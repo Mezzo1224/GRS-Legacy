@@ -1,11 +1,14 @@
 local gMysqlHost = "localhost"
+--local gMysqlUser = "zap695148-1"
+--local gMysqlPass = "EBIYrsAogaLEI3P9"
+--local gMysqlDatabase = "zap695148-1"
 local gMysqlUser = "root"
 local gMysqlPass = ""
 local gMysqlDatabase = "grs"
 
-local hasACLrights = false --- // NICHT ÄNDERN
-local hasDGSrunning = false --- // NICHT ÄNDERN
-local hasDGSACLrights = false --- // NICHT ÄNDERN
+local hasACLrights = false
+local hasDGSrunning = false
+local hasDGSACLrights = false -- Mit dieser Version sollte das Script funktionieren
 handler = nil
 playerUID = {}
 playerUIDName = {}
@@ -59,7 +62,7 @@ function gamemodeReadyCheck (res)
 	if enableStartDebug == true then
 		if not fileExists ( ":reallife_server/ready.txt" )  then
 			outputDebugString("---- STARTUP CHECK ----")
-			if isObjectInACLGroup("resource."..getResourceName(res), aclGetGroup("Admin")) or hasObjectPermissionTo ( res, "resource."..getResourceName(res)..".general.ModifyOtherObjects", true ) then
+			if isObjectInACLGroup("resource."..getResourceName(res), aclGetGroup("Admin"))  then
 				hasACLrights = true
 			else
 				outputDebugString("Der Gamemode ist nicht in der ACL Gruppe Admin, bearbeite bitte die ACL.xml")
@@ -70,15 +73,20 @@ function gamemodeReadyCheck (res)
 			end
 
 			if not getResourceFromName ( "dgs" ) then
-				outputDebugString("Du brauchst die dxLib `dgs` zum korrekten funktionieren des Scripts.")
+				outputDebugString("Du brauchst die dxLib `dgs` zum korrekten funktionieren des Gamemodes.")
 				outputDebugString("https://github.com/thisdp/dgs")
 				outputDebugString("Start abgebrochen.")
 			else
 				if getResourceState (getResourceFromName("dgs"))  == "loaded" then
-					startResource ( getResourceFromName ( "dgs" ) )
-					outputDebugString("DGS wurde gestartet.")
+					if startResource ( getResourceFromName ( "dgs" ) ) then
+						outputDebugString("DGS wurde gestartet.")
+						hasDGSrunning = true
+					else
+						outputDebugString("DGS konnte nicht gestartet werden. Überprüfe ob DGS installiert ist oder der Gamemode Rechte hat.")
+						hasDGSrunning = false
+					end
 				end
-				hasDGSrunning = true
+				
 				if not hasObjectPermissionTo ( getResourceFromName ( "dgs" ), "function.fetchRemote", true )  then
 					outputDebugString("DGS hat keine ACL Rechte. Gebe in der Konsole folgendes ein:")
 					outputDebugString("aclrequest allow dgs all")
