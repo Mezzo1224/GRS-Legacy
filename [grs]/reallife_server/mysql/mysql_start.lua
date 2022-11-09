@@ -1,14 +1,11 @@
 local gMysqlHost = "localhost"
---local gMysqlUser = "zap695148-1"
---local gMysqlPass = "EBIYrsAogaLEI3P9"
---local gMysqlDatabase = "zap695148-1"
 local gMysqlUser = "root"
 local gMysqlPass = ""
-local gMysqlDatabase = "reallife_server"
+local gMysqlDatabase = "grs"
 
-local hasACLrights = false
-local hasDGSrunning = false
-local hasDGSACLrights = false -- Mit dieser Version sollte das Script funktionieren
+local hasACLrights = false --- // NICHT ÄNDERN
+local hasDGSrunning = false --- // NICHT ÄNDERN
+local hasDGSACLrights = false --- // NICHT ÄNDERN
 handler = nil
 playerUID = {}
 playerUIDName = {}

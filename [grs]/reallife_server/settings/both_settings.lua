@@ -1,18 +1,19 @@
 ﻿-- // TODO: Ich habe über die Monate und Jahre die Config Datei, um es fein raus zu sagen, vergewaltigt. Viele Dinge, die den Client nicht interessieren z.B VIPXP sind unnötig.
--- // Die neuen Einstellungen sind im Ordner "settings/neu"
+-- // Die neuen Einstellungen sind im Ordner "settings/neu" edit 9.11.22: Nein sind sie nicht ! :)
 
-curVersion = "1.10b"
+curVersion = "1.10b" -- // Die Momentane Script-Version
 enableStartDebug = true -- WIRD FÜR DIE INSTALLATION EMPFOHLEN
-allowedEmailEnding = { ["web.de"]=true, ["outlook.com"]=true, ["outlook.de"]=true , ["gmx.net"]=true, ["gmail.com"]=true ,["yahoo.com"]=true }
-bonuscodes = {
+allowedEmailEnding = { ["web.de"]=true, ["outlook.com"]=true, ["outlook.de"]=true , ["gmx.net"]=true, ["gmail.com"]=true ,["yahoo.com"]=true } --- // Welche E-Mail Anbieter/Endungen bei der Registierung zugelassen sind
+bonuscodes = { ---- // In den Klammern ist der Code, dahinter die Zahl ist das Bankgeld. Code kann bei der Registierung eingegeben werden.
 	["grsfb"] = 100000,
 	["grsad"] = 100000
 }
+
 -- // Forumsystem
 
-VIPGroupe = 13 
+VIPGroupe = 13  -- ID der VIP Gruppe
 teamid = 12 -- ID der Teammitglieder Gruppe"
-betaGroupe = 14
+betaGroupe = 14 -- ID der Beta Gruppe
 
 adminForumRank = { -- Adminlevel, Gruppenid im Forum
 [8] = 4, 
@@ -37,18 +38,18 @@ adminForumView = { -- Aussehen bzw. Benutzerrang (unnötig)
 [1] = 15,
 }
 
-betasystem = true
-sendPaysavecards = true
-changeFactionCMD = true
-isHalloween = false
-VIPXP 				= 2 
+betasystem = true -- // true: Schaltet das Betakey System ein, d.h. es wird ein Key Benötigt, um sich Anzumelden.
+sendPaysavecards = true -- // Erlaubt das Senden von PaySafeCards via /self
+changeFactionCMD = true -- // Erlaubt das Wechseln seiner Fraktion durch den Befehl /fc
+isHalloween = false -- // De-/ oder Aktiviert das Halloween System
+VIPXP 				= 2 -- // 
 globalXPBoost			= 2 -- // >= 1 = Ausgeschaltet
-forumsync			= false
+forumsync			= false -- // Aktiviert das Forum <--> Ingame System. MySQL Config: wbb_conntect/wbbAdvance.lua
 noobtime = 0
 ageRestiction = false -- Siehe:  Art. 8 DSGVO, zudem ist GTA eh erst ab 16 :)
-emailSender = true -- Aktiviert den Mail-Sender, so werden E-Mails an nutzer gesendet bei z.B Bans
-emailSenderLink = "http://raptor-gaming.eu/MTA/mailer.php" -- Der Link der php Datei. (Webserver benötigt)
-compatibleDGS = "3.511"
+emailSender = true -- Aktiviert den Mail-Sender, so werden E-Mails an nutzer gesendet bei z.B Bans (Momentan inaktiv)
+emailSenderLink = "http://raptor-gaming.eu/MTA/mailer.php" -- Der Link der php Datei. (Webserver benötigt) (Momentan inaktiv)
+compatibleDGS = "3.511" ---- // NICHT ÄNDERN! Definiert DGS Version, mit der der Gamemode gemacht wurde
 
 rangedWeapons = {}
 	for i = 0, 50 do
