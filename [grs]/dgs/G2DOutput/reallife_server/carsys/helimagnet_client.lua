@@ -1,0 +1,41 @@
+
+----------GUI To DGS Converted----------
+if not getElementData(root,"__DGSDef") then
+	setElementData(root,"__DGSDef",true)
+	addEvent("onDgsEditAccepted-C",true)
+	addEvent("onDgsTextChange-C",true)
+	addEvent("onDgsComboBoxSelect-C",true)
+	addEvent("onDgsTabSelect-C",true)
+	function fncTrans(...)
+		triggerEvent(eventName.."-C",source,source,...)
+	end
+	addEventHandler("onDgsEditAccepted",root,fncTrans)
+	addEventHandler("onDgsTextChange",root,fncTrans)
+	addEventHandler("onDgsComboBoxSelect",root,fncTrans)
+	addEventHandler("onDgsTabSelect",root,fncTrans)
+	loadstring(exports.dgs:dgsImportFunction())()
+end
+----------GUI To DGS Converted----------
+
+function clientRenderMagnet ()
+	local vehitem = getPedOccupiedVehicle ( getLocalPlayer() )
+	if vehitem then
+		local mv = getElementData ( vehitem, "magnet" )
+		if mv then
+			local x1, y1, z1 = getElementPosition ( mv )
+			local x2, y2, z2 = getElementPosition ( vehitem )
+			dxDrawLine3D ( x1, y1, z1, x2, y2, z2, tocolor ( 100, 100, 100, 255 ), 10 )
+		else
+			removeEventHandler ( "onClientRender", getRootElement(), clientRenderMagnet )
+		end
+	else
+		removeEventHandler ( "onClientRender", getRootElement(), clientRenderMagnet )
+	end
+end
+
+
+addEventHandler ( "onClientPlayerVehicleEnter", localPlayer, function ( vehicle )
+	if getElementData ( vehicle, "magnet" ) then
+		addEventHandler ( "onClientRender", getRootElement(), clientRenderMagnet )
+	end
+end )

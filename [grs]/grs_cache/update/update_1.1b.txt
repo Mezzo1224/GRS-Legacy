@@ -1,0 +1,35 @@
++ Neues Betasystem
+--> Das Alte wurde verworfen
++ Unter /self kann man nun Autologin de./aktivieren.
+
+! Das Interaktionsfenster von Fraktionsfahrzeugen wurde überarbeitet
+--> Bekannter Fehler: Nach dem schließen funktioniert u.a /self nicht mehr
+! Fehler im neuen Ticketsystem behoben
+! Fehler im neuen Paydaysystem behoben
+! Fehler beim neuen /self behoben
+
+
+Anmerkung: Der Ordner für das Speichern der Lokalen Daten heißt nun "grs_cache"
+
+
+Update 1.0b Inhalte:
+
++ Neues Updatesystem
+--> Dieses Fenster
++ Neues Ticketsystem
+--> Bewertung von Supportern.
+--> Direktaktionen für Supporter.
+--> Komplette Überarbeitung der UI.
++ Neues Payday System
+--> Paydays werden nun nicht mehr im Chat angezeigt.
+--> (Alle) Paydays können durch Rechtsklick auf einen Bankautomaten eingesehen werden
++ Neues /self
+--> Komplette Überarbeitung der UI
+--> Neue Einstellungen mit vielen Funktionen
+--> Manche Dinge wie z.B Tastenzuweisung oder HUD-Optionen kommen noch
++ Werbesystem 
+--> Werber können beim registrieren angegeben werden
+--> Geworbene und Werber erhalten je nach Level Belohnungen
+
+! /pcar funktioniert nun mit IDs und Fahrzeugnamen /pcar [SLOT] [NAME/ID]
+--> Automatischer Respawn nach änderung der ID

@@ -1,0 +1,2 @@
++ Neues Werbesystem
+--> Werbung wird nun von der LTR vor der veröffendlichung überprüft, dabei verdienen sie 

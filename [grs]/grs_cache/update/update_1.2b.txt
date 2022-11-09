@@ -1,0 +1,9 @@
++ Neue Infobox
+--> Als Infobox wird die Box die Zentral-Oben angezeigt wird und Texte anzeigt
+--> Die Box wird bald das alte Design komplett ersetzten.
+--> Wer automatisch die Boxen ersetzten will, kann dies unter /self -> 
+Einstellungen machen
+--> Mit ´/tb aktionen´ kann man die Blip-Sichtbarkeit von Aktionen de-/aktivieren.
+! Fraktionssystem intern komplett überarbeitet
+! Frakionsfarben funktionieren nun korrekt
+! /self optisch überarbeitet (Icons)

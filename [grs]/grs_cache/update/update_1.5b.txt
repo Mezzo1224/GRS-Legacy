@@ -1,0 +1,19 @@
++ Unter /self --> "I" kann man nun seine Erfolge ansehen
++ /self --> Shop Funktioniert nun
+--> Ermöglicht das erwerben verschiedener Premiumdinge
+--> Eine Paysafecard kann nun zur Überprüfung eingeschickt werden
++ /self Neues Adminpanel
+! Cooperationssystem weiter ausgebaut und verbessert
+--> Es wird möglich sein den Payday der Ränge einzustellen, außerdem bekommt
+eine Firma einen eigenen Payday
+
+! HUD Schriftgröße passt sich nun an
+! HUD Bars (Level. Weste und Leben) ist nun animiert
+! Beta Hinweis (oben)
+! Erfahrungsboost Hinweis (neben dem HUD)
+! Neue Einstellungen bezg. UI Elementen
+! Alle Fraktionsbefehler werden ggf. in Unternehmens Befehle umgewandelt
+--> /invite wird automatisch zu /cinvite
+! Infobox passt sich nun einer NO-DM Zone an
+! Die Auflösung der Front bei der Infobox und bei dem NO-DM Zone passt sich nun an
+! Achievment-System Intern überarbeitet

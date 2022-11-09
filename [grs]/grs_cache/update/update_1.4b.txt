@@ -1,0 +1,24 @@
++ Unternehmenssystem
+--> Gründe ein Unternehmen im Rathhaus (EineGang oder eine Firma)
+-----> Eine Gang fungiert als "böse Fraktion" eine Firma als "neutrale".
+--> Erwerbe Fahrzeuge für dein Unternehmen, reduziert und bei deinem Autohändler.
+--> Habe ein eigenes Depot, bennene die Ränge
+--> Erwerbe Level für dein Unternehmen, diese ermöglichen es mehr Fahrzeuge zu erwerben. 
+--> Erwerbe ein höheres Tuninglevel, dieses rüstet automatisch deine Fahrzeuge mit Nebelanlagen, Verbesserten Bremse, Sportmotoren und Reifenpumpen auf
+--> Bennene die Ränge so wie du willst (1 - 4)
+--> Starte als Gang illegale Aktionen oder verkaufe als Firma Wagen an andere User
+Anmerkung: Das Menü ist noch in Arbeit, das Grundgerüst sollte aber funktionieren.
+Befehle:
+/cinvite [NAME] - Lädt ein Spieler in dein Unternehmen ein.
+/caccept - Nimm eine Einladung in ein Unternehmen an.
+/cuninvite [NAME] - Wirft ein Spieler aus deinem Unternehmen.
+/unternehmen - Öffnet das Unternehmensmenü
+/corespawn - Startet den Respawn für deine Fahrzeuge
+/cstate - Zeigt das Depot deines Unternehmens
+/cselect - Wählt die Farbe für dein Fraktionsfahrzeug
+
+
+! Fehler bei der Infobox behoben
+! Abfragen Fehler für Adminbefehle behoben
+! Interne vorbereitungen auf das neue Adminmenu
+

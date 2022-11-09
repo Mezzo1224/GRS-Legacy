@@ -1,0 +1,5 @@
+! Unternehmensmenü passt sich nun allen Auflösungen an
+! Die Möglichkeit ein Bilder für das Unternehmen hinzuzufügen
+! Deatkvierungssystem für die Unternehmen
+! "Premium-Paket verlängern" funktioniert nun und stellt beim Ablauf eine Anfrage an den User
+! Fix beim Kauf von Fahrzeugen für das Unternehmen

@@ -1,0 +1,14 @@
++ Neues Warnsystem
+--> Man kann nun Strafpunkte erhalten
+--> Vordefinierte Warns für Admins
+--> Notizen zu Usern
+
+Dabei wurden viele Funktionen getestet u.a:
+--> Autocomplete bei der Suchleiste mit Serverseitiger Cache 
+-----> Jemand sucht nach "GeorgWiesel", wenn ein anderer nur "G" eingibt, wird der
+Name vorgeschlagen
+--> Warnzeit kann mit Abkürzungen gegeben werden z.B 1d für einen Tag oder 2w für
+zwei Wochen
+--> Bei dem Notizen können Abkürzungen probiert werden: (D), (N), (M)
+Die UI von dem System ist Rot gehalten.
+--> Warns mit Doppelklick kopieren

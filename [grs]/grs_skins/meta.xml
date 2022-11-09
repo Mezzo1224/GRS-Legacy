@@ -1,0 +1,8 @@
+<meta>
+    <info author="Mezzo" type="script" name="GRS Skins" description="GRS Serverseitige Skins" />
+
+    <script src="skinLoader.lua" type = "client" />
+
+    <file src="pedSkins/swat.txd" />
+    <file src="pedSkins/swat.dff" />
+</meta>
