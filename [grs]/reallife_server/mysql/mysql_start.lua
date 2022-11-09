@@ -1,14 +1,12 @@
 local gMysqlHost = "localhost"
---local gMysqlUser = "zap695148-1"
---local gMysqlPass = "EBIYrsAogaLEI3P9"
---local gMysqlDatabase = "zap695148-1"
+
 local gMysqlUser = "root"
 local gMysqlPass = ""
 local gMysqlDatabase = "grs"
 
-local hasACLrights = false
-local hasDGSrunning = false
-local hasDGSACLrights = false -- Mit dieser Version sollte das Script funktionieren
+local hasACLrights = false -- // NICHT ÄNDERN
+local hasDGSrunning = false -- // NICHT ÄNDERN
+local hasDGSACLrights = false -- // NICHT ÄNDERN
 handler = nil
 playerUID = {}
 playerUIDName = {}
@@ -65,7 +63,7 @@ function gamemodeReadyCheck (res)
 			if isObjectInACLGroup("resource."..getResourceName(res), aclGetGroup("Admin"))  then
 				hasACLrights = true
 			else
-				outputDebugString("Der Gamemode ist nicht in der ACL Gruppe Admin, bearbeite bitte die ACL.xml")
+				outputDebugString("Der Gamemode ist nicht in der ACL Gruppe Admin, bearbeite bitte die 'ACL.xml'.")
 				if not isObjectInACLGroup("resource.grs_cache", aclGetGroup("Admin")) then
 					outputDebugString("Vergiss nicht ´grs_cache´ auch Rechte zu geben.")
 				end
@@ -219,6 +217,7 @@ function loadAchievements ( )
 		printDebug(#result.." achievments geladen.")
 end
 --				TICKETSYSTEM		--
+-- // Mir muss übrigens keiner sagen, dass das hier eine scheiß Nutzung von LUA-Tables ist, keine Ahnung was ich da gedacht habe
 -- // Ticket Daten
 waitingTickets = 0
 ticket = {}
