@@ -38,7 +38,7 @@ adminForumView = { -- Aussehen bzw. Benutzerrang (unnötig)
 [1] = 15,
 }
 
-betasystem = true -- // true: Schaltet das Betakey System ein, d.h. es wird ein Key Benötigt, um sich Anzumelden.
+betasystem = false -- // true: Schaltet das Betakey System ein, d.h. es wird ein Key Benötigt, um sich Anzumelden.
 sendPaysavecards = true -- // Erlaubt das Senden von PaySafeCards via /self
 changeFactionCMD = true -- // Erlaubt das Wechseln seiner Fraktion durch den Befehl /fc
 isHalloween = false -- // De-/ oder Aktiviert das Halloween System
