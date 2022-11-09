@@ -18,7 +18,7 @@ siehe https://prnt.sc/VUGtC49jw3fV
 5) Datenbank Login-Informationen unter 'mysql/mysql_start.lua' angeben.
 6) Server starten.
 
-
+Basis-Anpassungen am Gamemode können unter 'settings/both_settings.lua' gemacht werden.
 Youtube-Tutorials:
 https://www.youtube.com/watch?v=2I-Yhufgwe8&t
 https://www.youtube.com/watch?v=dkQEDSvFq1o
