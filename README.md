@@ -1,2 +1,24 @@
 # GRS-Legacy
 Eine weiter Version des GRS-Reallife Gamemodes, basierend auf dem Ultimate-Reallife Gamemode (MTA:SA)
+
+Zur Installation benötigst du Folgendes:
+- Eine MariaDB Datenbank (getestet mit Version 10.4.25)
+- Basis LUA-Kenntnisse 
+
+Step-By-Step Installation:
+0) Server ggf. herunterfahren.
+1) grs.sql in eine neue Datenbank importieren / ausführen
+2) Den Ordner '[grs]' in den 'ressources' Ordner schieben.
+3) Den Gamemode als Auto-Start in der 'mtaserver.conf' einfügen.
+  <resource src="reallife_server" startup="1" protected="0" />
+Bei den nächsten Schritten hilft auch ein kleines Installations-Tool. Dieses Überprüft immer wieder, ob alles richtig installiert ist bis es richtig installiert ist.
+siehe https://prnt.sc/VUGtC49jw3fV
+
+4) Folgenden Ressourcen ACL (Admin-) Rechte geben: 'DGS', 'grs_cache' und 'reallife_server'. 
+5) Datenbank Login-Informationen unter 'mysql/mysql_start.lua' angeben.
+6) Server starten.
+
+
+Youtube-Tutorials:
+https://www.youtube.com/watch?v=2I-Yhufgwe8&t
+https://www.youtube.com/watch?v=dkQEDSvFq1o
