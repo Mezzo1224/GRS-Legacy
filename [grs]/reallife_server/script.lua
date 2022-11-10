@@ -140,8 +140,46 @@ function hasInvalidCharString ( strin )
 	return false
 end
 
+function updateCheck ()
+	fetchRemote ( "https://raw.githubusercontent.com/Mezzo1224/GRS-Legacy/main/%5Bgrs%5D/reallife_server/meta.xml", getVersion, "", false )
+end
+
+function getVersion ( responseData, errorCode )
+	if errorCode == 0 then
+		local fileData = responseData
+		if fileExists ( ":grs_cache/meta_cache.xml" ) then
+			fileDelete ( ":grs_cache/meta_cache.xml" )
+		end
+		local newFile = fileCreate(":grs_cache/meta_cache.xml")
+		if (newFile) then
+			fileWrite(newFile, fileData)
+			fileClose(newFile)  
+		end
+
+		-- // Jetzt Versionen checken
+		local cacheMeta = xmlLoadFile ( ":grs_cache/meta_cache.xml" )
+		if cacheMeta then
+			local cacheMeta_info = xmlFindChild( cacheMeta, "info", 0 )
+			local gitHubVersion = xmlNodeGetAttribute(cacheMeta_info, "version")
+			xmlUnloadFile(cacheMeta)
+			local version = getResourceInfo ( getThisResource(), "version" )
+			if version ~= gitHubVersion then
+				print("!!! UPDATE VERFÜGBAR !!!")
+				print("Es ist ein Update verfügbar! (Momentane Version "..version..", Verfügbare Version: "..gitHubVersion..")")
+				print("https://github.com/Mezzo1224/GRS-Legacy")
+			end
+		end
+	else
+		print(errorCode)
+	end
+end
+
 function serverstart ()
 
+	setTimer ( function()
+		updateCheck ()
+		setTimer ( updateCheck, 3600*1000, 0 )
+	end, 5000, 1 )
 	setGameType ( "Ultimate-RL" )
 	setMapName ( "San Andreas" )
 	lastadtime = 0
