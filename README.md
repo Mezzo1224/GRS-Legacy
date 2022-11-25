@@ -14,8 +14,8 @@ Step-By-Step Installation (Server sollte währenddessen gestoppt sein):
   <resource src="DGS" startup="1" protected="0" />
   <resource src="reallife_server" startup="1" protected="0" />
 Bei den nächsten Schritten hilft auch ein kleines Installations-Tool. Dieses Überprüft immer wieder, ob alles richtig installiert ist bis es richtig installiert ist.
-![Installations-Helper](https://i.imgur.com/Q8IAw6S.png)
 
+![installer](https://i.imgur.com/Q8IAw6S.png)
 
 4) Folgenden Ressourcen ACL (Admin-) Rechte geben: 'DGS', 'grs_cache' und 'reallife_server'. 
 5) Datenbank Login-Informationen unter 'mysql/mysql_start.lua' angeben.
