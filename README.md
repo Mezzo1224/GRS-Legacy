@@ -5,6 +5,7 @@ Zur Installation benötigst du Folgendes:
 - Eine MariaDB Datenbank (getestet mit Version 10.4.25) (andere Datenbank-Typen sind Fehlerhaft!)
 - Basis LUA-Kenntnisse 
 - Einen MTA:SA Server (getestet mit Version 1.5.9)
+- DGS ( es empfielt sich die enthaltene Version zu nutzen, man kann aber auch die [aktuelle Version](https://github.com/thisdp/dgs) nutzen )
 
 Step-By-Step Installation (Server sollte währenddessen gestoppt sein):
 
