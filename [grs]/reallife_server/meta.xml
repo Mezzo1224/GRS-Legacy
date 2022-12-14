@@ -1,6 +1,6 @@
 <meta>
      <!-- Version nicht ändern, wird in Zukunft von nem Auto-Update System abgefragt! -->
-    <info author="Zipper" type="gamemode" name="Testserver" description="German Reallife" version="1" />
+    <info author="Zipper" type="gamemode" name="Testserver" description="German Reallife" version="2" />
     <oop>true</oop>
     <min_mta_version client="1.5.7-9.20157" />
     
