@@ -52,9 +52,8 @@ function MySQL_Startup ( )
 end
 MySQL_Startup()
 
-if getResourceFromName ( "dgs" ) and enableStartDebug == false then
-	startResource ( getResourceFromName ( "dgs" ) )
-end
+
+
 
 function gamemodeReadyCheck (res)
 	if enableStartDebug == true then
@@ -69,8 +68,7 @@ function gamemodeReadyCheck (res)
 				end
 				outputDebugString("Start abgebrochen.")
 			end
-
-			if not getResourceFromName ( "dgs" ) then
+			if getResourceFromName ( "dgs" ) == false then
 				outputDebugString("Du brauchst die dxLib `dgs` zum korrekten funktionieren des Gamemodes.")
 				outputDebugString("https://github.com/thisdp/dgs")
 				outputDebugString("Start abgebrochen.")
@@ -140,9 +138,11 @@ end
 addEventHandler ( "onResourceStart", getResourceRootElement(), gamemodeReadyCheck )
 
 function checkDGSVersion ()
-	if getElementData(getResourceRootElement(getResourceFromName("dgs")), "Version" ) then
-		if getElementData(getResourceRootElement(getResourceFromName("dgs")), "Version" ) ~= compatibleDGS then
-			outputDebugString("Achtung: Es läuft eine andere DGS Version als die Version, für die das Script entwickelt wurde.")
+	local currDgsVersion = getElementData(getResourceRootElement(getResourceFromName("dgs")), "Version" )
+	if currDgsVersion then
+		if currDgsVersion ~= compatibleDGS then
+			outputDebugString("Achtung: Es läuft die DGS Version "..currDgsVersion.." Version, der Gamemode ist aber auf die Version "..compatibleDGS.." ausgelegt.")
+			outputDebugString("Dies kann zu Fehler führen. Bitte verwende die Beigelegte DGS Version.")
 		end
 	else
 		outputDebugString("DGS Version konnte nicht abgefragt werden.")
