@@ -1,11 +1,13 @@
+dgsLogLuaMemory()
 local loadstring = loadstring
 ---------------Speed Up
 local tableInsert,tableRemove,tableFind = table.insert,table.remove,table.find
 local triggerEvent = triggerEvent
-local type = type
-local assert = assert
+local type,assert = type,assert
 local isElement = isElement
+local setElementData = setElementData
 local destroyElement = destroyElement
+local dgsSetProperty = dgsSetProperty
 local guiBlur = guiBlur or function()
 	destroyElement(guiCreateLabel(0,0,0,0,"",false))
 end
@@ -21,17 +23,11 @@ function insertResource(res,dgsEle)
 end
 
 function dgsGetGuiLocationOnScreen(dgsEle,rlt,rndsup)
-	if isElement(dgsEle) then
-		local pos = dgsElementData[dgsEle].absPos
-		local x,y = getParentLocation(dgsEle,rndsup,pos[1],pos[2])
-		return rlt and x/sW or x,rlt and y/sH or y
-	end
-	return false
+	if not isElement(dgsEle) then return false end
+	local pos = dgsElementData[dgsEle].absPos
+	local x,y = getParentLocation(dgsEle,rndsup,pos[1],pos[2])
+	return rlt and x/sW or x,rlt and y/sH or y
 end
---[[
-function dgsGetPositionInElement(dgsEle,x,y,rndSuspend,includeSide)
-	local 
-end]]
 -- todo
 function getParentLocation(dgsEle,rndSuspend,x,y,includeSide)
 	local eleData
@@ -45,20 +41,22 @@ function getParentLocation(dgsEle,rndSuspend,x,y,includeSide)
 			absPosX,absPosY = absPos[1],absPos[2]
 		end
 		if includeSide then
-			local parent = FatherTable[dgsEle]
+			local parent = dgsElementData[dgsEle].parent
 			local pEleData = dgsElementData[parent]
+			local eleConAlign = parent and pEleData.contentPositionAlignment
 			local eleAlign = eleData.positionAlignment
-			if eleAlign[1] == "right" then
+			local eleAlignH,eleAlignV = eleAlign[1] or eleConAlign[1], eleAlign[2] or eleConAlign[2]
+			if eleAlignH == "right" then
 				local pWidth = parent and pEleData.absSize[1] or sW
 				absPosX = pWidth-absPosX
-			elseif eleAlign[1] == "center" then
+			elseif eleAlignH == "center" then
 				local pWidth = parent and pEleData.absSize[1] or sW
 				absPosX = absPosX+pWidth/2-eleData.absSize[1]/2
 			end
-			if eleAlign[2] == "bottom" then
+			if eleAlignV == "bottom" then
 				local pHeight = parent and pEleData.absSize[2] or sH
 				absPosY = pHeight-absPosY
-			elseif eleAlign[2] == "center" then
+			elseif eleAlignV == "center" then
 				local pHeight = parent and pEleData.absSize[2] or sH
 				absPosY = absPosY+pHeight/2-eleData.absSize[2]/2
 			end
@@ -84,7 +82,7 @@ function getParentLocation(dgsEle,rndSuspend,x,y,includeSide)
 			local w = gridListEleData.absSize[1]
 			x,y = x+columnMoveOffset+gridListEleData.columnOffset+columnOffset+columnData[data[3]][3]*(gridListEleData.columnRelative and (w-scbThickV) or 1), y+gridListEleData.rowMoveOffset+(data[2]-1)*(leading+rowHeight)+gridListEleData.columnHeight
 		end
-		dgsEle = FatherTable[dgsEle]
+		dgsEle = dgsElementData[dgsEle].parent
 		eleData = dgsElementData[dgsEle]
 		if dgsElementType[dgsEle] == "dgs-dxwindow" then
 			local titleHeight = 0
@@ -93,14 +91,7 @@ function getParentLocation(dgsEle,rndSuspend,x,y,includeSide)
 			end
 			x,y = x+absPosX,y+absPosY+titleHeight
 		elseif dgsElementType[dgsEle] == "dgs-dxscrollpane" then
-			local scrollbar = eleData.scrollbars
-			local scbThick = eleData.scrollBarThick
-			local size = eleData.absSize
-			local relSizX,relSizY = size[1]-(dgsElementData[ scrollbar[1] ].visible and scbThick or 0),size[2]-(dgsElementData[ scrollbar[2] ].visible and scbThick or 0)
-			local maxSize = eleData.maxChildSize
-			local maxX,maxY = (maxSize[1]-relSizX),(maxSize[2]-relSizY)
-			maxX,maxY = maxX > 0 and maxX or 0,maxY > 0 and maxY or 0
-			x,y = x+absPosX-maxX*dgsElementData[scrollbar[2]].position*0.01,y+absPosY-maxY*dgsElementData[scrollbar[1]].position*0.01
+			x,y = x+absPosX+eleData.horizontalMoveOffset,y+absPosY+eleData.verticalMoveOffset
 		elseif dgsElementType[dgsEle] == "dgs-dxscalepane" then
 			--[[local scrollbar = eleData.scrollbars
 			local scbThick = eleData.scrollBarThick
@@ -109,7 +100,7 @@ function getParentLocation(dgsEle,rndSuspend,x,y,includeSide)
 			local maxSize = eleData.maxChildSize
 			local maxX,maxY = (maxSize[1]-relSizX),(maxSize[2]-relSizY)
 			maxX,maxY = maxX > 0 and maxX or 0,maxY > 0 and maxY or 0
-			x,y = x+absPosX-maxX*dgsElementData[ scrollbar[2] ].position*0.01,y+absPosY-maxY*dgsElementData[ scrollbar[1] ].position*0.01]]
+			x,y = x+absPosX-maxX*dgsElementData[ scrollbar[2] ].scrollPosition*0.01,y+absPosY-maxY*dgsElementData[ scrollbar[1] ].scrollPosition*0.01]]
 		else
 			x,y = x+absPosX,y+absPosY
 		end
@@ -120,7 +111,7 @@ function getParentLocation(dgsEle,rndSuspend,x,y,includeSide)
 	return x,y
 end
 
-function dgsGetPosition(dgsEle,bool,includeParent,rndSuspend,includeSide)
+function dgsGetPosition(dgsEle,relative,includeParent,rndSuspend,includeSide)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsGetPosition",1,"dgs-dxelement")) end
 	if includeParent then
 		local absPos = dgsElementData[dgsEle].absPos
@@ -129,33 +120,45 @@ function dgsGetPosition(dgsEle,bool,includeParent,rndSuspend,includeSide)
 			absPosX,absPosY = absPos[1],absPos[2]
 		end
 		guielex,guieley,startElement,brokenElement = getParentLocation(dgsEle,rndSuspend,absPosX,absPosY,includeSide)
-		assert(not brokenElement,"Bad argument @'dgsGetPosition', Found an infinite loop under "..tostring(brokenElement).."("..dgsGetType(brokenElement).."), start from element "..tostring(startElement).."("..dgsGetType(startElement)..")")
+		if brokenElement then error("Bad argument @'dgsGetPosition', Found an infinite loop under "..tostring(brokenElement).."("..dgsGetType(brokenElement).."), start from element "..tostring(startElement).."("..dgsGetType(startElement)..")") end
 		if relative then
 			return guielex/sW,guieley/sH
 		else
 			return guielex,guieley
 		end
 	else
-		local pos = dgsElementData[dgsEle][bool and "rltPos" or "absPos"]
-		if pos then
-			return pos[1],pos[2]
-		end
-		return false
+		local pos = dgsElementData[dgsEle][relative and "rltPos" or "absPos"]
+		if not pos then return false end
+		return pos[1],pos[2]
 	end
 end
 
-function dgsSetPosition(dgsEle,x,y,bool,isCenterPosition)
+function dgsSetPosition(dgsEle,x,y,relative,...)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetPosition",1,"dgs-dxelement")) end
-	if not(not x or type(x) == "number") then error(dgsGenAsrt(x,"dgsSetPosition",2,"nil/number")) end
-	if not(not y or type(y) == "number") then error(dgsGenAsrt(y,"dgsSetPosition",3,"nil/number")) end
-	local bool = bool and true or false
-	local pos = bool and dgsElementData[dgsEle].rltPos or dgsElementData[dgsEle].absPos
+	if (x and type(x) ~= "number") then error(dgsGenAsrt(x,"dgsSetPosition",2,"nil/number")) end
+	if (y and type(y) ~= "number") then error(dgsGenAsrt(y,"dgsSetPosition",3,"nil/number")) end
+	local pos = relative and dgsElementData[dgsEle].rltPos or dgsElementData[dgsEle].absPos
 	local x,y = x or pos[1],y or pos[2]
-	if isCenterPosition then
-		local size = dgsElementData[dgsEle][bool and "rltSize" or "absSize"]
-		calculateGuiPositionSize(dgsEle,x-size[1]/2,y-size[2]/2,bool)
+	local pivot = dgsElementData[dgsEle].posPivot
+	if select("#",...) == 2 or pivot then
+		local pivotX,pivotY
+		if select("#",...) == 2 then
+			pivotX,pivotY = ...
+		else
+			pivotX,pivotY = pivot[1],pivot[2]
+		end
+		if (type(pivotX) ~= "number") then error(dgsGenAsrt(pivotX,"dgsSetPosition",5,"number")) end
+		if (type(pivotY) ~= "number") then error(dgsGenAsrt(pivotY,"dgsSetPosition",6,"number")) end
+		local size = dgsElementData[dgsEle].absSize
+		calculateGuiPositionSize(dgsEle,x-size[1]*pivotX,y-size[2]*pivotX,relative)
 	else
-		calculateGuiPositionSize(dgsEle,x,y,bool)
+		local isCenterPosition = ...
+		if isCenterPosition then
+			local size = dgsElementData[dgsEle][relative and "rltSize" or "absSize"]
+			calculateGuiPositionSize(dgsEle,x-size[1]/2,y-size[2]/2,relative)
+		else
+			calculateGuiPositionSize(dgsEle,x,y,relative)
+		end
 	end
 	return true
 end
@@ -176,20 +179,37 @@ function dgsCenterElement(dgsEle,remainX,remainY)
    end
 end
 
-function dgsGetSize(dgsEle,bool)
+function dgsGetSize(dgsEle,relative)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsGetSize",1,"dgs-dxelement")) end
-	local size = dgsElementData[dgsEle][bool and "rltSize" or "absSize"] or {0,0}
-	return size[1],size[2]
+	local size = dgsElementData[dgsEle][relative and "rltSize" or "absSize"]
+	if size then return size[1],size[2] end
+	return 0,0
 end
 
-function dgsSetSize(dgsEle,w,h,bool)
+function dgsSetSize(dgsEle,w,h,relative,...)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetSize",1,"dgs-dxelement")) end
-	if not(not w or type(w) == "number") then error(dgsGenAsrt(w,"dgsSetSize",2,"nil/number")) end
-	if not(not h or type(h) == "number") then error(dgsGenAsrt(h,"dgsSetSize",3,"nil/number")) end
-	local bool = bool and true or false
-	local size = bool and dgsElementData[dgsEle].rltSize or dgsElementData[dgsEle].absSize
-	local w,h = w or size[1],h or size[2]
-	calculateGuiPositionSize(dgsEle,_,_,_,w,h,bool or false)
+	if (w and type(w) ~= "number") then error(dgsGenAsrt(w,"dgsSetSize",2,"nil/number")) end
+	if (h and type(h) ~= "number") then error(dgsGenAsrt(h,"dgsSetSize",3,"nil/number")) end
+	local size = relative and dgsElementData[dgsEle].rltSize or dgsElementData[dgsEle].absSize
+	local w,h = w or size[1], h or size[2]
+	local pivot = dgsElementData[dgsEle].sizePivot
+	if select("#",...) == 2 or pivot then
+		local pivotX,pivotY
+		if select("#",...) == 2 then
+			pivotX,pivotY = ...
+		else
+			pivotX,pivotY = pivot[1],pivot[2]
+		end
+		if (type(pivotX) ~= "number") then error(dgsGenAsrt(pivotX,"dgsSetSize",5,"number")) end
+		if (type(pivotY) ~= "number") then error(dgsGenAsrt(pivotY,"dgsSetSize",6,"number")) end
+		local oldSize = relative and dgsElementData[dgsEle].rltSize or dgsElementData[dgsEle].absSize
+		calculateGuiPositionSize(dgsEle,_,_,_,w,h,relative or false)
+		local oldPos = relative and dgsElementData[dgsEle].rltPos or dgsElementData[dgsEle].absPos
+		local newSize = relative and dgsElementData[dgsEle].rltSize or dgsElementData[dgsEle].absSize
+		calculateGuiPositionSize(dgsEle,oldPos[1]-(newSize[1]-oldSize[1])*pivotX,oldPos[2]-(newSize[2]-oldSize[2])*pivotY,relative)
+	else
+		calculateGuiPositionSize(dgsEle,_,_,_,w,h,relative or false)
+	end
 	return true
 end
 
@@ -255,50 +275,92 @@ function dgsGetDetectArea(dgsEle)
 	return dgsElementData[dgsEle].dgsCollider or false
 end
 
+function dgsApplyEnabledInherited(parent,enabled)
+	local children = dgsElementData[parent].children
+	for k,child in ipairs(children) do
+		dgsElementData[child].enabledInherited = enabled
+		dgsApplyEnabledInherited(child,dgsElementData[child].enabledInherited)
+	end
+end
+
+function dgsSetEnabled(dgsEle,enabled)
+	local enabled = enabled and true or false
+	if type(dgsEle) == "table" then
+		for i=1,#dgsEle do
+			if not(dgsIsType(dgsEle[i])) then error(dgsGenAsrt(dgsEle[i],"dgsSetEnabled",1,"dgs-dxelement",_,_,"at table index "..i)) end
+			dgsSetEnabled(dgsEle[i],enabled)
+		end
+		return true
+	else
+		if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetEnabled",1,"dgs-dxelement")) end
+		local originalEnabled = dgsElementData[dgsEle].enabled
+		if enabled == originalEnabled then return true end
+		local parentInherited = true
+		local parent = dgsGetParent(dgsEle)
+		if parent then parentInherited = dgsElementData[parent].enabledInherited and dgsElementData[parent].enabled end
+		dgsElementData[dgsEle].enabledInherited = parentInherited
+		dgsApplyEnabledInherited(dgsEle,enabled and dgsElementData[dgsEle].enabledInherited)
+		return dgsSetData(dgsEle,"enabled",enabled)
+	end
+end
+
+function dgsGetEnabled(dgsEle,selfOnly)
+	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsGetEnabled",1,"dgs-dxelement")) end
+	if selfOnly then return dgsElementData[dgsEle].enabled end
+	return dgsElementData[dgsEle].enabledInherited and dgsElementData[dgsEle].enabled
+end
+
+function dgsApplyVisibleInherited(parent,visible)
+	local children = dgsElementData[parent].children
+	for i=1,#children do
+		local child = children[i]
+		dgsElementData[child].visibleInherited = visible
+		local eleType = dgsElementType[child]
+		if dgsOnVisibilityChange[eleType] then dgsOnVisibilityChange[eleType](child) end
+		dgsApplyVisibleInherited(child,dgsElementData[child].visibleInherited)
+	end
+end
+
 function dgsSetVisible(dgsEle,visible)
-	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetVisible",1,"dgs-dxelement")) end
+	local visible = visible and true or false
 	if type(dgsEle) == "table" then
 		local result = true
 		for i=1,#dgsEle do
-			local dEle = dgsEle[i]
-			local originalVisible = dgsElementData[dEle].visible
-			local visible = visible and true or false
-			if visible == originalVisible then
-				return true
-			end
-			result = result and dgsSetData(dEle,"visible",visible)
+			if not(dgsIsType(dgsEle[i])) then error(dgsGenAsrt(dgsEle[i],"dgsSetVisible",1,"dgs-dxelement",_,_,"at table index "..i)) end
+			dgsSetVisible(dgsEle[i],visible)
 		end
-		return result
+		return true
 	else
+		if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetVisible",1,"dgs-dxelement")) end
 		local originalVisible = dgsElementData[dgsEle].visible
-		local visible = visible and true or false
-		if visible == originalVisible then
-			return true
-		end
+		if visible == originalVisible then return true end
+		local parentInherited = true
+		local parent = dgsGetParent(dgsEle)
+		if parent then parentInherited = dgsElementData[parent].visibleInherited  and dgsElementData[parent].visible end
+		dgsElementData[dgsEle].visibleInherited = parentInherited
+		if dgsOnVisibilityChange[eleType] then dgsOnVisibilityChange[eleType](dgsEle) end
+		dgsApplyVisibleInherited(dgsEle,visible and dgsElementData[dgsEle].visibleInherited)
 		return dgsSetData(dgsEle,"visible",visible)
 	end
 end
 
-function dgsGetVisible(dgsEle)
+function dgsGetVisible(dgsEle,selfOnly)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsGetVisible",1,"dgs-dxelement")) end
-	for i=1,5000 do								--Limited to 5000 to make sure there won't be able to make an infinity loop
-		if not dgsElementData[dgsEle].visible then return false end	--check and return false if dgsEle is invisible
-		dgsEle = FatherTable[dgsEle]			--if it is visible, check whether its parent hides it
-		if not dgsEle then return true end		--if it doesn't have parent, return true as visible
-	end
+	if selfOnly then return dgsElementData[dgsEle].visible end
+	return dgsElementData[dgsEle].visibleInherited and dgsElementData[dgsEle].visible
 end
 
 function dgsSetPositionAlignment(dgsEle,horizontal,vertical)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetPositionAlignment",1,"dgs-dxelement")) end
 	local eleAlign = dgsElementData[dgsEle].positionAlignment
-	eleAlign[1] = horizontal or eleAlign[1] or "left"
-	eleAlign[2] = vertical or eleAlign[2] or "top"
+	eleAlign[1] = horizontal or eleAlign[1]
+	eleAlign[2] = vertical or eleAlign[2]
 	return dgsSetData(dgsEle,"positionAlignment",eleAlign)
 end
 
 function dgsGetPositionAlignment(dgsEle)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsGetPositionAlignment",1,"dgs-dxelement")) end
-	return dgsElementData[dgsEle].positionAlignment[1],dgsElementData[dgsEle].positionAlignment[2]
+	return dgsElementData[dgsEle].positionAlignment[1] or "left",dgsElementData[dgsEle].positionAlignment[2] or "top"
 end
 
 function configPosSize(dgsEle,pos,size)
@@ -317,8 +379,9 @@ function configPosSize(dgsEle,pos,size)
 end
 
 function calculateGuiPositionSize(dgsEle,x,y,relativep,sx,sy,relatives,notrigger)
-	local eleData = dgsElementData[dgsEle] or {}
-	local parent = dgsGetParent(dgsEle)
+	if not dgsElementData[dgsEle] then dgsElementData[dgsEle] = {} end
+	local eleData = dgsElementData[dgsEle]
+	local parent = eleData.parent
 	local psx,psy = sW,sH
 	local relt = eleData.relative
 	local oldRelativePos,oldRelativeSize
@@ -345,9 +408,11 @@ function calculateGuiPositionSize(dgsEle,x,y,relativep,sx,sy,relatives,notrigger
 		end
 	end
 	if x and y then
-		local absPos = eleData.absPos or {}
+		if not eleData.absPos then eleData.absPos = {} end
+		if not eleData.rltPos then eleData.rltPos = {} end
+		local absPos = eleData.absPos
 		local oldPosAbsx,oldPosAbsy = absPos[1],absPos[2]
-		local rltPos = eleData.rltPos or {}
+		local rltPos = eleData.rltPos
 		local oldPosRltx,oldPosRlty = rltPos[1],rltPos[2]
 		x,y = relativep and x*psx or x,relativep and y*psy or y
 		local abx,aby,relatx,relaty = x,y,x/psx,y/psy
@@ -361,9 +426,11 @@ function calculateGuiPositionSize(dgsEle,x,y,relativep,sx,sy,relatives,notrigger
 		end
 	end
 	if sx and sy then
-		local absSize = eleData.absSize or {}
+		if not eleData.absSize then eleData.absSize = {} end
+		if not eleData.rltSize then eleData.rltSize = {} end
+		local absSize = eleData.absSize
 		local oldSizeAbsx,oldSizeAbsy = absSize[1],absSize[2]
-		local rltSize = eleData.rltSize or {}
+		local rltSize = eleData.rltSize
 		local oldSizeRltx,oldSizeRlty = rltSize[1],rltSize[2]
 		sx,sy = relatives and sx*psx or sx,relatives and sy*(psy-titleOffset) or sy
 		local absx,absy,relatsx,relatsy = sx,sy,sx/psx,sy/(psy-titleOffset)
@@ -380,14 +447,15 @@ function calculateGuiPositionSize(dgsEle,x,y,relativep,sx,sy,relatives,notrigger
 end
 
 function dgsSetAlpha(dgsEle,alpha,absolute)
+	if not(type(alpha) == "number") then error(dgsGenAsrt(alpha,"dgsSetAlpha",2,"number")) end
 	if type(dgsEle) == "table" then
 		for i=1,#dgsEle do
+			if not(dgsIsType(dgsEle[i])) then error(dgsGenAsrt(dgsEle[i],"dgsSetAlpha",1,"dgs-dxelement",_,_,"at table index "..i)) end
 			dgsSetAlpha(dgsEle[i],alpha,absolute)
 		end
 		return true
 	end
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetAlpha",1,"dgs-dxelement")) end
-	if not(type(alpha) == "number") then error(dgsGenAsrt(alpha,"dgsSetAlpha",2,"number")) end
 	alpha = absolute and alpha/255 or alpha
 	return dgsSetData(dgsEle,"alpha",(alpha > 1 and 1) or (alpha < 0 and 0) or alpha)
 end
@@ -400,26 +468,11 @@ function dgsGetAlpha(dgsEle,absolute,includeParent)
 		for i=1,5000 do
 			if not p then return absolute and alp*255 or alp end
 			alp = alp*(dgsElementData[p].alpha or 1)
-			p = FatherTable[p]
+			p = dgsElementData[p].parent
 		end
 	else
 		local alp = dgsElementData[dgsEle].alpha
 		return absolute and alp*255 or alp
-	end
-end
-
-function dgsSetEnabled(dgsEle,enabled)
-	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetEnabled",1,"dgs-dxelement")) end
-	if not(type(enabled) == "boolean") then error(dgsGenAsrt(enabled,"dgsSetEnabled",2,"boolean")) end
-	return dgsSetData(dgsEle,"enabled",enabled)
-end
-
-function dgsGetEnabled(dgsEle)
-	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsGetEnabled",1,"dgs-dxelement")) end
-	for i=1,5000 do 							--Limited to 5000 to make sure there won't be able to make an infinity loop
-		if not dgsElementData[dgsEle].enabled then return false end	--check and return false if dgsEle is disabled
-		dgsEle = FatherTable[dgsEle]			--if it is enabled, check whether its parent hides it
-		if not dgsEle then return true end		--if it doesn't have parent, return true as enabled
 	end
 end
 
@@ -438,8 +491,10 @@ function dgsSetFont(dgsEle,font)
 	local fontType = dgsGetType(font)
 	if fontType == "string" then
 		if not(fontBuiltIn[font]) then error(dgsGenAsrt(font,"dgsSetFont",2,_,_,_,"font "..font.." doesn't exist")) end
+	elseif fontType == "table" then
+		--nothing
 	elseif fontType ~= "dx-font" then
-		error(dgsGenAsrt(font,"dgsSetFont",2,"string/dx-font"))
+		error(dgsGenAsrt(font,"dgsSetFont",2,"string/dx-font/table"))
 	end
 	dgsSetData(dgsEle,"font",font)
 end
@@ -450,12 +505,10 @@ function dgsGetFont(dgsEle)
 end
 
 function dgsGetSystemFont(sres)
-
 	local res = sres or sourceResource or "global"
 	local style = styleManager.styles[res]
 	style = style.loaded[style.using]
 	local systemFont = style.systemFontElement
-	
 	return systemFont
 end
 
@@ -509,12 +562,13 @@ function dgsSetClickingSound(dgsEle,soundPath,volume,button,state)
 	if not fileExists(soundPath) then error(dgsGenAsrt(soundPath,"dgsSetClickingSound",2,_,_,_,"Couldn't find such file '"..soundPath.."'")) end
 	button = button or "left"
 	state = state or "down"
-	if not dgsElementData[dgsEle].clickingSound then dgsElementData[dgsEle].clickingSound = {} end
-	if not dgsElementData[dgsEle].clickingSound[button] then dgsElementData[dgsEle].clickingSound[button] = {} end
-	dgsElementData[dgsEle].clickingSound[button][state] = soundPath
-	if not dgsElementData[dgsEle].clickingSoundVolume then dgsElementData[dgsEle].clickingSoundVolume = {} end
-	if not dgsElementData[dgsEle].clickingSoundVolume[button] then dgsElementData[dgsEle].clickingSoundVolume[button] = {} end
-	dgsElementData[dgsEle].clickingSoundVolume[button][state] = tonumber(volume)
+	local eleData = dgsElementData[dgsEle]
+	if not eleData.clickingSound then eleData.clickingSound = {} end
+	if not eleData.clickingSound[button] then eleData.clickingSound[button] = {} end
+	eleData.clickingSound[button][state] = soundPath
+	if not eleData.clickingSoundVolume then eleData.clickingSoundVolume = {} end
+	if not eleData.clickingSoundVolume[button] then eleData.clickingSoundVolume[button] = {} end
+	eleData.clickingSoundVolume[button][state] = tonumber(volume)
 	return true
 end
 
@@ -522,9 +576,10 @@ function dgsGetClickingSound(dgsEle,button,state)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetClickingSound",1,"dgs-dxelement")) end
 	button = button or "left"
 	state = state or "down"
-	if not dgsElementData[dgsEle].clickingSound then return false end
-	if not dgsElementData[dgsEle].clickingSound[button] then return false end
-	return dgsElementData[dgsEle].clickingSound[button][state] or false
+	local eleData = dgsElementData[dgsEle]
+	if not eleData.clickingSound then return false end
+	if not eleData.clickingSound[button] then return false end
+	return eleData.clickingSound[button][state] or false
 end
 
 function dgsSetClickingSoundVolume(dgsEle,volume,button,state)
@@ -532,9 +587,10 @@ function dgsSetClickingSoundVolume(dgsEle,volume,button,state)
 	if type(volume) ~= "number" then error(dgsGenAsrt(volume,"dgsSetClickingSoundVolume",2,"number")) end
 	button = button or "left"
 	state = state or "down"
-	if not dgsElementData[dgsEle].clickingSoundVolume then dgsElementData[dgsEle].clickingSoundVolume = {} end
-	if not dgsElementData[dgsEle].clickingSoundVolume[button] then dgsElementData[dgsEle].clickingSoundVolume[button] = {} end
-	dgsElementData[dgsEle].clickingSoundVolume[button][state] = volume
+	local eleData = dgsElementData[dgsEle]
+	if not eleData.clickingSoundVolume then eleData.clickingSoundVolume = {} end
+	if not eleData.clickingSoundVolume[button] then eleData.clickingSoundVolume[button] = {} end
+	eleData.clickingSoundVolume[button][state] = volume
 	return true
 end
 
@@ -542,9 +598,10 @@ function dgsGetClickingSoundVolume(dgsEle,button,state)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSetClickingSound",1,"dgs-dxelement")) end
 	button = button or "left"
 	state = state or "down"
-	if not dgsElementData[dgsEle].clickingSoundVolume then return 1 end
-	if not dgsElementData[dgsEle].clickingSoundVolume[button] then return 1 end
-	return dgsElementData[dgsEle].clickingSoundVolume[button][state] or 1
+	local eleData = dgsElementData[dgsEle]
+	if not eleData.clickingSoundVolume then return 1 end
+	if not eleData.clickingSoundVolume[button] then return 1 end
+	return eleData.clickingSoundVolume[button][state] or 1
 end
 
 function dgsSetPostGUI(dgsEle,state)
@@ -593,7 +650,7 @@ function dgsGetMouseClickGUI(button)
 	end
 end
 
-function dgsIsMouseWithinGUI(ele) return MouseData.WithinElements[ele] and true or false end
+function dgsIsMouseWithinGUI(ele) return (isCursorShowing() and MouseData.WithinElements[ele]) and true or false end
 function dgsGetMouseEnterGUI() return MouseData.entered end
 function dgsGetMouseLeaveGUI() return MouseData.left end
 function dgsGetFocusedGUI() return MouseData.focused end
@@ -605,17 +662,9 @@ function dgsGetInputMode(...) return guiGetInputMode(...) end
 function dgsGetBrowser(b) return b end
 function dgsGetRootElement() return resourceRoot end
 
-function GlobalEditMemoBlurCheck()
-	local dxChild = source == GlobalEdit and dgsElementData[source].linkedDxEdit or dgsElementData[source].linkedDxMemo
-	if isElement(dxChild) and MouseData.focused == dxChild then
-		dgsBlur(dxChild,true)
-	end
-end
-
 function dgsFocus(dgsEle)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsFocus",1,"dgs-dxelement")) end
 	local lastFront = MouseData.focused
-	MouseData.focused = dgsEle
 	local eleType = dgsElementType[dgsEle]
 	if eleType == "dgs-dxbrowser" then
 		focusBrowser(dgsEle)
@@ -630,29 +679,25 @@ function dgsFocus(dgsEle)
 		guiFocus(GlobalMemo)
 		dgsElementData[GlobalMemo].linkedDxMemo = dgsEle
 	end
-	triggerEvent("onDgsFocus",dgsEle,lastFront)
+	if isElement(lastFront) and dgsEle ~= lastFront then
+		triggerEvent("onDgsBlur",lastFront,dgsEle)
+	end
 	MouseData.focused = dgsEle
+	triggerEvent("onDgsFocus",dgsEle,isElement(lastFront) and lastFront or nil)
 	return true
 end
 
-function dgsBlur(dgsEle,noTriggerGUI)
-	if not dgsEle or not isElement(MouseData.focused) or dgsEle ~= MouseData.focused then return end
+function dgsBlur(dgsEle)
+	if not dgsEle then dgsEle = MouseData.focused end
+	if not isElement(dgsEle) or dgsEle ~= MouseData.focused then return true end
 	local eleType = dgsElementType[dgsEle]
+	MouseData.focused = nil
 	if eleType == "dgs-dxbrowser" then
 		focusBrowser()
-	elseif eleType == "dgs-dxedit" then
-		if not noTriggerGUI then
-			guiBlur(GlobalEdit)
-		end
-		dgsElementData[GlobalEdit].linkedDxEdit = nil
-	elseif eleType == "dgs-dxmemo" then
-		if not noTriggerGUI then
-			guiBlur(GlobalMemo)
-		end
-		dgsElementData[GlobalEdit].linkedDxMemo = nil
+	else
+		blurEditMemo(dgsEle)
 	end
 	triggerEvent("onDgsBlur",dgsEle)
-	MouseData.focused = nil
 	return true
 end
 
@@ -669,11 +714,11 @@ function dgsGetCursorVisible()
 	return (isCursorShowing() or isChatBoxInputActive() or isConsoleActive()) and not isMainMenuActive() --Is visible in game
 end
 
-function dgsGetCursorPosition(rltEle,rlt,forceOnScreen,onSurface)
+function dgsGetCursorPosition(rltEle,rlt,forceOnScreen)
 	if dgsGetCursorVisible() then
-		if MouseData.intfaceHitElement and not forceOnScreen then
-			local absX,absY = MouseData.dgsCursorPos[1],MouseData.dgsCursorPos[2]
-			local resolution = dgsElementData[MouseData.intfaceHitElement].resolution
+		if MouseData.lock3DInterface and not forceOnScreen then
+			local absX,absY = dgsElementData[MouseData.lock3DInterface].cursorPosition[1],dgsElementData[MouseData.lock3DInterface].cursorPosition[2]
+			local resolution = dgsElementData[MouseData.lock3DInterface].resolution
 			if not rltEle and not dgsIsType(rltEle) then
 				if rlt then
 					return absX/resolution[1],absY/resolution[2]
@@ -829,21 +874,15 @@ function dgsIsDragNDropData()
 	return dgsDragDropBoard[0]
 end
 
-function dgsAddDragHandler(dgsEle,dragData,preview,previewColor,previewOffsetX,previewOffsetY,previewWidth,previewHeight,previewHorizontalAlign,previewVerticalAlign)
-	return dgsSetData(dgsEle,"dragHandler",{dragData,preview,previewColor,previewOffsetX,previewOffsetY,previewWidth,previewHeight,previewHorizontalAlign,previewVerticalAlign})
-end
-
-function dgsAddDropHandler(dgsEle)
-	return dgsSetData(dgsEle,"dropHandler",true)
+function dgsAddDragHandler(dgsEle,...)
+	--dragData,preview,previewColor,previewOffsetX,previewOffsetY,previewWidth,previewHeight,previewHorizontalAlign,previewVerticalAlign
+	return dgsSetData(dgsEle,"dragHandler",{...})
 end
 
 function dgsRemoveDragHandler(dgsEle)
 	return dgsSetData(dgsEle,"dragHandler",nil)
 end
 
-function dgsRemoveDropHandler(dgsEle)
-	return dgsSetData(dgsEle,"dropHandler",nil)
-end
 ------------Auto Destroy
 function dgsAttachToAutoDestroy(element,dgsEle,index)
 	if not isElement(element) then return true end
@@ -865,105 +904,6 @@ function dgsDetachFromAutoDestroy(element,dgsEle)
 	if id then tableRemove(dgsElementData[dgsEle].autoDestroyList,id) end
 	return true
 end
--------------------------
-addEventHandler("onDgsCreate",root,function(theResource)
-	local style
-	local res = theResource or "global"
-	if styleManager.styles[res] and styleManager.styles[res].using then
-		local _style = styleManager.styles[res]
-		local _using = styleManager.styles[res].using
-		if _style.loaded[_using] then
-			style = _style.loaded[_using]
-		else
-			style = styleManager.styles.global
-			style = style.loaded[style.using]
-		end
-	else
-		style = styleManager.styles.global
-		style = style.loaded[style.using]
-	end
-	
-	dgsElementData[source] = dgsElementData[source] or {}
-	local eleData = dgsElementData[source]
-	eleData.positionAlignment = {"left","top"}
-	eleData.visible = true
-	eleData.enabled = true
-	eleData.ignoreParentTitle = false
-	eleData.textRelative = false
-	eleData.alpha = 1
-	eleData.hitoutofparent = false
-	eleData.PixelInt = true
-	eleData.functionRunBefore = true --true : after render; false : before render
-	eleData.disabledColor = style.disabledColor
-	eleData.disabledColorPercent = style.disabledColorPercent
-	eleData.postGUI = dgsRenderSetting.postGUI == nil and true or false
-	eleData.outline = false
-	eleData.changeOrder = style.changeOrder --Change the order when "bring to front" or clicked
-	eleData.attachedTo = false
-	eleData.attachedBy = false
-	eleData.enableFullEnterLeaveCheck = false
-	eleData.clickCoolDown = false
-	eleData.settingListener = {}
-	eleData.clickingSound = false
-	eleData.clickingSoundVolume = false
-	eleData.cursorPosition = {[0]=0}
-	ChildrenTable[source] = ChildrenTable[source] or {}
-	insertResource(theResource,source)
-	local getPropagated = dgsElementType[source] == "dgs-dxwindow"
-	addEventHandler("onDgsBlur",source,function()
-		dgsElementData[this].isFocused = false
-	end,getPropagated)
-
-	addEventHandler("onDgsFocus",source,function()
-		dgsElementData[this].isFocused = true
-	end,getPropagated)
-end,true)
-
-function dgsClear(theType,res)
-	if res == true then
-		if not theType then
-			for theRes,guiTable in pairs(boundResource) do
-				for dgsEle in pairs(guiTable) do
-					if isElement(dgsEle) then destroyElement(dgsEle) end
-				end
-				boundResource[theRes] = nil
-			end
-			return true
-		else
-			for theRes,guiTable in pairs(boundResource) do
-				for dgsEle in pairs(guiTable) do
-					if dgsElementType[dgsEle] == theType then
-						if isElement(dgsEle) then
-							boundResource[theRes][dgsEle] = nil
-							destroyElement(dgsEle)
-						end
-					end
-				end
-			end
-			return true
-		end
-	else
-		local res = res or sourceResource
-		if not theType then
-			for dgsEle in pairs(boundResource[res]) do
-				if isElement(dgsEle) then destroyElement(dgsEle) end
-			end
-			boundResource[res] = nil
-			return true
-		else
-			for dgsEle in pairs(boundResource[res]) do
-				if dgsElementType[dgsEle] == theType then
-					if isElement(dgsEle) then
-						boundResource[res][dgsEle] = nil
-						destroyElement(dgsEle)
-					end
-				end
-			end
-			return true
-		end
-	end
-	return false
-end
 
 ----------------------------------Multi Language Support
 function dgsTranslationTableExists(name)
@@ -976,7 +916,7 @@ function dgsSetTranslationTable(name,tab)
 	if not(not table or type(tab) == "table") then error(dgsGenAsrt(tab,"dgsSetTranslationTable",1,"table/nil")) end
 	if tab then
 		LanguageTranslation[name] = tab
-		LanguageTranslationAttach[name] = LanguageTranslationAttach[name] or {}
+		if not LanguageTranslationAttach[name] then LanguageTranslationAttach[name] = {} end
 		dgsApplyLanguageChange(name,LanguageTranslation[name],LanguageTranslationAttach[name])
 	elseif dgsTranslationTableExists(name) then
 		LanguageTranslation[name] = false
@@ -1003,9 +943,13 @@ function dgsAttachToTranslation(dgsEle,name)
 		LanguageTranslationAttach[name] = LanguageTranslationAttach[name] or {}
 		tableInsert(LanguageTranslationAttach[name],dgsEle)
 	end
-	local text = dgsElementData[dgsEle]._translationText
+	local text = dgsElementData[dgsEle]._translation_text
 	if text then
 		dgsSetData(dgsEle,"text",text)
+	end
+	local font = dgsElementData[dgsEle]._translation_font
+	if font then
+		dgsSetData(dgsEle,"font",font)
 	end
 	return true
 end
@@ -1039,38 +983,124 @@ function dgsGetTranslationValue(name,key)
 	return false
 end
 --------------Translation Internal
-LanguageTranslationSupport = {
-	"dgs-dx3dtext",
-	"dgs-dxbutton",
-	"dgs-dxgridlist",
-	"dgs-dxradiobutton",
-	"dgs-dxcheckbox",
-	"dgs-dxlabel",
-	"dgs-dxwindow",
-	"dgs-dxselector",
-	"dgs-dxtab",
-	"dgs-dxcombobox",
-	"dgs-dxcombobox-Box",
-}
-function dgsTranslate(dgsEle,textTable,sourceResource)
-	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsTranslate",1,"dgs-dxelement")) end
-	if type(textTable) == "table" then
-		local translation = dgsElementData[dgsEle]._translang or resourceTranslation[sourceResource or getThisResource()]
-		local value = translation and LanguageTranslation[translation] and LanguageTranslation[translation][textTable[1]] or textTable[1]
-		local count = 2
-		while true do
-			local textArg = textTable[count]
-			if not textArg then break end
-			if type(textArg) == "table" then
-				textArg = dgsTranslate(dgsEle,textArg,sourceResource)
+local cTranslationEnvMeta = {
+	__index = {
+		table = table,
+		string = string,
+		find = function(tableToFind,value)
+			for i=1,#tableToFind do
+				if tableToFind[i] == value then return i end
 			end
-			local _value = value:gsub("%%rep%%",textArg,1)
-			if _value == value then break end
-			count = count+1
-			value = _value
+			return false
+		end,
+	}
+}
+local cTranslationBuffer = {}
+function dgsTranslate(dgsEle,textTable,sourceResource,skipPropertyListener)
+	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsTranslate",1,"dgs-dxelement")) end
+	local eleData = dgsElementData[dgsEle]
+	if type(textTable) == "table" then
+		local translation = eleData._translang or resourceTranslation[sourceResource or getThisResource()]
+		local value = translation and LanguageTranslation[translation] and LanguageTranslation[translation][textTable[1]] or textTable[1]
+		local result,status = value
+		if type(value) == "table" then	--Conditional Translation
+			--[[ --Conditional Translation
+			TestText={
+				"health == 'Superman'",				"You are a superman",
+				"find({0}, health)",				"Your health is 0",
+				"health <= 40",						"Your health is low",
+				"health <= 60",						"Your health is medium",
+				"health <= 80",						"Your health is high",
+				"Your health is $health",
+			},
+			]]
+			if #value%2 == 0 then error(dgsGenAsrt(dgsEle,"dgsTranslate",_,_,_,"Bad conditional translation item count (should be odd, got even), maybe missing default translation")) end
+			result = value[#value]
+			for i=1,#value-1,2 do --Odd item is conditional, Even item is translation, and skip default translation
+				if not cTranslationBuffer[value[i]] then
+					local fnc,err = loadstring("return "..value[i])
+					if not fnc then error("Bad argument @dgsTranslate, failed to load conditional ("..err..") at dictionary:"..translation.."[\""..textTable[1].."\"]["..math.floor(i/2).."]") end
+					cTranslationBuffer[value[i]] = fnc	--buffer
+				end
+				local condition = cTranslationBuffer[value[i]]
+				setmetatable(textTable,cTranslationEnvMeta)
+				setfenv(condition,textTable)
+				status,result = pcall(condition)
+				if status and result then
+					result = value[i+1]
+					break
+				end
+			end
+			local count = 2
+			while true do
+				local textArg = textTable[count]
+				if not textArg then break end
+				if type(textArg) == "table" then
+					textArg = dgsTranslate(dgsEle,textArg,sourceResource)
+				end
+				local _value = result:gsub("%%rep%%",textArg,1)
+				if _value == result then break end
+				count = count+1
+				result = _value
+			end
+		else	--Replacing Translation
+			local count = 2
+			while true do
+				local textArg = textTable[count]
+				if not textArg then break end
+				if type(textArg) == "table" then
+					textArg = dgsTranslate(dgsEle,textArg,sourceResource)
+				end
+				local _value = value:gsub("%%rep%%",textArg,1)
+				if _value == value then break end
+				count = count+1
+				result = _value
+			end
 		end
-		value = value:gsub("%%rep%%","")
-		return value
+		for k,v in pairs(textTable) do
+			if type(k) == "string" then
+				result = result:gsub("$"..k,v)
+			end
+		end
+		if not skipPropertyListener and eleData.translationListener then	--Dynamic Translation
+			for property in pairs(eleData.translationListener) do
+				local propertyValue = eleData[property]
+				if type(propertyValue) == "table" then
+					propertyValue = dgsTranslate(dgsEle,propertyValue,sourceResource,true)
+				end
+				result = result:gsub("$"..property,propertyValue)
+			end
+		end
+		result = result:gsub("%%rep%%","")
+		return result
+	end
+	return false
+end
+
+function dgsTranslationAddPropertyListener(dgsEle,property)
+	local translationListener = dgsElementData[dgsEle].translationListener or {}
+	translationListener[property] = true
+	return dgsSetData(dgsEle,"translationListener",translationListener)
+end
+
+function dgsTranslationRemovePropertyListener(dgsEle,property)
+	local translationListener = dgsElementData[dgsEle].translationListener or {}
+	translationListener[property] = nil
+	return dgsSetData(dgsEle,"translationListener",translationListener)
+end
+
+function dgsGetTranslationFont(dgsEle,fontTable,sourceResource)
+	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsTranslate",1,"dgs-dxelement")) end
+	if type(fontTable) == "table" then
+		local translation = dgsElementData[dgsEle]._translang or resourceTranslation[sourceResource or getThisResource()]
+		local font = translation and LanguageTranslation[translation] and LanguageTranslation[translation][fontTable[1]] or fontTable[1]
+		local fontType = dgsGetType(font)
+		if fontType == "dx-font" then
+			return font
+		elseif fontType == "string" then
+			if not(fontBuiltIn[font]) then return "default" end
+			return font
+		end
 	end
 	return false
 end
@@ -1080,48 +1110,7 @@ function dgsApplyLanguageChange(name,translation,attach)
 		local dgsEle = attach[i]
 		if isElement(dgsEle) then
 			local dgsType = dgsGetType(dgsEle)
-			if dgsType == "dgs-dxgridlist" then
-				local columnData = dgsElementData[dgsEle].columnData
-				for cIndex=1,#columnData do
-					local text = columnData[cIndex]._translationText
-					if text then
-						columnData[cIndex][1] = dgsTranslate(dgsEle,text,sourceResource)
-					end
-				end
-				dgsSetData(dgsEle,"columnData",columnData)
-				local rowData = dgsElementData[dgsEle].rowData
-				for rID=1,#rowData do
-					for cID=1,#rowData[rID] do
-						local text = rowData[rID][cID]._translationText
-						if text then
-							rowData[rID][cID][1] = dgsTranslate(dgsEle,text,sourceResource)
-						end
-					end
-				end
-				dgsSetData(dgsEle,"rowData",rowData)
-			elseif dgsType == "dgs-dxcombobox" then
-				local text = dgsElementData[dgsEle]._translationText
-				if text then
-					dgsComboBoxSetCaptionText(dgsEle,text)
-				end
-				local itemData = dgsElementData[dgsEle].itemData
-				for itemID=1,#itemData do
-					local text = itemData[itemID]._translationText
-					if text then
-						itemData[itemID][1] = dgsTranslate(dgsEle,text,sourceResource)
-					end
-				end
-				dgsSetData(dgsEle,"itemData",itemData)
-			elseif dgsType == "dgs-dxswitchbutton" then
-				local textOn = dgsElementData[dgsEle]._translationtextOn
-				local textOff = dgsElementData[dgsEle]._translationtextOff
-				dgsSwitchButtonSetText(dgsEle,textOn,textOff)
-			else
-				local text = dgsElementData[dgsEle]._translationText
-				if text then
-					dgsSetData(dgsEle,"text",text)
-				end
-			end
+			if dgsOnTranslationUpdate[dgsType] then dgsOnTranslationUpdate[dgsType](dgsEle) else dgsOnTranslationUpdate.default(dgsEle) end
 		end
 	end
 end
@@ -1149,27 +1138,21 @@ function dgsTranslateText(textTable)
 end
 
 ----Compatibility
+dgsRegisterDeprecatedFunction("dgsSetSide","dgsSetPositionAlignment")
+dgsRegisterDeprecatedFunction("dgsGetSide","dgsGetPositionAlignment")
+local _dgsSetSide = dgsSetSide
+local _dgsGetSide = dgsGetSide
 function dgsSetSide(dgsEle,which,where)
-	if not getElementData(localPlayer,"DGS-DEBUG-C") then
-		outputDebugString("Deprecated function @'dgsSetSide', use 'dgsSetPositionAlignment' instead. To fix, run it again with command /debugdgs c",2)
-	else
-		error("Found deprecated function @'dgsSetSide', replace with 'dgsSetPositionAlignment'")
-	end
 	if which == "lor" then
-		dgsSetPositionAlignment(dgsEle,where)
+		_dgsSetSide(dgsEle,where)
 	elseif which == "tob" then
-		dgsSetPositionAlignment(dgsEle,_,where)
+		_dgsSetSide(dgsEle,_,where)
 	end
 	return true
 end
 
 function dgsGetSide(dgsEle,which)
-	if not getElementData(localPlayer,"DGS-DEBUG-C") then
-		outputDebugString("Deprecated function @'dgsGetSide', use 'dgsGetPositionAlignment' instead. To fix, run it again with command /debugdgs c",2)
-	else
-		error("Found deprecated function @'dgsGetSide', replace with 'dgsGetPositionAlignment'")
-	end
-	local h,v = dgsGetPositionAlignment(dgsEle,_,where)
+	local h,v = _dgsGetSide(dgsEle,_,where)
 	if which == "lor" then
 		return h
 	elseif which == "tob" then
@@ -1186,3 +1169,103 @@ end)
 
 addEvent("onDgsCursorMove",true)
 addEventHandler("onDgsMouseMove",root,function(...) triggerEvent("onDgsCursorMove",source,...) end)
+
+---------------DGS XML Loader
+--[[
+function dgsCreateFromXML(xmlFile)
+	if getUserdataType(xmlFile) == "xml-node" then
+		local createdTable = {}
+		local elementIDUsed = {}
+		local tree = function(xmlNode)
+			local eleType = xmlNodeGetName(xmlNode)
+			if eleType ~= "root" then
+				local attrs = xmlNodeGetAttributes(xmlNode)
+				
+				
+				
+				local xmlChildren = xmlNodeGetChildren(xmlNode)
+				for i=1,#xmlChildren do
+					local child = xmlChildren[i]
+					tree(child)
+				end
+			end
+		end
+	elseif type(xmlFile) == "string" then
+		local pathOrStr = xmlFile
+		local xml
+		if not fileExists(pathOrStr) then
+			if not fileExists(":"..getResourceName(sourceResource).."/"..pathOrStr) then
+				xml = xmlLoadString(pathOrStr)
+			else
+				xml = xmlLoadFile(":"..getResourceName(sourceResource).."/"..pathOrStr)
+			end
+		else
+			xml = xmlLoadFile(xmlFile)
+		end
+		local createdTable = dgsCreateFromXML(xml)
+		xmlUnloadFile(xml)
+		return createdTable
+	end
+end]]
+---------------DGS 3D Common Functions
+function dgs3DSetPosition(ele3D,x,y,z)
+	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DSetPosition",1,"dgs-dx3delement")) end
+	if not(type(x) == "number") then error(dgsGenAsrt(x,"dgs3DSetPosition",2,"number")) end
+	if not(type(y) == "number") then error(dgsGenAsrt(y,"dgs3DSetPosition",3,"number")) end
+	if not(type(z) == "number") then error(dgsGenAsrt(z,"dgs3DSetPosition",4,"number")) end
+	return dgsSetData(ele3D,"position",{x,y,z})
+end
+dgsRegisterDeprecatedFunction("dgs3DImageSetPosition","dgs3DSetPosition")
+dgsRegisterDeprecatedFunction("dgs3DInterfaceSetPosition","dgs3DSetPosition")
+dgsRegisterDeprecatedFunction("dgs3DLineSetPosition","dgs3DSetPosition")
+dgsRegisterDeprecatedFunction("dgs3DTextSetPosition","dgs3DSetPosition")
+
+function dgs3DGetPosition(ele3D)
+	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DGetPosition",1,"dgs-dx3delement")) end
+	local pos = dgsElementData[ele3D].position
+	return pos[1],pos[2],pos[3]
+end
+dgsRegisterDeprecatedFunction("dgs3DImageGetPosition","dgs3DGetPosition")
+dgsRegisterDeprecatedFunction("dgs3DInterfaceGetPosition","dgs3DGetPosition")
+dgsRegisterDeprecatedFunction("dgs3DLineGetPosition","dgs3DGetPosition")
+dgsRegisterDeprecatedFunction("dgs3DTextGetPosition","dgs3DGetPosition")
+
+function dgs3DSetInterior(ele3D,interior)
+	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DSetInterior",1,"dgs-dx3delement")) end
+	local inRange = interior >= -1
+	if not(type(interior) == "number" and inRange) then error(dgsGenAsrt(interior,"dgs3DSetInterior",2,"number","-1~+∞",inRange and "Out Of Range")) end
+	return dgsSetData(ele3D,"interior",interior-interior%1)
+end
+dgsRegisterDeprecatedFunction("dgs3DImageSetInterior","dgs3DSetInterior")
+dgsRegisterDeprecatedFunction("dgs3DInterfaceSetInterior","dgs3DSetInterior")
+dgsRegisterDeprecatedFunction("dgs3DLineSetInterior","dgs3DSetInterior")
+dgsRegisterDeprecatedFunction("dgs3DTextSetInterior","dgs3DSetInterior")
+
+function dgs3DGetInterior(ele3D)
+	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DGetInterior",1,"dgs-dx3delement")) end
+	return dgsElementData[ele3D].interior or -1
+end
+dgsRegisterDeprecatedFunction("dgs3DImageGetInterior","dgs3DGetInterior")
+dgsRegisterDeprecatedFunction("dgs3DInterfaceGetInterior","dgs3DGetInterior")
+dgsRegisterDeprecatedFunction("dgs3DLineGetInterior","dgs3DGetInterior")
+dgsRegisterDeprecatedFunction("dgs3DTextGetInterior","dgs3DGetInterior")
+
+function dgs3DSetDimension(ele3D,dimension)
+	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DSetDimension",1,"dgs-dx3delement")) end
+	local inRange = dimension >= -1 and dimension <= 65535
+	if not(type(dimension) == "number" and dimension) then error(dgsGenAsrt(dimension,"dgs3DSetDimension",2,"number","-1~+∞",inRange and "Out Of Range")) end
+	return dgsSetData(ele3D,"dimension",dimension-dimension%1)
+end
+dgsRegisterDeprecatedFunction("dgs3DImageSetDimension","dgs3DSetDimension")
+dgsRegisterDeprecatedFunction("dgs3DInterfaceSetDimension","dgs3DSetDimension")
+dgsRegisterDeprecatedFunction("dgs3DLineSetDimension","dgs3DSetDimension")
+dgsRegisterDeprecatedFunction("dgs3DTextSetDimension","dgs3DSetDimension")
+
+function dgs3DGetDimension()
+	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DGetDimension",1,"dgs-dx3delement")) end
+	return dgsElementData[ele3D].dimension or -1
+end
+dgsRegisterDeprecatedFunction("dgs3DImageGetDimension","dgs3DGetDimension")
+dgsRegisterDeprecatedFunction("dgs3DInterfaceGetDimension","dgs3DGetDimension")
+dgsRegisterDeprecatedFunction("dgs3DLineGetDimension","dgs3DGetDimension")
+dgsRegisterDeprecatedFunction("dgs3DTextGetDimension","dgs3DGetDimension")

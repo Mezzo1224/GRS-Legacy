@@ -1,3 +1,5 @@
+dgsLogLuaMemory()
+dgsRegisterPluginType("dgs-dxnineslice")
 local nineSliceShader
 function nineSliceRender(posX,posY,width,height,self,rotation,rotationCenterOffsetX,rotationCenterOffsetY,color,postGUI)
 	local selfData = dgsElementData[self]
@@ -9,7 +11,8 @@ end
 
 function dgsCreateNineSlice(texture,gridXLeft,gridXRight,gridYTop,gridYBottom,relative)
 	relative = relative and true or false
-	if not(dgsGetType(texture) == "texture") then error(dgsGenAsrt(texture,"dgsCreateNineSlice",1,"texture")) end
+	local imgType = dgsGetType(texture)
+	if not(imgType == "texture" or imgType == "svg") then error(dgsGenAsrt(texture,"dgsCreateNineSlice",1,"texture")) end
 	if not(type(gridXLeft) == "number") then error(dgsGenAsrt(gridXLeft,"dgsCreateNineSlice",2,"number")) end
 	if not(type(gridXLeft) == "number") then error(dgsGenAsrt(gridXLeft,"dgsCreateNineSlice",3,"number")) end
 	if not(type(gridYTop) == "number") then error(dgsGenAsrt(gridYTop,"dgsCreateNineSlice",4,"number")) end
@@ -68,7 +71,8 @@ end
 
 function dgsNineSliceSetTexture(nineSlice,texture)
 	if not(dgsGetPluginType(nineSlice) == "dgs-dxnineslice") then error(dgsGenAsrt(nineSlice,"dgsNineSliceSetTexture",1,"dgs-dxnineslice")) end
-	if not(dgsGetType(texture) == "texture") then error(dgsGenAsrt(texture,"dgsNineSliceSetTexture",2,"texture")) end
+	local imgType = dgsGetType(texture)
+	if not(imgType == "texture" or imgType == "svg") then error(dgsGenAsrt(texture,"dgsNineSliceSetTexture",2,"texture")) end
 	dxSetShaderValue(shader,"sourceTexture",texture)
 	dgsSetData(nineSlice,"renderImage",texture)
 	local matX,matY = dxGetMaterialSize(texture)
@@ -90,16 +94,16 @@ float2 tR = float2(32,32);	//Texture Resolution
 float2 rR = float2(32,32);	//Render Image Resolution
 
 sampler2D Sampler = sampler_state{
-    Texture		= sourceTexture;
-    MinFilter	= None;
-    MagFilter	= None;
-    MipFilter	= None;
-    AddressU	= Wrap;
-    AddressV	= Wrap;
+	Texture		= sourceTexture;
+	MinFilter	= None;
+	MagFilter	= None;
+	MipFilter	= None;
+	AddressU	= Wrap;
+	AddressV	= Wrap;
 };
 
 float map(float v,float a,float b,float c,float d) {
-    return (v-a)/(b-a)*(d-c)+c;
+	return (v-a)/(b-a)*(d-c)+c;
 }
 
 float4 nineSlice(float2 tex:TEXCOORD0,float4 color:COLOR0):COLOR0{

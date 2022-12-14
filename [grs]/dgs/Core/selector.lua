@@ -1,7 +1,34 @@
+dgsLogLuaMemory()
+dgsRegisterType("dgs-dxselector","dgsBasic","dgsType2D")
+dgsRegisterProperties("dgs-dxselector",{
+	alignment = 				{	{ PArg.String,PArg.String }	},
+	clip = 						{	PArg.Bool	},
+	colorCoded = 				{	PArg.Bool	},
+	enableScroll = 				{	PArg.Bool	},
+	font = 						{	PArg.Font+PArg. String	},
+	isHorizontal = 				{	PArg.Bool	},
+	isReversed = 				{	PArg.Bool	},
+	itemTextColor = 			{	PArg.Color	},
+	itemTextSize = 				{	{ PArg.Number, PArg.Number }	},
+	placeHolder = 				{	PArg.String	},
+	select = 					{	PArg.Number	},
+	selectorImageColorLeft = 	{	{ PArg.Color, PArg.Color, PArg.Color }	},
+	selectorImageLeft = 		{	{ PArg.Material+PArg.Nil, PArg.Material+PArg.Nil, PArg.Material+PArg.Nil }	},
+	selectorImageColorRight = 	{	{ PArg.Color, PArg.Color, PArg.Color }	},
+	selectorImageRight = 		{	{ PArg.Material+PArg.Nil, PArg.Material+PArg.Nil, PArg.Material+PArg.Nil }	},
+	selectorSize = 				{	{ PArg.Number, PArg.Number, PArg.Bool }	},
+	selectorText = 				{	{ PArg.String, PArg.String }	},
+	selectorTextColor = 		{	{ PArg.Color, PArg.Color, PArg.Color }	},
+	selectorTextSize = 			{	{ PArg.Number, PArg.Number }	},
+	shadow = 					{	{ PArg.Number, PArg.Number, PArg.Color, PArg.Bool+PArg.Nil }, PArg.Nil	},
+	subPixelPositioning = 		{	PArg.Bool	},
+	text = 						{	PArg.Text	},
+	textColor = 				{	PArg.Color	},
+	textSize = 					{	{ PArg.Number,PArg.Number }	},
+})
 --Dx Functions
-local dxDrawImage = dxDrawImageExt
-local dxDrawText = dxDrawText
-local dxDrawRectangle = dxDrawRectangle
+local dxDrawImage = dxDrawImage
+local dgsDrawText = dgsDrawText
 --DGS Functions
 local dgsSetType = dgsSetType
 local dgsGetType = dgsGetType
@@ -18,16 +45,17 @@ local tonumber = tonumber
 local type = type
 local tableInsert = table.insert
 local tableRemove = table.remove
-local mathClamp = math.restrict
+local mathClamp = math.clamp
 --[[
 Selector Data Structure:
 {
-	{text,alignment,color,colorcoded,sizex,sizey,font,translationTest,data,imageData},
-	{text,alignment,color,colorcoded,sizex,sizey,font,translationTest,data,imageData},
-	{text,alignment,color,colorcoded,sizex,sizey,font,translationTest,data,imageData},
+	{text,alignment,color,colorCoded,sizex,sizey,font,translationTest,data,imageData},
+	{text,alignment,color,colorCoded,sizex,sizey,font,translationTest,data,imageData},
+	{text,alignment,color,colorCoded,sizex,sizey,font,translationTest,data,imageData},
 }
 ]]
 function dgsCreateSelector(...)
+	local sRes = sourceResource or resource
 	local x,y,w,h,relative,parent,textColor,scaleX,scaleY,shadowoffsetx,shadowoffsety,shadowcolor
 	if select("#",...) == 1 and type(select(1,...)) == "table" then
 		local argTable = ...
@@ -52,9 +80,8 @@ function dgsCreateSelector(...)
 	if not(type(h) == "number") then error(dgsGenAsrt(h,"dgsCreateSelector",4,"number")) end
 	local selector = createElement("dgs-dxselector")
 	dgsSetType(selector,"dgs-dxselector")
-	dgsSetParent(selector,parent,true,true)
 		
-	local res = sourceResource or "global"
+	local res = sRes ~= resource and sRes or "global"
 	local style = styleManager.styles[res]
 	local using = style.using
 	style = style.loaded[using]
@@ -74,7 +101,7 @@ function dgsCreateSelector(...)
 		selectorImageLeft = style.selectorImageLeft,
 		selectorImageColorRight = style.selectorImageColorRight,
 		selectorImageRight = style.selectorImageRight,
-		colorcoded = false,
+		colorCoded = false,
 		quickLeap = 0.02,
 		quickLeapState = 0,
 		quickLeapTick = 0,
@@ -90,8 +117,9 @@ function dgsCreateSelector(...)
 		font = style.font or systemFont,
 		select = -1,
 	}
+	dgsSetParent(selector,parent,true,true)
 	calculateGuiPositionSize(selector,x,y,relative or false,w,h,relative or false,true)
-	triggerEvent("onDgsCreate",selector,sourceResource)
+	onDGSElementCreate(selector,sRes)
 	return selector
 end
 
@@ -101,7 +129,7 @@ function dgsSelectorAddItem(selector,text,pos)
 	local alignment = eleData.alignment
 	local itemTextColor = eleData.itemTextColor
 	local itemTextSize = eleData.itemTextSize
-	local colorcoded = eleData.colorcoded
+	local colorCoded = eleData.colorCoded
 	local font = eleData.font
 	local itemData = eleData.itemData
 	local pos = tonumber(pos) or #itemData+1
@@ -114,11 +142,11 @@ function dgsSelectorAddItem(selector,text,pos)
 		tostring(text or ""),
 		alignment,
 		itemTextColor,
-		colorcoded,
+		colorCoded,
 		itemTextSize[1],
 		itemTextSize[2],
 		font,
-		_translationText=_text,
+		_translation_text=_text,
 		{}, --item data
 		nil, -- item image
 	})
@@ -365,6 +393,10 @@ function dgsSelectorRemoveItemImage(selector,i)
 end
 
 ----------------------------------------------------------------
+--------------------------onClicked-----------------------------
+----------------------------------------------------------------
+
+----------------------------------------------------------------
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
 dgsRenderer["dgs-dxselector"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt)
@@ -375,7 +407,7 @@ dgsRenderer["dgs-dxselector"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 	local selector = eleData.selectorText
 	local alignment = eleData.alignment
 	local font = eleData.font
-	local colorcoded = eleData.colorcoded
+	local colorCoded = eleData.colorCoded
 	local placeHolder = eleData.placeHolder
 	local itemTextColorDef = eleData.itemTextColor
 	local selectorSize = eleData.selectorSize
@@ -455,17 +487,13 @@ dgsRenderer["dgs-dxselector"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 			local imageY = y+(imageData[7] and imageData[4]*h or imageData[4])
 			local imageW = imageData[7] and imageData[5]*w or imageData[5]
 			local imageH = imageData[7] and imageData[6]*h or imageData[6]
-			if isElement(imageData[1]) then
-				dxDrawImage(imageX,imageY,imageW,imageH,imageData[1],0,0,0,applyColorAlpha(imageData[2],parentAlpha),isPostGUI)
-			else
-				dxDrawRectangle(imageX,imageY,imageW,imageH,applyColorAlpha(imageData[2],parentAlpha),isPostGUI)
-			end
+			dxDrawImage(imageX,imageY,imageW,imageH,imageData[1],0,0,0,applyColorAlpha(imageData[2],parentAlpha),isPostGUI)
 		end
 		local itemTextColor = type(renderItem[3]) == "table" and renderItem[3][selectorTextColors[2]] or renderItem[3]
-		dxDrawText(renderItem[1],x+selectorSizeX,y,x+w-selectorSizeX,y+h,applyColorAlpha(itemTextColor,parentAlpha),renderItem[5],renderItem[6],renderItem[7],renderItem[2][1],renderItem[2][2],false,false,isPostGUI,renderItem[4])
+		dgsDrawText(renderItem[1],x+selectorSizeX,y,x+w-selectorSizeX,y+h,applyColorAlpha(itemTextColor,parentAlpha),renderItem[5],renderItem[6],renderItem[7],renderItem[2][1],renderItem[2][2],false,false,isPostGUI,renderItem[4])
 	else
 		local itemTextColor = type(itemTextColorDef) == "table" and itemTextColorDef[selectorTextColors[2]] or itemTextColorDef
-		dxDrawText(placeHolder,x+selectorSizeX,y,x+w-selectorSizeX,y+h,applyColorAlpha(itemTextColor,parentAlpha),itemTextSizeDef[1],itemTextSizeDef[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorcoded)
+		dgsDrawText(placeHolder,x+selectorSizeX,y,x+w-selectorSizeX,y+h,applyColorAlpha(itemTextColor,parentAlpha),itemTextSizeDef[1],itemTextSizeDef[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorCoded)
 	end
 	
 	local selectorTextColorLeft = selectorTextColor[selectorTextColors[1]]
@@ -487,40 +515,24 @@ dgsRenderer["dgs-dxselector"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 		local selectorStart = y+selectMinBound
 		local selectorEnd = selectorStart+selectorSizeY
 		if selectorImageColorLeft then
-			if selectorImageLeft then
-				dxDrawImage(x,selectorStart,selectorSizeX,selectorSizeY,selectorImageLeft,0,0,0,applyColorAlpha(selectorImageColorLeft,parentAlpha),isPostGUI,rndtgt)
-			else
-				dxDrawRectangle(x,selectorStart,selectorSizeX,selectorSizeY,applyColorAlpha(selectorImageColorLeft,parentAlpha),isPostGUI)
-			end
+			dxDrawImage(x,selectorStart,selectorSizeX,selectorSizeY,selectorImageLeft,0,0,0,applyColorAlpha(selectorImageColorLeft,parentAlpha),isPostGUI,rndtgt)
 		end
 		if selectorImageColorRight then
-			if selectorImageRight then
-				dxDrawImage(x+w-selectorSizeX,selectorStart,selectorSizeX,selectorSizeY,selectorImageRight,0,0,0,applyColorAlpha(selectorImageColorRight,parentAlpha),isPostGUI,rndtgt)
-			else
-				dxDrawRectangle(x+w-selectorSizeX,selectorStart,selectorSizeX,selectorSizeY,applyColorAlpha(selectorImageColorRight,parentAlpha),isPostGUI)
-			end
+			dxDrawImage(x+w-selectorSizeX,selectorStart,selectorSizeX,selectorSizeY,selectorImageRight,0,0,0,applyColorAlpha(selectorImageColorRight,parentAlpha),isPostGUI,rndtgt)
 		end
-		dxDrawText(selectorTextLeft,x,selectorStart,x+selectorSizeX,selectorEnd,applyColorAlpha(selectorTextColorLeft,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorcoded)
-		dxDrawText(selectorTextRight,x+w-selectorSizeX,selectorStart,x+w,selectorEnd,applyColorAlpha(selectorTextColorRight,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorcoded)
+		dgsDrawText(selectorTextLeft,x,selectorStart,x+selectorSizeX,selectorEnd,applyColorAlpha(selectorTextColorLeft,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorCoded)
+		dgsDrawText(selectorTextRight,x+w-selectorSizeX,selectorStart,x+w,selectorEnd,applyColorAlpha(selectorTextColorRight,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorCoded)
 	else
 		local selectorStart = x+selectMinBound
 		local selectorEnd = selectorStart+selectorSizeX
 		if selectorImageColorLeft then
-			if selectorImageLeft then
-				dxDrawImage(selectorStart,y,selectorSizeX,selectorSizeY,selectorImageLeft,0,0,0,applyColorAlpha(selectorImageColorLeft,parentAlpha),isPostGUI,rndtgt)
-			else
-				dxDrawRectangle(selectorStart,y,selectorSizeX,selectorSizeY,applyColorAlpha(selectorImageColorLeft,parentAlpha),isPostGUI)
-			end
+			dxDrawImage(selectorStart,y,selectorSizeX,selectorSizeY,selectorImageLeft,0,0,0,applyColorAlpha(selectorImageColorLeft,parentAlpha),isPostGUI,rndtgt)
 		end
 		if selectorImageColorRight then
-			if selectorImageRight then
-				dxDrawImage(selectorStart,y+h-selectorSizeY,selectorSizeX,selectorSizeY,selectorImageRight,0,0,0,applyColorAlpha(selectorImageColorRight,parentAlpha),isPostGUI,rndtgt)
-			else
-				dxDrawRectangle(selectorStart,y+h-selectorSizeY,selectorSizeX,selectorSizeY,applyColorAlpha(selectorImageColorRight,parentAlpha),isPostGUI)
-			end
+			dxDrawImage(selectorStart,y+h-selectorSizeY,selectorSizeX,selectorSizeY,selectorImageRight,0,0,0,applyColorAlpha(selectorImageColorRight,parentAlpha),isPostGUI,rndtgt)
 		end
-		dxDrawText(selectorTextLeft,selectorStart,y,selectorEnd,y+selectorSizeY,applyColorAlpha(selectorTextColorLeft,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorcoded)
-		dxDrawText(selectorTextRight,selectorStart,y+h-selectorSizeY,selectorEnd,y+h,applyColorAlpha(selectorTextColorRight,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorcoded)
+		dgsDrawText(selectorTextLeft,selectorStart,y,selectorEnd,y+selectorSizeY,applyColorAlpha(selectorTextColorLeft,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorCoded)
+		dgsDrawText(selectorTextRight,selectorStart,y+h-selectorSizeY,selectorEnd,y+h,applyColorAlpha(selectorTextColorRight,parentAlpha),selectorTextSize[1],selectorTextSize[2],font,alignment[1],alignment[2],false,false,isPostGUI,colorCoded)
 	end
 	return rndtgt,false,mx,my,0,0
 end

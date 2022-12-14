@@ -1,3 +1,5 @@
+dgsLogLuaMemory()
+dgsRegisterPluginType("dgs-dxeffect3d")
 local effect3DShader
 
 function dgsCreateEffect3D(rotFactor)
@@ -28,6 +30,7 @@ function dgsEffect3DMouseMoveCheck()
 		dgsEffect3DRemoveFromScrollPane(source)
 	end
 	local alwaysEnable = dgsElementData[ filter[1] ].alwaysEnable
+	if not isCursorShowing() then return false end
 	if dgsIsMouseWithinGUI(source) or alwaysEnable then
 		local x,y = dgsGetCursorPosition()
 		local spx,spy = dgsGetPosition(source,false,true)
@@ -38,6 +41,28 @@ function dgsEffect3DMouseMoveCheck()
 		filter[2] = dx
 		filter[3] = dy
 	end
+end
+
+function dgsEffect3DSetRotationFactor(effect3d,rotFactor)
+	if not(dgsGetPluginType(effect3d) == "dgs-dxeffect3d") then error(dgsGenAsrt(rectShader,"dgsEffect3DSetRotationFactor",1,"plugin dgs-dxeffect3d")) end
+	assert(type(rotFactor) == "number","Bad argument @dgsEffect3DSetRotationFactor at argument 2, expect number got "..type(rotFactor))
+	return dgsSetData(effect3d,"rotFactor",rotFactor)
+end
+
+function dgsEffect3DGetRotationFactor(effect3d)
+	if not(dgsGetPluginType(effect3d) == "dgs-dxeffect3d") then error(dgsGenAsrt(rectShader,"dgsEffect3DGetRotationFactor",1,"plugin dgs-dxeffect3d")) end
+	return dgsElementData[effect3d].rotFactor
+end
+
+function dgsEffect3DSetAlwaysEnabled(effect3d,state)
+	if not(dgsGetPluginType(effect3d) == "dgs-dxeffect3d") then error(dgsGenAsrt(rectShader,"dgsEffect3DSetAlwaysEnabled",1,"plugin dgs-dxeffect3d")) end
+	assert(type(state) == "boolean","Bad argument @dgsEffect3DSetAlwaysEnabled at argument 2, expect boolean got "..type(state))
+	return dgsSetData(effect3d,"alwaysEnable",state)
+end
+
+function dgsEffect3DGetAlwaysEnabled(effect3d)
+	if not(dgsGetPluginType(effect3d) == "dgs-dxeffect3d") then error(dgsGenAsrt(rectShader,"dgsEffect3DGetAlwaysEnabled",1,"plugin dgs-dxeffect3d")) end
+	return dgsElementData[effect3d].alwaysEnable
 end
 	
 function dgsEffect3DRemoveFromScrollPane(effect3d)

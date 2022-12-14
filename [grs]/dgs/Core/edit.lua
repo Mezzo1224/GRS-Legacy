@@ -1,14 +1,54 @@
+dgsLogLuaMemory()
+dgsRegisterType("dgs-dxedit","dgsBasic","dgsType2D")
+dgsRegisterProperties("dgs-dxedit",{
+	alignment = 					{	{ PArg.String, PArg.String }	},
+	allowCopy = 					{	PArg.Bool	},
+	autoCompleteSkip = 				{	PArg.Bool	},
+	bgColor = 						{	PArg.Color	},
+	bgColorBlur = 					{	PArg.Color	},
+	bgImage = 						{	PArg.Material+PArg.Nil	},
+	bgImageBlur = 					{	PArg.Material+PArg.Nil	},
+	caretColor = 					{	PArg.Color	},
+	caretHeight = 					{	PArg.Number	},
+	caretOffset = 					{	PArg.Number	},
+	caretStyle = 					{	PArg.Number	},
+	caretThick = 					{	PArg.Number	},
+	caretWidth = 					{	{ PArg.Number, PArg.Number, PArg.Bool }	},
+	clearSelection = 				{	PArg.Bool	},
+	enableTabSwitch = 				{	PArg.Bool	},
+	font = 							{	PArg.Font+PArg.String	},
+	masked = 						{	PArg.Bool	},
+	maskText = 						{	PArg.String	},
+	maxLength = 					{	PArg.Number	},
+	padding = 						{	{ PArg.Number, PArg.Number }	},
+	placeHolder = 					{	PArg.String	},
+	placeHolderColor = 				{	PArg.Color	},
+	placeHolderColorCoded = 		{	PArg.Bool	},
+	placeHolderFont = 				{	PArg.Font	},
+	placeHolderIgnoreRenderTarget = {	PArg.Bool	},
+	placeHolderOffset = 			{	{ PArg.Number, PArg.Number }	},
+	placeHolderVisibleWhenFocus = 	{	PArg.Bool	},
+	readOnly = 						{	PArg.Bool	},
+	readOnlyCaretShow = 			{	PArg.Bool	},
+	selectColorBlur = 				{	PArg.Color	},
+	selectColor = 					{	PArg.Color	},
+	shadow = 						{	{ PArg.Number, PArg.Number, PArg.Color, PArg.Number+PArg.Bool+PArg.Nil, PArg.Font+PArg.Nil }, PArg.Nil	},
+	text = 							{	PArg.Text	},
+	textColor = 					{	PArg.Color	},
+	textSize = 						{	{ PArg.Number, PArg.Number }	},
+	typingSound = 					{	PArg.String	},
+	typingSoundVolume = 			{	PArg.Number	},
+})
 --Dx Functions
 local dxDrawLine = dxDrawLine
-local dxDrawImage = dxDrawImageExt
-local dxDrawText = dxDrawText
+local dxDrawImage = dxDrawImage
+local dgsDrawText = dgsDrawText
 local dxGetFontHeight = dxGetFontHeight
 local dxDrawRectangle = dxDrawRectangle
 local dxSetRenderTarget = dxSetRenderTarget
 local dxGetTextWidth = dxGetTextWidth
-local _dxGetTextWidth = dxGetTextWidth
 local dxSetBlendMode = dxSetBlendMode
-local _dxDrawImage = _dxDrawImage
+local __dxDrawImage = __dxDrawImage
 local dxCreateRenderTarget = dxCreateRenderTarget
 --DGS Functions
 local dgsSetType = dgsSetType
@@ -53,6 +93,7 @@ local editsCount = 1
 local autoCompleteParameterFunction = {}
 ----
 function dgsCreateEdit(...)
+	local sRes = sourceResource or resource
 	local x,y,w,h,text,relative,parent,textColor,scaleX,scaleY,bgImage,bgColor,selectMode
 	if select("#",...) == 1 and type(select(1,...)) == "table" then
 		local argTable = ...
@@ -79,16 +120,15 @@ function dgsCreateEdit(...)
 	text = tostring(text or "")
 	local edit = createElement("dgs-dxedit")
 	dgsSetType(edit,"dgs-dxedit")
-	dgsSetParent(edit,parent,true,true)
 	
-	local res = sourceResource or "global"
+	local res = sRes ~= resource and sRes or "global"
 	local style = styleManager.styles[res]
 	local using = style.using
 	style = style.loaded[using]
 	local systemFont = style.systemFontElement
 	
 	style = style.edit
-	local textSizeX,textSizeY = tonumber(scalex) or style.textSize[1], tonumber(scaley) or style.textSize[2]
+	local textSizeX,textSizeY = tonumber(scaleX) or style.textSize[1], tonumber(scaleY) or style.textSize[2]
 	dgsElementData[edit] = {
 		text = "",
 		bgColor = bgColor or style.bgColor,
@@ -105,8 +145,9 @@ function dgsCreateEdit(...)
 		showPos = 0,
 		placeHolder = style.placeHolder,
 		placeHolderFont = systemFont,
+		placeHolderVisibleWhenFocus = false,
 		placeHolderColor = style.placeHolderColor,
-		placeHolderColorcoded = style.placeHolderColorcoded,
+		placeHolderColorCoded = style.placeHolderColorCoded,
 		placeHolderOffset = style.placeHolderOffset,
 		placeHolderTextSize = style.placeHolderTextSize,
 		placeHolderIgnoreRenderTarget = style.placeHolderIgnoreRenderTarget,
@@ -127,6 +168,7 @@ function dgsCreateEdit(...)
 		underlineOffset = 0,
 		lockView = false,
 		allowCopy = true,
+		shadow = nil,
 		autoCompleteShow = false,
 		autoCompleteTextColor = nil,
 		autoCompleteSkip = false,
@@ -145,35 +187,45 @@ function dgsCreateEdit(...)
 		--rtl = nil,	--nil: auto; false:disabled; true: enabled
 		insertMode = false,
 		editCounts = editsCount, --Tab Switch
-		updateTextRTNextFrame = true,
+		updateRTNextFrame = true,
+		
+		renderBuffer = {
+			placeHolderState = false,
+			parentAlphaLast = false,
+			isFocused = false,
+		},
 	}
+	dgsSetParent(edit,parent,true,true)
 	editsCount = editsCount+1
 	calculateGuiPositionSize(edit,x,y,relative or false,w,h,relative or false,true)
-	local sx,sy = dgsGetSize(edit,false)
-	local padding = dgsElementData[edit].padding
-	local sizex,sizey = sx-padding[1]*2,sy-padding[2]*2
-	sizex,sizey = sizex-sizex%1,sizey-sizey%1
-	local bgRT,err = dxCreateRenderTarget(sizex,sizey,true,edit)
-	if bgRT ~= false then
-		dgsAttachToAutoDestroy(bgRT,edit,-1)
-	else
-		outputDebugString(err,2)
-	end
-	dgsElementData[edit].bgRT = bgRT
-	local textRT,err = dxCreateRenderTarget(sizex,sizey,true,edit)
-	if textRT ~= false then
-		dgsAttachToAutoDestroy(textRT,edit,-2)
-	else
-		outputDebugString(err,2)
-	end
-	dgsElementData[edit].textRT = textRT
 	handleDxEditText(edit,text,false,true)
 	dgsEditSetCaretPosition(edit,utf8Len(text))
 	dgsAddEventHandler("onDgsTextChange",edit,"dgsEditCheckAutoComplete",false)
 	dgsAddEventHandler("onDgsMouseMultiClick",edit,"dgsEditCheckMultiClick",false)
 	dgsAddEventHandler("onDgsEditPreSwitch",edit,"dgsEditCheckPreSwitch",false)
-	triggerEvent("onDgsCreate",edit,sourceResource)
+	onDGSElementCreate(edit,sRes)
+	dgsEditRecreateRenderTarget(edit,true)
 	return edit
+end
+
+function dgsEditRecreateRenderTarget(edit,lateAlloc)
+	local eleData = dgsElementData[edit]
+	if isElement(eleData.bgRT) then destroyElement(eleData.bgRT) end
+	if lateAlloc then
+		dgsSetData(edit,"retrieveRT",true)
+	else
+		local padding = eleData.padding
+		local width,height = eleData.absSize[1]-padding[1]*2,eleData.absSize[2]-padding[2]*2
+		width,height = width-width%1,height-height%1
+		local bgRT,err = dxCreateRenderTarget(width,height,true,edit)
+		if bgRT ~= false then
+			dgsAttachToAutoDestroy(bgRT,edit,-1)
+		else
+			outputDebugString(err,2)
+		end
+		dgsSetData(edit,"bgRT",bgRT)
+		dgsSetData(edit,"retrieveRT",nil)
+	end
 end
 
 function dgsEditCheckMultiClick(button,state,x,y,times)
@@ -239,7 +291,7 @@ function dgsEditCheckAutoComplete()
 					local paramLen = utf8Len(textParam)
 					autoCompleteResult[i] = textParam
 					if eleData.caretPos >= currentStart and eleData.caretPos <= currentStart+paramLen+1 then
-						local acParamFunctionName = acTable[foundAC[1]][i]
+						local acParamFunctionName = type(acTable[foundAC[1]]) == "table" and acTable[foundAC[1]][i]
 						if acParamFunctionName then
 							local acParamFunction = autoCompleteParameterFunction[acParamFunctionName] and autoCompleteParameterFunction[acParamFunctionName][1] or function(input) 
 								if input:lower() == acParamFunctionName:sub(1,input:len()):lower() then
@@ -259,7 +311,7 @@ function dgsEditCheckAutoComplete()
 			end
 		end
 		autoCompleteShow.result = table.concat(autoCompleteResult," ")
-		eleData.updateTextRTNextFrame = true
+		eleData.updateRTNextFrame = true
 		dgsSetData(source,"autoCompleteShow",autoCompleteShow)
 	end
 end
@@ -267,8 +319,8 @@ end
 function dgsEditCheckPreSwitch()
 	if not wasEventCancelled() then
 		if not dgsElementData[source].enableTabSwitch then return end
-		local parent = FatherTable[source]
-		local theTable = isElement(parent) and ChildrenTable[parent] or (dgsElementData[source].alwaysOnBottom and BottomFatherTable or CenterFatherTable)
+		local parent = dgsElementData[source].parent
+		local theTable = isElement(parent) and dgsElementData[parent].children or (dgsElementData[source].alwaysOnBottom and BottomFatherTable or CenterFatherTable)
 		local id = dgsElementData[source].editCounts
 		if id then
 			local Next,theFirst
@@ -402,12 +454,12 @@ function dgsEditGetReadOnly(edit)
 	return dgsElementData[edit].readOnly
 end
 
-function dgsEditSetWhiteList(edit,str)
-	if not dgsIsType(edit,"dgs-dxedit") then error(dgsGenAsrt(edit,"dgsEditSetWhiteList",1,"dgs-dxedit")) end
+function dgsEditSetTextFilter(edit,str)
+	if not dgsIsType(edit,"dgs-dxedit") then error(dgsGenAsrt(edit,"dgsEditSetTextFilter",1,"dgs-dxedit")) end
 	if type(str) == "string" then
-		dgsSetData(edit,"whiteList",str)
+		dgsSetData(edit,"textFilter",str)
 	else
-		dgsSetData(edit,"whiteList",nil)
+		dgsSetData(edit,"textFilter",nil)
 	end
 	local eleData = dgsElementData[edit]
 	
@@ -420,23 +472,24 @@ function dgsEditSetWhiteList(edit,str)
 	local font = eleData.font or systemFont
 	local textSize = eleData.textSize
 	local index = dgsEditGetCaretPosition(edit,true)
-	local whiteList = str or ""
+	local textFilter = str or ""
 	local oldText = eleData.text
-	local text = utf8Gsub(eleData.text,whiteList,"")
+	local text = utf8Gsub(eleData.text,textFilter,"")
 	local textLen = utf8Len(text)
 	eleData.text = text
 	if eleData.masked then
 		text = strRep(eleData.maskText,utf8Len(text))
 	end
-	eleData.textFontLen = _dxGetTextWidth(text,textSize[1],font)
+	eleData.textFontLen = dxGetTextWidth(text,textSize[1],font)
 	if index >= textLen then
 		dgsEditSetCaretPosition(edit,textLen)
 	end
 	dgsSetData(edit,"undoHistory",{})
 	dgsSetData(edit,"redoHistory",{})
-	eleData.updateTextRTNextFrame = true
+	eleData.updateRTNextFrame = true
 	triggerEvent("onDgsTextChange",edit,oldText)
 end
+dgsRegisterDeprecatedFunction("dgsEditSetWhiteList","dgsEditSetTextFilter")
 
 function dgsEditInsertText(edit,index,text)
 	if not dgsIsType(edit,"dgs-dxedit") then error(dgsGenAsrt(edit,"dgsEditInsertText",1,"dgs-dxedit")) end
@@ -478,7 +531,7 @@ function dgsEditDeleteText(edit,fromIndex,toIndex,noAffectCaret,historyRecState)
 	if isMask then
 		deletedText = strRep(eleData.maskText,utf8Len(_deletedText))
 	end
-	local deleted = _dxGetTextWidth(deletedText,eleData.textSize[1],eleData.font)
+	local deleted = dxGetTextWidth(deletedText,eleData.textSize[1],eleData.font)
 	local text = utf8Sub(text,1,fromIndex)..utf8Sub(text,toIndex+1)
 	eleData.text = text
 	if not noAffectCaret then
@@ -504,8 +557,8 @@ function dgsEditDeleteText(edit,fromIndex,toIndex,noAffectCaret,historyRecState)
 	if eleData.masked then
 		text = strRep(eleData.maskText,utf8Len(text))
 	end
-	eleData.textFontLen = _dxGetTextWidth(text,eleData.textSize[1],eleData.font)
-	eleData.updateTextRTNextFrame = true
+	eleData.textFontLen = dxGetTextWidth(text,eleData.textSize[1],eleData.font)
+	eleData.updateRTNextFrame = true
 	triggerEvent("onDgsTextChange",edit,oldText)
 	return deletedText
 end
@@ -517,7 +570,7 @@ function dgsEditClearText(edit)
 	dgsSetData(edit,"caretPos",0)
 	dgsSetData(edit,"selectFrom",0)
 	dgsElementData[edit].textFontLen = 0
-	dgsElementData[edit].updateTextRTNextFrame = true
+	dgsElementData[edit].updateRTNextFrame = true
 	triggerEvent("onDgsTextChange",edit,oldText)
 	return true
 end
@@ -579,29 +632,11 @@ end
 -----------------Internal Functions
 function configEdit(edit)
 	local eleData = dgsElementData[edit]
-	local w,h = eleData.absSize[1],eleData.absSize[2]
-	local px,py = w-eleData.padding[1]*2,h-eleData.padding[2]*2
-	px,py = px-px%1,py-py%1
-	if isElement(eleData.bgRT) then destroyElement(eleData.bgRT) end
-	if isElement(eleData.textRT) then destroyElement(eleData.textRT) end
-	local bgRT,err = dxCreateRenderTarget(px,py,true,edit)
-	if bgRT ~= false then
-		dgsAttachToAutoDestroy(bgRT,edit,-1)
-	else
-		outputDebugString(err,2)
-	end
-	dgsSetData(edit,"bgRT",bgRT)
-	local textRT,err = dxCreateRenderTarget(px,py,true,edit)
-	if textRT ~= false then
-		dgsAttachToAutoDestroy(textRT,edit,-2)
-	else
-		outputDebugString(err,2)
-	end
-	dgsSetData(edit,"textRT",textRT)
+	dgsEditRecreateRenderTarget(edit,true)
 	local oldPos = dgsEditGetCaretPosition(edit)
 	dgsEditSetCaretPosition(edit,0)
 	dgsEditSetCaretPosition(edit,oldPos)
-	eleData.updateTextRTNextFrame = true
+	eleData.updateRTNextFrame = true
 end
 
 function resetEdit(x,y)
@@ -655,30 +690,30 @@ function searchEditMousePosition(edit,posx)
 	for i=1,sto do
 		local stoSfrom_Half = (sto+sfrom)*0.5
 		local stoSfrom_Half = stoSfrom_Half-stoSfrom_Half%1
-		local strlen = _dxGetTextWidth(utf8Sub(text,sfrom+1,stoSfrom_Half),txtSizX,font)
+		local strlen = dxGetTextWidth(utf8Sub(text,sfrom+1,stoSfrom_Half),txtSizX,font)
 		local len1 = strlen+templen
 		if pos < len1 then
 			sto = stoSfrom_Half
 		elseif pos > len1 then
 			sfrom = stoSfrom_Half
-			templen = _dxGetTextWidth(utf8Sub(text,0,sfrom),txtSizX,font)
+			templen = dxGetTextWidth(utf8Sub(text,0,sfrom),txtSizX,font)
 			start = len1
 		elseif pos == len1 then
 			start = len1
 			sfrom = stoSfrom_Half
 			sto = sfrom
-			templen = _dxGetTextWidth(utf8Sub(text,0,sfrom),txtSizX,font)
+			templen = dxGetTextWidth(utf8Sub(text,0,sfrom),txtSizX,font)
 		end
 		if sto-sfrom <= 10 then
 			break
 		end
 	end
-	local start = _dxGetTextWidth(utf8Sub(text,0,sfrom),txtSizX,font)
+	local start = dxGetTextWidth(utf8Sub(text,0,sfrom),txtSizX,font)
 	local lastWidth
 	for i=sfrom,sto do
-		local Next = _dxGetTextWidth(utf8Sub(text,i+1,i+1),txtSizX,font)*0.5
+		local Next = dxGetTextWidth(utf8Sub(text,i+1,i+1),txtSizX,font)*0.5
 		local offsetR = Next+start
-		local Last = lastWidth or _dxGetTextWidth(utf8Sub(text,i,i),txtSizX,font)*0.5
+		local Last = lastWidth or dxGetTextWidth(utf8Sub(text,i,i),txtSizX,font)*0.5
 		lastWidth = Next
 		local offsetL = start-Last
 		if i <= sfrom and pos <= offsetL then
@@ -696,7 +731,7 @@ end
 addEventHandler("onClientGUIAccepted",GlobalEdit,function()
 	local dgsEdit = dgsElementData[source].linkedDxEdit
 	if dgsGetType(dgsEdit) == "dgs-dxedit" then
-		triggerEvent("onDgsEditAccepted",dgsEdit)
+		triggerEvent("onDgsEditAccepted",dgsEdit,dgsEdit)
 	end
 end,true)
 
@@ -713,14 +748,14 @@ function dgsEditAlignmentShowPosition(edit,text)
 		text = strRep(eleData.maskText,utf8Len(text))
 	end
 	if alignment[1] == "left" then
-		local nowLen = _dxGetTextWidth(utf8Sub(text,0,pos),eleData.textSize[1],font)
+		local nowLen = dxGetTextWidth(utf8Sub(text,0,pos),eleData.textSize[1],font)
 		if nowLen+showPos > sx-padding[1]*2 then
 			dgsSetData(edit,"showPos",sx-padding[1]*2-nowLen)
 		elseif nowLen+showPos < 0 then
 			dgsSetData(edit,"showPos",-nowLen)
 		end
 	elseif alignment[1] == "right" then
-		local nowLen = _dxGetTextWidth(utf8Sub(text,pos+1),eleData.textSize[1],font)
+		local nowLen = dxGetTextWidth(utf8Sub(text,pos+1),eleData.textSize[1],font)
 		if nowLen+showPos > sx-padding[1]*2 then
 			dgsSetData(edit,"showPos",sx-padding[1]*2-nowLen)
 		elseif nowLen+showPos < 0 then
@@ -728,7 +763,7 @@ function dgsEditAlignmentShowPosition(edit,text)
 		end
 	elseif alignment[1] == "center" then
 		local __width = eleData.textFontLen
-		local nowLen = _dxGetTextWidth(utf8Sub(text,0,pos),eleData.textSize[1],font)
+		local nowLen = dxGetTextWidth(utf8Sub(text,0,pos),eleData.textSize[1],font)
 		local checkCaret = sx*0.5+nowLen-__width*0.5+showPos*0.5
 		if sx*0.5+nowLen-__width*0.5+showPos*0.5-padding[1] > sx-padding[1]*2 then
 			dgsSetData(edit,"showPos",(sx*0.5-padding[1]-nowLen+__width*0.5)*2)
@@ -760,22 +795,22 @@ function handleDxEditText(edit,text,noclear,noAffectCaret,index,historyRecState)
 	local textSize = eleData.textSize
 	local _index = dgsEditGetCaretPosition(edit,true)
 	local index = index or _index
-	local whiteList = eleData.whiteList or ""
+	local textFilter = eleData.textFilter or ""
 	local textDataLen = utf8Len(textData)
 	local text = utf8Sub(text,1,maxLength-textDataLen)
 	local _textLen = utf8Len(text)
 	local textData_add = utf8Sub(textData,1,index)..text..utf8Sub(textData,index+1)
-	local newTextData = utf8Gsub(textData_add,whiteList,"")
+	local newTextData = utf8Gsub(textData_add,textFilter,"")
 	local textLen = utf8Len(newTextData)-textDataLen
 	eleData.text = newTextData
 	newTextData = eleData.masked and strRep(eleData.maskText,utf8Len(newTextData)) or newTextData
-	eleData.textFontLen = _dxGetTextWidth(newTextData,eleData.textSize[1],eleData.font)
+	eleData.textFontLen = dxGetTextWidth(newTextData,eleData.textSize[1],eleData.font)
 	if not noAffectCaret then
 		if index <= _index then
 			dgsEditSetCaretPosition(edit,index+textLen)
 		end
 	end
-	eleData.updateTextRTNextFrame = true
+	eleData.updateRTNextFrame = true
 	triggerEvent("onDgsTextChange",edit,oldText)
 	if eleData.enableRedoUndoRecord then
 		historyRecState = historyRecState or 1
@@ -1064,23 +1099,125 @@ addEventHandler("onClientGUIChanged",GlobalEdit,function()
 end,true)
 
 ----------------------------------------------------------------
+-----------------------PropertyListener-------------------------
+----------------------------------------------------------------
+function dgsEditUpdateRTNextFrame(dgsEle)
+	dgsElementData[dgsEle].updateRTNextFrame = true
+end
+
+dgsOnPropertyChange["dgs-dxedit"] = {
+	text = function(dgsEle,key,value,oldValue)
+		handleDxEditText(dgsEle,value)
+	end,
+	textSize = function(dgsEle,key,value,oldValue)
+		dgsElementData[dgsEle].textFontLen = dxGetTextWidth(dgsElementData[dgsEle].text,value[1],dgsElementData[dgsEle].font)
+		dgsElementData[dgsEle].updateRTNextFrame = true
+	end,
+	textColor = dgsEditUpdateRTNextFrame,
+	caretPos = dgsEditUpdateRTNextFrame,
+	selectFrom = dgsEditUpdateRTNextFrame,
+	font = function(dgsEle,key,value,oldValue)
+		--Multilingual
+		if type(value) == "table" then
+			dgsElementData[dgsEle]._translation_font = value
+			value = dgsGetTranslationFont(dgsEle,value,sourceResource)
+		else
+			dgsElementData[dgsEle]._translation_font = nil
+		end
+		dgsElementData[dgsEle].font = value
+		
+		local eleData = dgsElementData[dgsEle]
+		eleData.textFontLen = dxGetTextWidth(eleData.text,eleData.textSize[1],eleData.font)
+		dgsElementData[dgsEle].updateRTNextFrame = true
+	end,
+	padding = function(dgsEle,key,value,oldValue)
+		configEdit(dgsEle)
+	end,
+	showPos = dgsEditUpdateRTNextFrame,
+	masked = dgsEditUpdateRTNextFrame,
+	placeHolder = function(dgsEle,key,value,oldValue)
+		dgsElementData[dgsEle].updateRTNextFrame = true
+		--Multilingual
+		if type(value) == "table" then
+			dgsElementData[dgsEle]._translation_placeHolderText = value
+			value = dgsTranslate(dgsEle,value,sourceResource)
+		else
+			dgsElementData[dgsEle]._translation_placeHolderText = nil
+		end
+		dgsElementData[dgsEle].placeHolder = tostring(value)
+	end,
+	placeHolderFont = function(dgsEle,key,value,oldValue)
+		dgsElementData[dgsEle].updateRTNextFrame = true
+		--Multilingual
+		if type(value) == "table" then
+			dgsElementData[dgsEle]._translation_placeHolderFont = value
+			value = dgsGetTranslationFont(dgsEle,value,sourceResource)
+		else
+			dgsElementData[dgsEle]._translation_placeHolderFont = nil
+		end
+		dgsElementData[dgsEle].placeHolderFont = value
+	end,
+	placeHolderVisibleWhenFocus = dgsEditUpdateRTNextFrame,
+	placeHolderColor = dgsEditUpdateRTNextFrame,
+	placeHolderColorcoded = dgsEditUpdateRTNextFrame,
+	placeHolderOffset = dgsEditUpdateRTNextFrame,
+	placeHolderTextSize = dgsEditUpdateRTNextFrame,
+	placeHolderIgnoreRenderTarget = dgsEditUpdateRTNextFrame,
+}
+----------------------------------------------------------------
+---------------------Translation Updater------------------------
+----------------------------------------------------------------
+dgsOnTranslationUpdate["dgs-dxedit"] = function(dgsEle,key,value)
+	local text = dgsElementData[dgsEle]._translation_placeHolderText
+	if text then
+		if key then text[key] = value end
+		dgsSetData(dgsEle,"placeHolder",text)
+	end
+	local font = dgsElementData[dgsEle]._translation_placeHolderFont
+	if font then
+		dgsSetData(dgsEle,"placeHolderFont",font)
+	end
+	dgsElementData[dgsEle].updateTextRTNextFrame = true
+end
+
+----------------------------------------------------------------
+-----------------------VisibilityManage-------------------------
+----------------------------------------------------------------
+dgsOnVisibilityChange["dgs-dxedit"] = function(dgsElement,selfVisibility,inheritVisibility)
+	if not selfVisibility or not inheritVisibility then
+		dgsEditRecreateRenderTarget(dgsElement,true)
+	end
+end
+----------------------------------------------------------------
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
 dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt)
+	local renderBuffer = eleData.renderBuffer
+	if eleData.retrieveRT then
+		dgsEditRecreateRenderTarget(source)
+		eleData.updateRTNextFrame = true
+	end
 	local bgImage = eleData.isFocused and eleData.bgImage or (eleData.bgImageBlur or eleData.bgImage)
 	local bgColor = eleData.isFocused and eleData.bgColor or (eleData.bgColorBlur or eleData.bgColor)
 	bgColor = applyColorAlpha(bgColor,parentAlpha)
 	local caretColor = applyColorAlpha(eleData.caretColor,parentAlpha)
-	if MouseData.focused == source then
+	local isFocused = MouseData.focused == source
+	if isFocused == source then
 		if isConsoleActive() or isMainMenuActive() or isChatBoxInputActive() then
 			MouseData.focused = false
 		end
 	end
+	if isFocused ~= renderBuffer.isFocused then
+		renderBuffer.isFocused = isFocused
+		eleData.updateRTNextFrame = true
+	end
+	
+	local shadow = eleData.shadow
 	local text = eleData.text
 	if eleData.masked then text = strRep(eleData.maskText,utf8Len(text)) end
 	local caretPos = eleData.caretPos
 	local selectFro = eleData.selectFrom
-	local selectColor = MouseData.focused == source and eleData.selectColor or eleData.selectColorBlur
+	local selectColor = applyColorAlpha(MouseData.focused == source and eleData.selectColor or eleData.selectColorBlur,parentAlpha)
 	
 	local res = eleData.resource or "global"
 	local style = styleManager.styles[res]
@@ -1091,7 +1228,7 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	local font = eleData.font or systemFont
 	local txtSizX,txtSizY = eleData.textSize[1],eleData.textSize[2] or eleData.textSize[1]
 	local alignment = eleData.alignment
-	local textX_Left,textX_Right
+	local textLeft,textRight,textTop,textBottom
 	local textColor = eleData.textColor
 	
 	local selx = 0
@@ -1102,11 +1239,11 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	end
 	local showPos = eleData.showPos
 	local padding = eleData.padding
-	local sidelength,sideheight = padding[1]-padding[1]%1,padding[2]-padding[2]%1
+	local paddingX,paddingY = padding[1]-padding[1]%1,padding[2]-padding[2]%1
 	local caretHeight = eleData.caretHeight
-	local insideH = h-sideheight*2
-	local selStartY = insideH/2-insideH/2*caretHeight
-	local selEndY = (insideH/2-selStartY)*2
+	local textTop,textBottom = 0,h-paddingY*2
+	local selStartY = textBottom/2-textBottom/2*caretHeight
+	local selEndY = (textBottom/2-selStartY)*2
 	local width,selectX,selectW
 	local posFix = 0
 	local placeHolder = eleData.placeHolder
@@ -1114,46 +1251,58 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	local placeHolderOffset = eleData.placeHolderOffset
 	if alignment[1] == "left" then
 		width = dxGetTextWidth(utf8Sub(text,0,caretPos),txtSizX,font)
-		textX_Left,textX_Right = showPos,w-sidelength
+		textLeft,textRight = showPos,w-paddingX
 		selectX,selectW = width+showPos,selx
 	elseif alignment[1] == "center" then
 		local __width = eleData.textFontLen
 		width = dxGetTextWidth(utf8Sub(text,0,caretPos),txtSizX,font)
-		textX_Left,textX_Right = showPos,w-sidelength
-		selectX,selectW = width+showPos*0.5+w*0.5-__width*0.5-sidelength+1,selx
+		textLeft,textRight = showPos,w-paddingX
+		selectX,selectW = width+showPos*0.5+w*0.5-__width*0.5-paddingX+1,selx
 		posFix = ((text:reverse():find("%S") or 1)-1)*dxGetTextWidth(" ",txtSizX,font)
 	elseif alignment[1] == "right" then
 		width = dxGetTextWidth(utf8Sub(text,caretPos+1),txtSizX,font)
-		textX_Left,textX_Right = x,w-sidelength*2-showPos
-		selectX,selectW = textX_Right-width,selx
+		textLeft,textRight = x,w-paddingX*2-showPos
+		selectX,selectW = textRight-width,selx
 		posFix = ((text:reverse():find("%S") or 1)-1)*dxGetTextWidth(" ",txtSizX,font)
 	end
 	
-	if eleData.bgRT then
+	local isPlaceHolderShown = text == "" and placeHolder ~= "" and (MouseData.focused ~= source or eleData.placeHolderVisibleWhenFocus) 
+	if renderBuffer.placeHolderState ~= isPlaceHolderShown then
+		renderBuffer.placeHolderState = isPlaceHolderShown
+		eleData.updateRTNextFrame = true
+	end
+	if renderBuffer.parentAlphaLast ~= parentAlpha then
+		renderBuffer.parentAlphaLast = parentAlpha
+		eleData.updateRTNextFrame = true
+	end
+	
+	local shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont
+	if shadow then
+		shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont = shadow[1],shadow[2],shadow[3],shadow[4],shadow[5]
+		shadowColor = applyColorAlpha(shadowColor or white,parentAlpha)
+	end
+	
+	if eleData.bgRT and (eleData.updateRTNextFrame or dgsRenderInfo.RTRestoreNeed) then
 		dxSetRenderTarget(eleData.bgRT,true)
-		dxSetBlendMode("modulate_add")
 		if selx ~= 0 then
 			dxDrawRectangle(selectX,selStartY,selectW,selEndY,selectColor)
 		end
+		dxSetBlendMode("modulate_add")
 		if eleData.underline then
-			local textHeight = dxGetFontHeight(txtSizY,font)
-			local lineOffset = eleData.underlineOffset+h*0.5+textHeight*0.5
+			local textBottomeight = dxGetFontHeight(txtSizY,font)
+			local lineOffset = eleData.underlineOffset+h*0.5+textBottomeight*0.5
 			local lineWidth = eleData.underlineWidth
 			local textFontLen = eleData.textFontLen
-			dxDrawLine(showPos,lineOffset,showPos+textFontLen,lineOffset,textColor,lineWidth)
+			dxDrawLine(showPos,lineOffset,showPos+textFontLen,lineOffset,applyColorAlpha(textColor,parentAlpha),lineWidth)
 		end
-	end
-	if eleData.textRT and (eleData.updateTextRTNextFrame or dgsRenderInfo.RTRestoreNeed) then
-		eleData.updateTextRTNextFrame = false
-		dxSetBlendMode("modulate_add")
-		dxSetRenderTarget(eleData.textRT,true)
-		textX_Left = textX_Left-textX_Left%1
-		textX_Right = textX_Right-textX_Right%1
+		eleData.updateRTNextFrame = nil
+		textLeft = textLeft-textLeft%1
+		textRight = textRight-textRight%1
 		if not placeHolderIgnoreRndTgt then
-			if text == "" and MouseData.focused ~= source then
-				local pColor = eleData.placeHolderColor
+			if isPlaceHolderShown then
+				local pColor = applyColorAlpha(eleData.placeHolderColor,parentAlpha)
 				local pFont = eleData.placeHolderFont
-				local pColorcoded = eleData.placeHolderColorcoded
+				local pColorCoded = eleData.placeHolderColorCoded
 				local pHolderTextSizeX,pHolderTextSizeY
 				local placeHolderTextSize = eleData.placeHolderTextSize
 				if placeHolderTextSize then
@@ -1161,23 +1310,24 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 				else
 					pHolderTextSizeX,pHolderTextSizeY = txtSizX,txtSizY
 				end
-				dxDrawText(placeHolder,textX_Left+placeHolderOffset[1],placeHolderOffset[2],textX_Right-posFix+placeHolderOffset[1],h-sidelength+placeHolderOffset[2],pColor,pHolderTextSizeX,pHolderTextSizeY,pFont,alignment[1],alignment[2],false,false,false,pColorcoded)
+				dgsDrawText(placeHolder,textLeft+placeHolderOffset[1],textTop+placeHolderOffset[2],textRight-posFix+placeHolderOffset[1],textBottom+placeHolderOffset[2],pColor,pHolderTextSizeX,pHolderTextSizeY,pFont,alignment[1],alignment[2],false,false,false,pColorcoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
 			end
 		end
 		if eleData.autoCompleteShow then
-			dxDrawText(eleData.autoCompleteShow.result or "",textX_Left,0,textX_Right-posFix,h-sidelength,eleData.autoCompleteTextColor or applyColorAlpha(textColor,0.7),txtSizX,txtSizY,font,alignment[1],alignment[2],false,false,false,false)
+			dgsDrawText(eleData.autoCompleteShow.result or "",textLeft,textTop,textRight-posFix,textBottom,eleData.autoCompleteTextColor or applyColorAlpha(textColor,0.7*parentAlpha),txtSizX,txtSizY,font,alignment[1],alignment[2],false,false,false,false,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
 		end
-		dxDrawText(text,textX_Left,0,textX_Right-posFix,h-sidelength,textColor,txtSizX,txtSizY,font,alignment[1],alignment[2],false,false,false,false)
+		
+		dgsDrawText(text,textLeft,textTop,textRight-posFix,textBottom,applyColorAlpha(textColor,parentAlpha),txtSizX,txtSizY,font,alignment[1],alignment[2],false,false,false,false,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
 	end
-	dxSetBlendMode(rndtgt and "modulate_add" or "blend")
 	dxSetRenderTarget(rndtgt)
-	local px,py,pw,ph = x+sidelength,y+sideheight,w-sidelength*2,h-sideheight*2
+	dxSetBlendMode(rndtgt and "modulate_add" or "blend")
+	local px,py,pw,ph = x+paddingX,y+paddingY,w-paddingX*2,textBottom
 	local finalcolor
 	if not enabledInherited and not enabledSelf then
 		if type(eleData.disabledColor) == "number" then
 			finalcolor = eleData.disabledColor
 		elseif eleData.disabledColor == true then
-			local r,g,b,a = fromcolor(bgColor,true)
+			local r,g,b,a = fromcolor(bgColor)
 			local average = (r+g+b)/3*eleData.disabledColorPercent
 			finalcolor = tocolor(average,average,average,a)
 		else
@@ -1186,23 +1336,18 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	else
 		finalcolor = bgColor
 	end
-	if bgImage then
-		dxDrawImage(x,y,w,h,bgImage,0,0,0,finalcolor,isPostGUI,rndtgt)
-	else
-		dxDrawRectangle(x,y,w,h,finalcolor,isPostGUI)
-	end
-	_dxDrawImage(px,py,pw,ph,eleData.bgRT,0,0,0,tocolor(255,255,255,255*parentAlpha),isPostGUI)
+	dxDrawImage(x,y,w,h,bgImage,0,0,0,finalcolor,isPostGUI,rndtgt)
+	dxSetBlendMode(rndtgt and "modulate_add" or "add")
+	__dxDrawImage(px,py,pw,ph,eleData.bgRT,0,0,0,white,isPostGUI)
 	if placeHolderIgnoreRndTgt then
-		if text == "" and MouseData.focused ~= source then
+		if isPlaceHolderShown then
 			local pColor = applyColorAlpha(eleData.placeHolderColor,parentAlpha)
 			local pFont = eleData.placeHolderFont
-			local pColorcoded = eleData.placeHolderColorcoded
+			local pColorCoded = eleData.placeHolderColorCoded
 			dxSetBlendMode(rndtgt and "modulate_add" or "blend")
-			dxDrawText(placeHolder,px+textX_Left+placeHolderOffset[1],py+placeHolderOffset[2],px+textX_Right-posFix+placeHolderOffset[1],py+h-sidelength+placeHolderOffset[2],pColor,txtSizX,txtSizY,pFont,alignment[1],alignment[2],false,false,isPostGUI,pColorcoded)
+			dgsDrawText(placeHolder,px+textLeft+placeHolderOffset[1],py+placeHolderOffset[2],px+textRight-posFix+placeHolderOffset[1],py+textBottom+placeHolderOffset[2],pColor,txtSizX,txtSizY,pFont,alignment[1],alignment[2],false,false,isPostGUI,pColorcoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
 		end
 	end
-	
-	_dxDrawImage(px,py,pw,ph,eleData.textRT,0,0,0,tocolor(255,255,255,255*parentAlpha),isPostGUI)
 
 	if MouseData.focused == source and MouseData.EditMemoCursor then
 		local CaretShow = true
@@ -1211,14 +1356,14 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 		end
 		if CaretShow then
 			local caretStyle = eleData.caretStyle
-			local selStartX = selectX+x+sidelength
+			local selStartX = selectX+x+paddingX-1
 			selStartX = selStartX-selStartX%1
 			if caretStyle == 0 then
-				if selStartX+1 >= x+sidelength and selStartX <= x+w-sidelength then
+				if selStartX+1 >= x+paddingX and selStartX <= x+w-paddingX then
 					local offset = eleData.caretOffset
-					local selStartY = h/2-h/2*caretHeight+sideheight-offset
+					local selStartY = h/2-h/2*caretHeight+paddingY
 					local selEndY = (h/2-selStartY)*2
-					dxDrawLine(selStartX,y+selStartY,selStartX,y+selEndY+selStartY,caretColor,eleData.caretThick,isPostGUI)
+					dxDrawLine(selStartX,y+selStartY-offset,selStartX,y+selEndY+selStartY-offset,caretColor,eleData.caretThick,isPostGUI)
 				end
 			elseif caretStyle == 1 then
 				local caretWidth = eleData.caretWidth
@@ -1231,10 +1376,10 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 				else
 					caretWidth = caretWidth[1]
 				end
-				if selStartX+1 >= x+sidelength and selStartX+caretWidth <= x+w-sidelength then
+				if selStartX+1 >= x+paddingX and selStartX+caretWidth <= x+w-paddingX then
 					local offset = eleData.caretOffset
-					local textHeight = dxGetFontHeight(txtSizY,font)
-					local selStartY = y+h/2+textHeight/2+sideheight-offset
+					local textBottomeight = dxGetFontHeight(txtSizY,font)
+					local selStartY = y+h/2+textBottomeight/2+paddingY-offset
 					dxDrawLine(selStartX,selStartY,selStartX+caretWidth,selStartY,caretColor,eleData.caretThick,isPostGUI)
 				end
 			end

@@ -1,3 +1,5 @@
+dgsLogLuaMemory()
+dgsRegisterPluginType("dgs-dxpastehandler")
 GlobalPasteHandler = false
 
 function dgsPasteHandlerSetEnabled(state)
@@ -47,7 +49,6 @@ end
 function dgsPasteHandlerIsFocused()
 	return isElement(GlobalPasteHandler) and isBrowserFocused(GlobalPasteHandler)
 end
-
 
 function dgsPasteHandlerIsEnabled()
 	return isElement(GlobalPasteHandler)
