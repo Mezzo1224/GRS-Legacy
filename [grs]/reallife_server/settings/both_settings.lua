@@ -49,7 +49,7 @@ noobtime = 0
 ageRestiction = false -- Siehe:  Art. 8 DSGVO, zudem ist GTA eh erst ab 16 :)
 emailSender = true -- Aktiviert den Mail-Sender, so werden E-Mails an nutzer gesendet bei z.B Bans (Momentan inaktiv)
 emailSenderLink = "http://raptor-gaming.eu/MTA/mailer.php" -- Der Link der php Datei. (Webserver benötigt) (Momentan inaktiv)
-compatibleDGS = "3.511" ---- // NICHT ÄNDERN! Definiert DGS Version, mit der der Gamemode gemacht wurde
+compatibleDGS = "3.518" ---- // NICHT ÄNDERN! Definiert DGS Version, mit der der Gamemode gemacht wurde
 
 rangedWeapons = {}
 	for i = 0, 50 do
