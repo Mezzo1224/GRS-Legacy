@@ -1,8 +1,14 @@
-﻿-- // TODO: Ich habe über die Monate und Jahre die Config Datei, um es fein raus zu sagen, vergewaltigt. Viele Dinge, die den Client nicht interessieren z.B VIPXP sind unnötig.
--- // Die neuen Einstellungen sind im Ordner "settings/neu" edit 9.11.22: Nein sind sie nicht ! :)
+﻿-- // Updater - Erklärung
+-- // "repository" - Überprüft die komplette GitHub Datei nach änderung d.h man bekommst nach jeder Änderung eine Nachricht, dass es ein Update gibt (Kurz: Bei jeder Änderung = Nachricht)
+-- // "meta" - Bekommt eine Versions-Zahl aus der 'meta.xml' von 'reallife_server', sollte diese anders sein als die installierte, gibt es eine Nachricht, dass es ein Update gibt (Kurz: Bei erwähnenswerten Updates = Nachricht)
+-- // false - schaltet den Updater aus
+versionsChecker = "meta"
+frequentUpdateReminder = true --// Soll die Erinnerung, dass es ein Update gibt jede Stunde (true) oder nur bei jedem Gamemode-Start  (false)
+githubRespoLink = "https://api.github.com/repos/Mezzo1224/GRS-Legacy" 
+githubRawMeta = "https://raw.githubusercontent.com/Mezzo1224/GRS-Legacy/main/%5Bgrs%5D/reallife_server/meta.xml"
 
 curVersion = "1.10b" -- // Die Momentane Script-Version
-enableStartDebug = true -- WIRD FÜR DIE INSTALLATION EMPFOHLEN
+enableStartDebug = true --// WIRD FÜR DIE INSTALLATION EMPFOHLEN
 allowedEmailEnding = { ["web.de"]=true, ["outlook.com"]=true, ["outlook.de"]=true , ["gmx.net"]=true, ["gmail.com"]=true ,["yahoo.com"]=true } --- // Welche E-Mail Anbieter/Endungen bei der Registierung zugelassen sind
 bonuscodes = { ---- // In den Klammern ist der Code, dahinter die Zahl ist das Bankgeld. Code kann bei der Registierung eingegeben werden.
 	["grsfb"] = 100000,
@@ -38,7 +44,7 @@ adminForumView = { -- Aussehen bzw. Benutzerrang (unnötig)
 [1] = 15,
 }
 
-betasystem = false -- // true: Schaltet das Betakey System ein, d.h. es wird ein Key Benötigt, um sich Anzumelden.
+betasystem = true -- // true: Schaltet das Betakey System ein, d.h. es wird ein Key Benötigt, um sich Anzumelden.
 sendPaysavecards = true -- // Erlaubt das Senden von PaySafeCards via /self
 changeFactionCMD = true -- // Erlaubt das Wechseln seiner Fraktion durch den Befehl /fc
 isHalloween = false -- // De-/ oder Aktiviert das Halloween System
