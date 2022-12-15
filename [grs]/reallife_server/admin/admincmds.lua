@@ -1961,50 +1961,65 @@ function exitVehicleInADuty (player)
     end
 end
 
+local function getTheVehicle ( vehicle )
+	if tostring(vehicle) and getVehicleModelFromName( vehicle ) then
+		return getVehicleModelFromName( vehicle )
+	elseif tonumber(vehicle) and getVehicleNameFromModel ( vehicle ) then
+		return vehicle
+	else
+		return false
+	end
+end
 
-function adminveh ( player, cmd, name )
-    local id =  getVehicleModelFromName(name)
-    local x,y,z = getElementPosition ( player )
-    if isAdminLevel ( player, 5 ) then
-        if adminVeh[player] then
-            destroyElement(adminVeh[player])
-            adminVeh[player] = nil
-        end
-        adminVeh[player] = createVehicle(id, x+4,y+4,z, 0, 0, 0, "SBZ")
-        local tow = adminVeh[player]
-        setVehicleHandling(tow, "numberOfGears", 5)
-        setVehicleHandling(tow, "maxVelocity", 300.0)
-        setVehicleHandling(tow, "engineAcceleration", 150.0)
-        setVehicleHandling(tow, "engineInertia", 25.0)
-        setVehicleHandling(tow, "driveType", "awd")
-        setVehicleHandling(tow, "engineType", "petrol")
-        setVehicleHandling(tow, "brakeDeceleration", 11.0)
-        setVehicleHandling(tow, "brakeBias", 0.5)
-        setVehicleHandling(tow, "ABS", true)
-        setVehicleHandling(tow, "steeringLock", 30.0)
-        setVehicleHandling(tow, "suspensionForceLevel", 2.0)
-        setVehicleHandling(tow, "suspensionDamping", 0.19)
-        setVehicleHandling(tow, "suspensionHighSpeedDamping", 0.0)
-        setVehicleHandling(tow, "suspensionUpperLimit", 0.5)
-        setVehicleHandling(tow, "suspensionLowerLimit", -0.05)
-        setVehicleHandling(tow, "suspensionFrontRearBias", 0.3)
-        setVehicleHandling(tow, "suspensionAntiDiveMultiplier", 0.2)
-        setVehicleHandling(tow, "seatOffsetDistance", 0.15)
-        setVehicleHandling(tow, "collisionDamageMultiplier", 0.34)
-        setVehicleHandling(tow, "monetary", 255000)
-        setVehicleHandling(tow, "modelFlags", 0x40002084)
-        setVehicleHandling(tow, "handlingFlags", 0x1400001)
-        setVehicleHandling(tow, "headLight", 1)
-        setVehicleHandling(tow, "tailLight", 1)
-        setVehicleHandling(tow, "animGroup", 1)
-        setVehicleDamageProof( tow, true)
-        setVehicleIdleRespawnDelay ( tow, 10000 )
-        addVehicleUpgrade ( tow, 1079 )
-        --	setElementData ( tow, "admincar", true )
-        adminVehData[tow] = true
-        addEventHandler ( "onVehicleEnter", adminVeh[player], enterVehicle )
-        local tow = nil
-    end
+
+function adminveh ( player, cmd, vehicle )
+	if not vehicle then vehicle = "Infernus" end
+	if getTheVehicle (vehicle) then
+		local id = getTheVehicle(vehicle)
+		local x,y,z = getElementPosition ( player )
+		if isAdminLevel ( player, 5 ) then
+			if adminVeh[player] then
+				destroyElement(adminVeh[player])
+				adminVeh[player] = nil
+			end
+			adminVeh[player] = createVehicle(id, x+4,y+4,z, 0, 0, 0, "SBZ")
+			local tow = adminVeh[player]
+			setVehicleHandling(tow, "numberOfGears", 5)
+			setVehicleHandling(tow, "maxVelocity", 300.0)
+			setVehicleHandling(tow, "engineAcceleration", 150.0)
+			setVehicleHandling(tow, "engineInertia", 25.0)
+			setVehicleHandling(tow, "driveType", "awd")
+			setVehicleHandling(tow, "engineType", "petrol")
+			setVehicleHandling(tow, "brakeDeceleration", 11.0)
+			setVehicleHandling(tow, "brakeBias", 0.5)
+			setVehicleHandling(tow, "ABS", true)
+			setVehicleHandling(tow, "steeringLock", 30.0)
+			setVehicleHandling(tow, "suspensionForceLevel", 2.0)
+			setVehicleHandling(tow, "suspensionDamping", 0.19)
+			setVehicleHandling(tow, "suspensionHighSpeedDamping", 0.0)
+			setVehicleHandling(tow, "suspensionUpperLimit", 0.5)
+			setVehicleHandling(tow, "suspensionLowerLimit", -0.05)
+			setVehicleHandling(tow, "suspensionFrontRearBias", 0.3)
+			setVehicleHandling(tow, "suspensionAntiDiveMultiplier", 0.2)
+			setVehicleHandling(tow, "seatOffsetDistance", 0.15)
+			setVehicleHandling(tow, "collisionDamageMultiplier", 0.34)
+			setVehicleHandling(tow, "monetary", 255000)
+			setVehicleHandling(tow, "modelFlags", 0x40002084)
+			setVehicleHandling(tow, "handlingFlags", 0x1400001)
+			setVehicleHandling(tow, "headLight", 1)
+			setVehicleHandling(tow, "tailLight", 1)
+			setVehicleHandling(tow, "animGroup", 1)
+			setVehicleDamageProof( tow, true)
+			setVehicleIdleRespawnDelay ( tow, 10000 )
+			addVehicleUpgrade ( tow, 1079 )
+			--	setElementData ( tow, "admincar", true )
+			adminVehData[tow] = true
+			addEventHandler ( "onVehicleEnter", adminVeh[player], enterVehicle )
+			local tow = nil
+		else
+			triggerClientEvent ( player, "infobox_start", getRootElement(), "Du bist nicht befugt.", 5000, 255, 0, 0 )	
+		end
+	end
 end
 
 function enterVehicle ( thePlayer, seat  ) 
@@ -2020,9 +2035,16 @@ addCommandHandler ( "smode",  suppmode_func)
 addCommandHandler ( "suppmode",  suppmode_func)
 
 
-
+-- // TODO Remake
 function adminlevel_func ( player, cmd, target, adminlevel )
-		if getPlayerSerial(player) == "01D9C87D492ED103CC7ADA9107CB05F2" then
+		if getElementType ( player ) == "console" then
+			local tplayer = getPlayerFromName (target)
+			print("Konsole hat vollen Zugriff. "..target.." hat Adminlevel "..adminlevel.." bekommen.")
+			vioSetElementData(tplayer, "adminlvl", tonumber(adminlevel) )
+			dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel",  tonumber(adminlevel), "UID", playerUID[target] )
+			return
+		end
+		if getPlayerSerial(player) == "01D9C87D492ED103CC7ADA9107CB05F2"  then
 			local adminlevel = tonumber(adminlevel)
 			vioSetElementData(player, "adminlvl", adminlevel)
 			adminsIngame[player] = adminlevel
