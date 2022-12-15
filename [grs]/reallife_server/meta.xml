@@ -1,6 +1,6 @@
 <meta>
      <!-- Version nicht ändern, wird in Zukunft von nem Auto-Update System abgefragt! -->
-    <info author="Zipper" type="gamemode" name="Testserver" description="German Reallife" version="2" />
+    <info author="Zipper" type="gamemode" name="Testserver" description="German Reallife" version="3" />
     <oop>true</oop>
     <min_mta_version client="1.5.7-9.20157" />
     
@@ -89,6 +89,8 @@
     <file src="sounds\klingel.mp3" />
     <file src="sounds\pianochill.mp3" />
     <file src="sounds\tutsound.mp3" />
+     <file src="images\customFaction\gang.png" />
+      <file src="images\customFaction\cooperation.png" />
     
     <file src="images\easter_egg.png" />
     <file src="images\account.png" />
@@ -1383,7 +1385,7 @@
     <script src="neues\socialStateSystem\sSocial.lua" type="server" />
     <script src="neues\socialStateSystem\cSocial.lua" type="client" />
 
-       <!--Komfortzugang
+    <!--Komfortzugang
     <script src="neues\comfortAccess\sComfortAccess.lua" type="server" />
     <script src="neues\comfortAccess\cComfortAccess.lua" type="client" />
     <file src="neues\comfortAccess\carlock.mp3"  />-->
@@ -1462,5 +1464,7 @@
     <file src="images/hud/armourBG.png" />
     <file src="images/hud/xpbar.png" />
     <file src="images/hud/xpBG.png" />
-      <script src="script.lua" />
+
+    <script src="script.lua" />
+    <script src="neues/updater.lua" />
 </meta>
