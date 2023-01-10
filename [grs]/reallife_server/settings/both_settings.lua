@@ -1,6 +1,6 @@
 ﻿-- // Updater - Erklärung
 -- // "repository" - Überprüft die komplette GitHub Datei nach änderung d.h man bekommst nach jeder Änderung eine Nachricht, dass es ein Update gibt (Kurz: Bei jeder Änderung = Nachricht)
--- // "meta" - Bekommt eine Versions-Zahl aus der 'meta.xml' von 'reallife_server', sollte diese anders sein als die installierte, gibt es eine Nachricht, dass es ein Update gibt (Kurz: Bei erwähnenswerten Updates = Nachricht)
+-- // "meta" - Bekommt eine Versions-Zahl aus der 'meta.xml' von 'reallife_server', sollte diese anders sein als die installierte, gibt es eine Nachricht, dass es ein Update gibt (Kurz: Bei erwähnenswerten Updates vom Main-Gamemode = Nachricht)
 -- // false - schaltet den Updater aus
 versionsChecker = "meta"
 frequentUpdateReminder = true --// Soll die Erinnerung, dass es ein Update gibt jede Stunde (true) oder nur bei jedem Gamemode-Start  (false)
