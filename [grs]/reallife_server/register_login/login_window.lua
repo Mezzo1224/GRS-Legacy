@@ -5,7 +5,6 @@ local pwResetWindow = {}
 local x, y = DGS:dgsGetScreenSize()
 local sx, sy = x/2560, y/1440
 
-
 function createLoginWindow ()
     if not joinmusic then
         joinmusic = playSound ("sounds/login.mp3", true)
@@ -13,17 +12,21 @@ function createLoginWindow ()
     if isSoundPaused(joinmusic) then
         setSoundPaused(joinmusic, false)
     end
-    
     setSoundVolume(joinmusic,0.1)
     showCursor(true)
     if isElement(headerImage) then
         destroyElement(headerImage)
     end
- --   background = DGS:dgsCreateImage (0, 0, x, y, ":reallife_server/images/header.jpg", false)    
     headerImage = DGS:dgsCreateImage (955*sx, -10*sy, 651*sx, 206*sy, ":reallife_server/images/header.jpg", false)    
-    DGS:dgsMoveTo( headerImage,955*sx, 377*sy,false,false,"OutQuad",4000)
     loginWindow["window"] = DGS:dgsCreateWindow(1115*sx, -10*sy, 330*sx, 258*sy, "Login", false)
-    DGS:dgsMoveTo( loginWindow["window"],1115*sx, 593*sy,false,false,"OutQuad",5000)
+    if cameFromResetWindow then
+        DGS:dgsSetPosition ( headerImage, 955*sx, 377*sy, false )
+        DGS:dgsSetPosition (  loginWindow["window"], 1115*sx, 593*sy, false )
+    else
+        DGS:dgsMoveTo( headerImage,955*sx, 377*sy,false,"OutQuad",4000)
+        DGS:dgsMoveTo( loginWindow["window"],1115*sx, 593*sy,false,"OutQuad",5000)
+    end
+    cameFromResetWindow = nil
     DGS:dgsWindowSetSizable(loginWindow["window"],false)
     DGS:dgsWindowSetMovable(loginWindow["window"],false)
     DGS:dgsWindowSetCloseButtonEnabled(loginWindow["window"], false)
@@ -36,21 +39,44 @@ function createLoginWindow ()
     loginWindow["resetpw"] = DGS:dgsCreateLabel(10*sx, 205*sy, 179*sx, 18*sy, "P̲a̲s̲s̲w̲o̲r̲t̲ ̲v̲e̲r̲g̲e̲s̲s̲e̲n̲ ̲?̲", false, loginWindow["window"])  
     DGS:dgsSetProperty(loginWindow["resetpw"],"textColor",tocolor(235, 180, 16,255))
     DGS:dgsSetProperty(loginWindow["loginBtn"],"color",{tocolor(12, 133, 44,255),tocolor(15, 150, 51,255),tocolor(12, 133, 44,255)})
-    DGS:dgsSetProperty(loginWindow["loginBtn"],"wordbreak",true)
+    DGS:dgsSetProperty(loginWindow["loginBtn"],"wordBreak",true)
     bindKey ( "enter", "down", loginPlayer )
-    checkForPassword ()
+    local safedPW = getPassword ()
+    if safedPW == false then
+        DGS:dgsSetText(loginWindow["password"], safedPW)
+        DGS:dgsCheckBoxSetSelected(loginWindow["savePassword"], false)
+    else
+        DGS:dgsSetText(loginWindow["password"], safedPW)
+        DGS:dgsCheckBoxSetSelected(loginWindow["savePassword"], true)
+    end
+
+    addEventHandler("onDgsTextChange", loginWindow["password"], function() 
+        local passwort = DGS:dgsGetText( loginWindow["password"] )
+        local savingPW, enableAutologin = DGS:dgsCheckBoxGetSelected(loginWindow["savePassword"]), DGS:dgsCheckBoxGetSelected(loginWindow["autologin"])
+        if savingPW == true then
+            safePassword (hash ( "sha512", passwort ))
+        end
+     end)
+
     addEventHandler ( "onDgsCheckBoxChange",loginWindow["savePassword"], 
     function(state)
-
+        local passwort = DGS:dgsGetText( loginWindow["password"] )
         local savingPW, enableAutologin = DGS:dgsCheckBoxGetSelected(loginWindow["savePassword"]), DGS:dgsCheckBoxGetSelected(loginWindow["autologin"])
         if state == true then
             DGS:dgsSetEnabled(loginWindow["autologin"], true)
+            safePassword (hash ( "sha512", passwort ))
         else
             DGS:dgsCheckBoxSetSelected(loginWindow["autologin"], false)
             DGS:dgsSetEnabled(loginWindow["autologin"], false)
+            safePassword (nil)
         end
     end)
 
+    addEventHandler ( "onDgsCheckBoxChange",loginWindow["autologin"], 
+    function(state)
+        print(state, "Autologin-State")
+        toggleAutoLogin (state)
+    end)
 
     addEventHandler ( "onDgsMouseClickDown", loginWindow["resetpw"], 
         function(button, state, x, y)
@@ -68,24 +94,19 @@ function createLoginWindow ()
         end
     end)
 
-    -- // Autologin
-    autoLoginCheck ()
-    if autoLogin == 1 then
-
+    -- // Autologin-Check
+    local autoLoginState = getAutoLogin ()
+    print(autoLoginState, "AutologinState")
+    if autoLoginState  == true then
         DGS:dgsCheckBoxSetSelected(loginWindow["autologin"], true)
-        -- // Timer ist für Debug
         setTimer ( function()
             loginPlayer ()
-        end, 5000, 1 )
-       
+        end, 100, 1 )
     end
 end
 
-
-
 function destroyLoginwindow ()
-    local savingPW, enableAutologin = DGS:dgsCheckBoxGetSelected(loginWindow["savePassword"]), DGS:dgsCheckBoxGetSelected(loginWindow["autologin"])
-    login_toggleAutoLogin(enableAutologin)
+
     stopSound(joinmusic)
     DGS:dgsCloseWindow(loginWindow["window"])
     unbindKey ( "enter", "down", loginPlayer )
@@ -101,7 +122,6 @@ function destroyLoginwindow ()
         killTimer ( LVCamFlightTimer )
     end
 	setTempToken () -- // Supporttoken setzen
-  --  findSettings () -- // Einstellungen laden
     loadClientSettings ()
     -- // Update ?
     checkNewUpdate ()
@@ -109,79 +129,28 @@ end
 
 function loginPlayer ()
 	local passwort = DGS:dgsGetText( loginWindow["password"] )
-	triggerServerEvent ( "einloggen", lp, lp, hash ( "sha512", passwort ))
-    local savingPW = DGS:dgsCheckBoxGetSelected(loginWindow["savePassword"])
-	local file = xmlLoadFile ( ":grs_cache/pw.xml" )
-	if savingPW == true then
-		local psafe = xmlFindChild ( file, "pw", 0 )
-		xmlNodeSetValue ( psafe, passwort  )
-		xmlSaveFile ( file )
+    local safedPW = getPassword ()
+    local savingPW, enableAutologin = DGS:dgsCheckBoxGetSelected(loginWindow["savePassword"]), DGS:dgsCheckBoxGetSelected(loginWindow["autologin"])
+    if safedPW ~= "" and savingPW == true then
+	    triggerServerEvent ( "einloggen", lp, lp, safedPW)
     else
-		local psafe = xmlFindChild ( file, "pw", 0 )
-		xmlNodeSetValue ( psafe, nil  )
-		xmlSaveFile ( file )
-	end
-end
-
-
-function checkForPassword ()
-    local pwfile = xmlLoadFile ( ":grs_cache/pw.xml" )
-    if not pwfile then
-        pwfile = xmlCreateFile ( ":grs_cache/pw.xml", "PW" )
-        xmlSaveFile ( pwfile )
-        pwfile = xmlLoadFile ( ":grs_cache/pw.xml" )
-
-        psafe = xmlCreateChild ( pwfile, "pw" )
-        xmlSaveFile ( pwfile )
-    else
-        local psafe = xmlFindChild ( pwfile, "pw", 0 )
-        success = xmlNodeGetValue ( psafe )
-        DGS:dgsSetText(loginWindow["password"], success)
-        DGS:dgsCheckBoxSetSelected(loginWindow["savePassword"], true)
+        triggerServerEvent ( "einloggen", lp, lp, hash ( "sha512", passwort ))
     end
 end
-
-
-function login_toggleAutoLogin (state)
-	-- // Lädt die Passwort Datei
-    if state == false then
-        if fileExists(":grs_cache/autologin.txt") then
-            local deleteFile = fileDelete(":grs_cache/autologin.txt")
-            if deleteFile then
-                outputChatBox ( "Autologin deaktiviert.", 224, 13, 13 )
-                autoLogin = 0
-                fileClose(deleteFile)
-            else
-                outputChatBox ( "Versuche es später erneut.", 224, 13, 13 )
-            end
-        end
-    elseif state == true then
-        local createFile = fileCreate(":grs_cache/autologin.txt")
-        if createFile then
-            outputChatBox ( "Autologin aktiviert.", 224, 13, 13 )
-            autoLogin = 1
-            fileClose(createFile)
-        else
-            outputChatBox ( "Versuche es später erneut.", 224, 13, 13 )
-        end
-	end
-end
-
-  
 
 -- // Passwort zurücksetzten
 function showResetPasswordWindow ()    
     pwResetWindow["window"] = DGS:dgsCreateWindow(1137*sx, 569*sy, 286*sx, 303*sy, "Passwort zurücksetzen", false)
     DGS:dgsWindowSetSizable(pwResetWindow["window"],false)
     DGS:dgsWindowSetMovable(pwResetWindow["window"],false)
-  --  pwResetWindow["helptext"] = DGS:dgsCreateMemo(11, 5, 265, 110, "Um dein Passwort zurückzusetzen musst du deinen Permanenten-Supporttoken angeben und dein neues Passwort, danach wird das Passwort geändert, aber auch ein neuer Token generiert.", false, pwResetWindow["window"])
+
     pwResetWindow["helptext"] = DGS:dgsCreateLabel(11*sx, 5*sy, 265*sx, 110*sy, "Um dein Passwort zurückzusetzen musst du deinen Permanenten-Supporttoken angeben und dein neues Passwort, danach wird das Passwort geändert, aber auch ein neuer Token generiert.", false, pwResetWindow["window"])
     DGS:dgsSetProperty(pwResetWindow["helptext"],"wordbreak",true)
     pwResetWindow["token"] = DGS:dgsCreateEdit(11*sx, 125*sy, 159*sx, 37*sy, "", false, pwResetWindow["window"])
     pwResetWindow["newpw"] = DGS:dgsCreateEdit(11*sx, 172*sy, 128*sx, 37*sy, "", false, pwResetWindow["window"])
     pwResetWindow["newpw_repeat"] = DGS:dgsCreateEdit(148*sx, 172*sy, 128*sx, 37*sy, "", false, pwResetWindow["window"])
-    pwResetWindow["resetpwBtn"] = DGS:dgsCreateButton(76*sx, 235*sy, 134*sx, 38*sy, "Zurücksetzen", false, pwResetWindow["window"])    
-    
+    pwResetWindow["resetpwBtn"] = DGS:dgsCreateButton(74*sx, 225*sy, 134*sx, 38*sy, "Zurücksetzen", false, pwResetWindow["window"])    
+    DGS:dgsSetProperty(pwResetWindow["resetpwBtn"],"color",{tocolor(207, 152, 33,255),tocolor(240, 176, 38,255), tocolor(181, 132, 27,255)})
     DGS:dgsSetProperty(pwResetWindow["token"],"placeHolder","Token")
     DGS:dgsSetProperty(pwResetWindow["newpw"],"placeHolder","Neues PW")
     DGS:dgsSetProperty(pwResetWindow["newpw_repeat"],"placeHolder","Neues PW Wdh.")
@@ -189,7 +158,6 @@ function showResetPasswordWindow ()
     addEventHandler ( "onDgsMouseClickDown", pwResetWindow["resetpwBtn"], 
         function(button, state, x, y)
         if source == pwResetWindow["resetpwBtn"] then
-            print("Reset PW Click")
             local pw, pw2 = DGS:dgsGetText(pwResetWindow["newpw"]), DGS:dgsGetText(pwResetWindow["newpw_repeat"])
             local token = DGS:dgsGetText(pwResetWindow["token"])
             triggerServerEvent ( "resetPasswordFromLogin", lp, lp, token, pw, pw2)
@@ -198,6 +166,7 @@ function showResetPasswordWindow ()
 
     addEventHandler( "onDgsWindowClose", pwResetWindow["window"], 
     function()
+        cameFromResetWindow = true
         createLoginWindow ()
     end)
 end
@@ -209,17 +178,100 @@ addEvent ( "ShowLoginWindow", true)
 addEventHandler ( "ShowLoginWindow", getRootElement(), createLoginWindow)
 
 
--- // Check
+-- // Wird ausgeführt, wenn der Gamemode fertig geladen ist
 addEventHandler("onClientResourceStart", getResourceRootElement(getThisResource()),
     function ()
-        local player = getLocalPlayer()
         for i = 1, 100 do
             outputChatBox (" ")
         end
         findSettings ()
+        intLoginFile ()
         if ( x < 1920 ) and ( y < 1080 ) then 
             outputChatBox ( "WARNUNG: DEINE AUFLÖSUNG IST UNTER 1920x1080 ! DIES KANN ZU PROBLEMEN FÜHREN!" )
         end
-        triggerServerEvent ( "regcheck", getLocalPlayer(), player )
+        triggerServerEvent ( "regcheck", getLocalPlayer(),  getLocalPlayer() )
+
+
     end
 )
+
+
+-- // Login File
+local filePath = ":grs_cache/"..getPlayerName(getLocalPlayer()).."_login.xml"
+function intLoginFile ()
+    local loginSettingsNode = xmlLoadFile ( filePath )
+    if not loginSettingsNode then
+        loginSettingsNode  = xmlCreateFile(filePath,"loginSettings")
+        local passwordNode = xmlCreateChild(loginSettingsNode, "password")
+        local autologinNode = xmlCreateChild(loginSettingsNode, "enableAutoLogin")
+        xmlSaveFile(loginSettingsNode)
+        xmlUnloadFile(loginSettingsNode)
+    end
+    loadLoginFile()
+end
+
+
+function loadLoginFile ()
+    loginSettingsNode = xmlLoadFile ( filePath )
+    local savedPassword =  xmlNodeGetValue(loginSettingsNode, "password")
+    local enableAutologin =  xmlNodeGetValue(loginSettingsNode, "enableAutoLogin")
+    xmlSaveFile(loginSettingsNode)
+    xmlUnloadFile(loginSettingsNode)
+end
+
+
+function toggleAutoLogin (state)
+    local loginSettingsNode = xmlLoadFile ( filePath )
+    local autologinChild = xmlFindChild ( loginSettingsNode, "enableAutoLogin", 0 )
+    if state == false then
+        print("Autologin deaktiviert.")
+        xmlNodeSetValue (  autologinChild, "0"  )
+    else
+        print("Autologin aktiviert.")
+        xmlNodeSetValue (  autologinChild, "1"  )
+    end
+    xmlSaveFile(loginSettingsNode)
+    xmlUnloadFile(loginSettingsNode)
+end
+
+function safePassword (password)
+    local loginSettingsNode = xmlLoadFile ( filePath )
+    local passwordChild = xmlFindChild ( loginSettingsNode, "password", 0 )
+    if password == nil then
+        xmlNodeSetValue (  passwordChild, ""  )
+        print("Passwort wird nicht mehr gespeichert.")
+    else
+        xmlNodeSetValue (  passwordChild, password  )
+        print("Passwort wird gespeichert.", password)
+    end
+    xmlSaveFile(loginSettingsNode)
+    xmlUnloadFile(loginSettingsNode)
+end
+
+function getAutoLogin ()
+    local loginSettingsNode = xmlLoadFile ( filePath )
+    local autologinChild = xmlFindChild ( loginSettingsNode, "enableAutoLogin", 0 )
+    local autologinValue =  xmlNodeGetValue ( autologinChild ) 
+    if autologinValue == "1" then
+        return true
+    else
+        return false
+    end
+    xmlSaveFile(loginSettingsNode)
+    xmlUnloadFile(loginSettingsNode)
+end
+
+function getPassword ()
+    local loginSettingsNode = xmlLoadFile ( filePath )
+    local passwordChild = xmlFindChild ( loginSettingsNode, "password", 0 )
+    local passwortValue =  xmlNodeGetValue ( passwordChild ) 
+    if passwortValue ~= "" then
+        return passwortValue
+    else
+        return false
+    end
+    xmlSaveFile(loginSettingsNode)
+    xmlUnloadFile(loginSettingsNode)
+end
+
+
