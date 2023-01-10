@@ -1342,7 +1342,7 @@
      <!-- Settingsystem-->
     <script src="neues/settingSystem/settingSystemMain.lua" type="client" />
     <script src="neues/settingSystem/settingLoader.lua" type="client" />
-    <script src="neues/settingSystem/settingSystemSererside.lua" type="server" />
+    <script src="neues/settingSystem/settingSystemServerside.lua" type="server" />
     <!-- Levelsystem-->
     <script src="neues/levelsystem/cLevelSystem.lua" type="client" cache="false" />
     <script src="neues/levelsystem/sLevelSystem.lua" type="server" />
