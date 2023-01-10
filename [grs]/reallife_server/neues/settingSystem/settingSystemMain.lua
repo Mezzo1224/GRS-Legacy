@@ -40,7 +40,7 @@ settings.game[19] = {name = "syncForumGroups", value = "0" }
 settings.game[20] = {name = "getForumConversations", value = "0" }
 -- Anderes
 settings.game[21] = {name = "showXPBoostNotice", value = "1" }
-settings.game[22] = {name = "showVersionNotice", value = "1" }
+settings.game[22] = {name = "showVersionNotice", value = "0" }
 settings.game[23] = {name = "showGreenzoneWarning", value = "1" }
 
 
