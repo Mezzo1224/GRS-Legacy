@@ -308,17 +308,9 @@ function showSettingsWindow ()
 		
 		settingsElements = {}
 		settingsElements.IDs = {}
-		local settingsScrollPane = DGS:dgsCreateScrollPane(0.33, 0.07, 0.65, 0.90,true,settingsWindow)
-		local settingsScrollBar = DGS:dgsCreateScrollBar(0.95, 0.01, 0.05, 0.99, false, true,settingsScrollPane )
+		local settingsScrollPane = DGS:dgsCreateScrollPane(0.33, 0.02, 0.65, 0.90,true,settingsWindow) --0.33
+	--	local settingsScrollBar = DGS:dgsCreateScrollBar(0.95, 0.01, 0.05, 0.99, false, true,settingsScrollPane )
 		
-		
-		
-
-
-  
-
-
-      
 		addEventHandler ( "onDgsMouseClickDown", settingsList, function (cmd, state)
 			if source == settingsList then 
 			--	if state == "down" then
@@ -403,13 +395,8 @@ function showSettingsWindow ()
 							end
 						end
 
-						addEventHandler("onDgsSwitchButtonStateChange", settingsElements[20], function() 
-							toggleAutoLogin ()
-							if autoLogin == 1 then
-								DGS:dgsSetProperty(settingsElements[20],"state", true)
-							else
-								DGS:dgsSetProperty(settingsElements[20],"state", false)
-							end
+						addEventHandler("onDgsSwitchButtonStateChange", settingsElements[20], function(state) 
+							toggleAutoLogin (state)
 						end)
 
 						
@@ -755,11 +742,8 @@ function autoUpdateSettings ()
 end
 function checkSettingStates ()
 	-- Autologin 
-	if autoLogin == 1 then
-		DGS:dgsSetProperty(settingsElements[20],"state", true)
-	else
-		DGS:dgsSetProperty(settingsElements[20],"state", false)
-	end
+	local autoLoginState =  getAutoLogin ()
+	DGS:dgsSetProperty(settingsElements[20],"state", autoLoginState)
 	-- Edits
 	 DGS:dgsSetText(settingsElements[13], getSetting (4, 1))
 	 DGS:dgsSetText(settingsElements[14], getSetting (6, 1)) 
