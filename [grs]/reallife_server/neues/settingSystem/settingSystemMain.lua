@@ -221,49 +221,9 @@ function saveSettings ()
 --	end
 end
 
--- // Autlogin
-function autoLoginCheck ()
-	if fileExists(":grs_cache/autologin.txt") then
-		autoLogin = 1
-    else
-		autoLogin = 0
-    end
-end
-
-function toggleAutoLogin ()
-	-- // Lädt die Passwort Datei
-	local pwfile = xmlLoadFile ( ":grs_cache/pw.xml" )
-	local psafe = xmlFindChild ( pwfile, "pw", 0 )
-	local pw = xmlNodeGetValue ( psafe )
-	if string.len(pw) > 0 then
-		if fileExists(":grs_cache/autologin.txt") then
-			-- Ist es Möglich ?
-			if fileDelete(":grs_cache/autologin.txt") then
-				outputChatBox ( "Autologin deaktiviert.", 224, 13, 13 )
-				autoLogin = 0
-			else
-				outputChatBox ( "Versuche es später erneut.", 224, 13, 13 )
-			end
-		else
-			-- Ist es Möglich ?
-			if fileCreate(":grs_cache/autologin.txt") then
-				outputChatBox ( "Autologin aktiviert.", 224, 13, 13 )
-				autoLogin = 1
-			else
-				outputChatBox ( "Versuche es später erneut.", 224, 13, 13 )
-			end
-		end
-		autoLoginCheck ()
-	else
-		outputChatBox ( "Du musst erst beim Login dein Passwort speichern.", 224, 13, 13 )
-		autoLogin = 0
-	end
-end
-
 
 addEventHandler ( "onClientResourceStop", resourceRoot, saveSettings )
 addCommandHandler("ssx",saveSettings)
 addCommandHandler("dst",deleteSettings)
-addCommandHandler("ta", toggleAutoLogin)
 fileDelete(":reallife_server/neues/settingSystem/settingSystemMain.lua")
 
