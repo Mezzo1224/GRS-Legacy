@@ -1,5 +1,6 @@
 # GRS-Legacy 
 Eine weiter Version des GRS-Reallife Gamemodes, basierend auf dem Ultimate-Reallife Gamemode (MTA:SA)
+
 Trello: https://trello.com/b/enlrE9qG/grs (Informationen für zukünftige Updates)
 
 Zur Installation benötigst du Folgendes:
