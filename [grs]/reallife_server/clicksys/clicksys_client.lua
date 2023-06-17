@@ -17,5 +17,5 @@ function showhmenue ( )
 		end
 	end
 end
-bindKey ("f1", "down", showhmenue)
+-- bindKey ("f1", "down", showhmenue)
 

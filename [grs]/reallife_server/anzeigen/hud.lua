@@ -261,7 +261,7 @@ elseif hud == "invi" then
 	hud = "off"
 	end
 end
-bindKey ( "b", "down", switchHUD )
+--bindKey ( "b", "down", switchHUD )
 
 function convertNumber ( number )  
     local formatted = number  
