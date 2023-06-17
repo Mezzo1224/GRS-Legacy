@@ -28,14 +28,13 @@ function sendMSGToStateFactions (msg,r,g,b)
 	sendMSGForFaction ( msg, 6, r,g,b )
 	sendMSGForFaction ( msg, 8, r,g,b )
 end  
- 
 
 function changeFaction (player, cmd, factionName)
-	if changeFactionCMD == true then
-		local paket = vioGetElementData ( player, "Paket" )
+	if ServerConfig["main"].enableChangeFactionCMD == true then
 		if vioGetElementData(player, "loggedin") == 1 then
+			local paket = vioGetElementData ( player, "Paket" )
 			if not isInCoop(player) then
-				if checkFactionBan ( player ) == false then
+				if hasFactionBan ( player ) == false then
 					if fraktionJoinable[factionName] then
 						local factionID = fraktionJoinID[factionName]
 						if vioGetElementData ( player, "fraktion") == 0 then
@@ -129,7 +128,7 @@ function checkExpiredFactionBan ( player )
     end
 end
 
-function checkFactionBan ( player )
+function hasFactionBan ( player )
     local pname = getPlayerName ( player )
     local result = dbPoll ( dbQuery ( handler, "SELECT  ??, ??, ?? FROM ?? WHERE ??=? ","FraktionsBanReason", "FraktionsBanDate", "FraktionsBan", "userdata", "UID", playerUID[pname] ), -1 )
     if result and result[1] then
@@ -1188,4 +1187,3 @@ end
 
 
 
-	
