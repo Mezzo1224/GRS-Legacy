@@ -68,6 +68,8 @@ function mySQLCarCreate ( array )
 				setPrivVehCorrectLightColor ( veh )
 				setVehicleLocked ( veh, true )
 				vioSetElementData ( veh, "fuelstate", Benzin )
+
+				
 				setPrivVehCorrectColor ( veh )
 				setVehiclePaintjob ( veh, Paintjob )
 				if tonumber(Tuning) == 1 then
