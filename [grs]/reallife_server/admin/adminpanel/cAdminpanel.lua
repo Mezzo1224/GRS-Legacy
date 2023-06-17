@@ -214,6 +214,11 @@ function showAdminPanel ()
             adminPanelUI["respawn_respawn"] = DGS:dgsCreateButton(181*sx, 16*sy, 110*sx, 43*sy, "Respawnen", false, adminPanelUI["respawn_tb"])
             adminPanelUI["respawn_crespawn"] = DGS:dgsCreateButton(181*sx, 69*sy, 110*sx, 43*sy, "Alles im Umkreis\nrespawnen", false, adminPanelUI["respawn_tb"])
             adminPanelUI["respawn_respawnmeter"] = DGS:dgsCreateEdit(181*sx, 122*sy, 110*sx, 35*sy, "", false, adminPanelUI["respawn_tb"])
+            local row = DGS:dgsGridListAddRow ( adminPanelUI["respawn_list"] )
+            DGS:dgsGridListSetItemText ( adminPanelUI["respawn_list"], row, adminPanelUI["respawn_list_name"], "Fraktionen", false, false )
+            DGS:dgsGridListSetItemColor( adminPanelUI["respawn_list"], row, adminPanelUI["respawn_list_name"], 45, 194, 84  )
+            DGS:dgsGridListSetRowAsSection ( adminPanelUI["respawn_list"], row, true )
+
             DGS:dgsSetProperty( adminPanelUI["respawn_respawnmeter"],"placeHolder","Meter")
             for i, var in ipairs(respawnList) do
                 local row = DGS:dgsGridListAddRow ( adminPanelUI["respawn_list"] )
@@ -223,8 +228,9 @@ function showAdminPanel ()
                 end
                 if i == 13 then -- // Nach der letzten Fraktion
                     local row = DGS:dgsGridListAddRow ( adminPanelUI["respawn_list"] )
-                    DGS:dgsGridListSetItemText ( adminPanelUI["respawn_list"], row, adminPanelUI["respawn_list_name"], "-- Nicht Fraktionsbasiert --", false, false )
-                    DGS:dgsGridListSetItemColor(adminPanelUI["respawn_list"], row, adminPanelUI["respawn_list_name"], 247, 184, 10  )
+                    DGS:dgsGridListSetItemText ( adminPanelUI["respawn_list"], row, adminPanelUI["respawn_list_name"], "Jobs", false, false )
+                    DGS:dgsGridListSetItemColor( adminPanelUI["respawn_list"], row, adminPanelUI["respawn_list_name"], 45, 194, 84  )
+                    DGS:dgsGridListSetRowAsSection ( adminPanelUI["respawn_list"], row, true )
                 end
 
             end
