@@ -1,9 +1,34 @@
--- comfort access
+
+
+
+
 
 vehiclesWithComfort = {}
 vehiclesFromCol = {}
 
+local function testGiveCV (player)
+    local veh = getPedOccupiedVehicle ( player )
+    giveVehicleComfortAccess (player, veh, true, true, true )
+end
+addCommandHandler("tcv", testGiveCV)
 
+function giveVehicleComfortAccess (player, vehicle, enableWelcome, enableEnginetoggle, enableLockWhenEntered )
+
+    local owner = vioGetElementData ( vehicle, "owner")
+    local ownerID = playerUID[owner]
+    local carslot = vioGetElementData ( vehicle, "carslotnr_owner" )
+    if owner == getPlayerName(player) then
+        if dbExist ( "vehicles", "UID LIKE '"..ownerID.."' AND Slot LIKE '"..carslot.."'") then
+            local data = {
+                enableWelcome = enableWelcome,
+                enableEnginetoggle = enableEnginetoggle,
+                enableLockWhenEntered = enableLockWhenEntered
+            }
+            dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=? AND ??=?", "vehicles", "comfortAccess", toJSON(data),"UID", ownerID, "Slot", carslot )
+            print("Das Fahrzeug hat CA bekommen")
+        end
+    end
+end
 
 function enableComfortAccess (vehicle, owner, enableWelcome, enableEnginetoggle, enableLockWhenEntered)
     local x, y, z = getElementPosition ( vehicle ) 
@@ -28,7 +53,13 @@ function enableComfortAccess (vehicle, owner, enableWelcome, enableEnginetoggle,
     addEventHandler ( "onVehicleEnter", getRootElement(), closeWhenEnterOrExit ) -- // Wenn er reingegangen ist wird das Auto verschlossen
    addEventHandler ( "onVehicleExit", getRootElement(), closeWhenEnterOrExit ) -- // Wenn er rausgeht wird es auch verschlossen
 
+   local owner = vioGetElementData ( veh, "owner")
+   local ownerID = playerUID[owner]
+   local carslot = vioGetElementData ( veh, "carslotnr_owner" )
+
+   print(owner, ownerID, carslot)
 end
+
 
 function  cv (player)
    -- local veh = createVehicle ( 560, x, y, z, 0, 0, rotZ )
@@ -37,35 +68,6 @@ function  cv (player)
 end
 addEventHandler ( "onVehicleEnter", getRootElement(), cv )
 
---[[
-function cv (player)
-    local x, y, z = getElementPosition ( player ) 
-
-    local rotZ = getElementRotation ( player )
-    id = id + 1
-    local veh = createVehicle ( 560, x, y, z, 0, 0, rotZ )
-    warpPedIntoVehicle(player,veh)
-
-    vehicles[veh] = {
-        id = id,
-        comfortAccess = true,
-        comfortAccessExpanted = true,
-        col = createColSphere ( x, y, z, 7 )
-    }
-    local col = vehicles[veh].col
-    attachElementToElement(col, veh)
-
-    -- // Events
-    vehiclesFromCol[col] = veh
-    addEventHandler ( "onColShapeHit", col, OpenVeh )
-    addEventHandler ( "onColShapeLeave", col, CloseVeh )
-
-    -- // Zweiter Test
-    addEventHandler ( "onVehicleEnter", getRootElement(), closeveh2 ) -- // Wenn er reingegangen ist wird das Auto verschlossen
-   addEventHandler ( "onVehicleExit", getRootElement(), closeveh2 ) -- // Wenn er rausgeht wird es auch verschlossen
-
-end
-addCommandHandler("cv", cv)--]]
 
 function closeWhenEnterOrExit (player)
     setVehicleLocked(source, true)

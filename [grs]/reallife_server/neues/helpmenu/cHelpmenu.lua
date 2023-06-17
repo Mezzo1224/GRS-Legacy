@@ -2,32 +2,31 @@ local helpmenuUI = {}
 
 -- // In Settings rüber machen
 helpmenuLinks = {
-    ["trello"] = "https://trello.com/b/enlrE9qG/grs",
-    ["forum"] = "https://www.einfach-gaming.de/forum/",
-    ["rules"] = "https://www.einfach-gaming.de/wiki/entry/74-regeln-forum/"
+    ["trello"] = "https://trello.com/b/enlrE9qG",
+    ["forum"] = "https://www.mta-sa.org",
+    ["rules"] = "https://www.mta-sa.org/cms/sc-terms-of-use/"
 }
 helpmenuRequestLinks = {
     ["trello"] = "www.trello.com",
-    ["forum"] = "www.einfach-gaming.de",
-    ["trello2"] = "a.trellocdn.com",
-    ["trello3"] = "api.atlassian.com",
-    ["trello4"] = "contextual.media.net",
-    ["trello5"] = "api-gateway.trello.com",
-    ["trello6"] = "app.butlerfortrello.com",
-    ["trello7"] = "c.trello.com",
-    ["trello8"] = "trello-members.s3.amazonaws.com",
+    ["forum"] = "www.mta-sa.org"
 }
 
 requestBrowserDomains(helpmenuRequestLinks)
+
+function createHelpmenu ()
+    createHelpmenuUI ()
+end
+addEvent ( "createHelpmenu", true)
+addEventHandler ( "createHelpmenu", getRootElement(), createHelpmenu)
+
 function createHelpmenuUI ()
 
     helpmenuUI["window_main"] = DGS:dgsCreateWindow(0.34, -0.2, 0.41, 0.59, "Hilfemenü", true)
-   DGS:dgsMoveTo( helpmenuUI["window_main"],0.34, 0.26,true,false,"OutQuad",2000)
+    DGS:dgsMoveTo( helpmenuUI["window_main"],0.34, 0.26,true,"OutQuad",2000)
     DGS:dgsWindowSetMovable ( helpmenuUI["window_main"], false )
     DGS:dgsWindowSetSizable ( helpmenuUI["window_main"], false )
     DGS:dgsWindowSetCloseButtonEnabled(helpmenuUI["window_main"], true)
     showCursor(true)
-    print(DGS:dgsGetPosition(helpmenuUI["window_main"],true))
     helpmenuUI["tabpanel"] = DGS:dgsCreateTabPanel (0.02, 0.02, 0.96, 0.92,true, helpmenuUI["window_main"])
     DGS:dgsSetProperty( helpmenuUI["tabpanel"],"tabGapSize",{0.03,true})
     DGS:dgsSetProperty( helpmenuUI["tabpanel"],"tabAlignment","center")
@@ -35,6 +34,7 @@ function createHelpmenuUI ()
 
     helpmenuUI["tabpanel_helpmenu_helps"] = DGS:dgsCreateGridList(0.01, 0.02, 0.25, 0.95, true, helpmenuUI["tabpanel_helpmenu"])
     DGS:dgsSetProperty(helpmenuUI["tabpanel_helpmenu_helps"],"rowHeight",30)
+    DGS:dgsSetProperty(helpmenuUI["tabpanel_helpmenu_helps"],"rowColor",{tocolor(13, 90, 110, 255),tocolor(16, 109, 133, 255),tocolor(10, 67, 82, 255)})
     helpmenuUI["tabpanel_helpmenu_helps_name"] =  DGS:dgsGridListAddColumn(  helpmenuUI["tabpanel_helpmenu_helps"], "Name", 1)
 
     helpmenuUI["tabpanel_helpmenu_helptitle"] = DGS:dgsCreateLabel(0.28, 0.02, 0.25, 0.04, "TITEL", true, helpmenuUI["tabpanel_helpmenu"])
@@ -49,12 +49,11 @@ function createHelpmenuUI ()
         DGS:dgsMemoSetReadOnly(helpmenuUI["tabpanel_faction_memo"], true)
     end
     local job = vioClientGetElementData ( "job" )
-    if not job == 0 then
+    if job ~= "none" then
         helpmenuUI["tabpanel_job"] = DGS:dgsCreateTab("Deine Job", helpmenuUI["tabpanel"])
         helpmenuUI["tabpanel_job_memo"] = DGS:dgsCreateMemo(0.02, 0.02, 0.96, 0.95, jobText[job], true, helpmenuUI["tabpanel_job"])
         DGS:dgsMemoSetReadOnly(helpmenuUI["tabpanel_job_memo"], true)
     end
-  --  GUIEditor.memo[1] = guiCreateMemo(0.02, 0.02, 0.96, 0.95, "UPDATE", true, GUIEditor.tab[3])
     helpmenuUI["tabpanel_update"] = DGS:dgsCreateTab("Update", helpmenuUI["tabpanel"])
     helpmenuUI["tabpanel_trello"] = DGS:dgsCreateTab("Trello", helpmenuUI["tabpanel"])
 
@@ -64,7 +63,7 @@ function createHelpmenuUI ()
    helpmenuUI["tabpanel_rules"] = DGS:dgsCreateTab("Regeln", helpmenuUI["tabpanel"])
 
    -- // Links
-   helpmenuUI["trello"] = DGS:dgsCreateBrowser(0.02, 0.02, 0.96, 0.95,true, helpmenuUI["tabpanel_trello"] ,false)
+   helpmenuUI["trello"] = DGS:dgsCreateBrowser(0.02, 0.02, 0.96, 0.95,true, helpmenuUI["tabpanel_trello"] ,true)
    helpmenuUI["forum"] = DGS:dgsCreateBrowser(0.02, 0.02, 0.96, 0.95,true, helpmenuUI["tabpanel_forum"] ,false)
    helpmenuUI["rules"] = DGS:dgsCreateBrowser(0.02, 0.02, 0.96, 0.95,true, helpmenuUI["tabpanel_rules"] ,false)
    
@@ -74,6 +73,22 @@ function createHelpmenuUI ()
 
    -- // Events
    triggerServerEvent("fetchUpdateDetailsForHelpmenu", getLocalPlayer())
+  
+   -- // Klick-Events bei Sub-Kategorien
+   addEventHandler( "onDgsMouseClick",  root, 
+   function(button, state, x, y)
+       if button == 'left' and state == 'up' and source == helpmenuUI["tabpanel_helpmenu_subhelps"] then
+           local Selected, selectedCol = DGS:dgsGridListGetSelectedItem( helpmenuUI["tabpanel_helpmenu_subhelps"] )
+           if Selected ~= -1 then 
+               local clickedRowData =  DGS:dgsGridListGetItemData ( helpmenuUI["tabpanel_helpmenu_subhelps"], Selected, helpmenuUI["tabpanel_helpmenu_subhelps_name"] )
+               DGS:dgsSetText( helpmenuUI["tabpanel_helpmenu_subhelptitle"], clickedRowData.title)
+               DGS:dgsSetText( helpmenuUI["tabpanel_helpmenu_subhelptext"],  clickedRowData.text)
+           end
+       end
+   end)
+
+
+   -- // Klick-Events bei Kategorien
    addEventHandler( "onDgsMouseClick", helpmenuUI["tabpanel_helpmenu_helps"], 
    function(button, state, x, y)
        if button == 'left' and state == 'up' and source ==  helpmenuUI["tabpanel_helpmenu_helps"] then
@@ -82,14 +97,18 @@ function createHelpmenuUI ()
                 local theTable = DGS:dgsGridListGetItemData( helpmenuUI["tabpanel_helpmenu_helps"],Selected, helpmenuUI["tabpanel_helpmenu_helps_name"])
                -- // Hat es Sub Kategorien ?
                 if theTable.subCategorys then
+                    local selectedCategory = theTable.subCategorys.startSubCategory
                     createSubcategoryElements ()
-                    print("hat sub")
                     -- // Hinzufügen
                     DGS:dgsGridListClear(helpmenuUI["tabpanel_helpmenu_subhelps"])
                     for i,theSubTable in ipairs(theTable.subCategorys) do
-                        print(i, theSubTable )
                         local row = DGS:dgsGridListAddRow (  helpmenuUI["tabpanel_helpmenu_subhelps"] )
                         DGS:dgsGridListSetItemText (  helpmenuUI["tabpanel_helpmenu_subhelps"], row,  helpmenuUI["tabpanel_helpmenu_subhelps_name"], theSubTable.title, false, false )
+                        DGS:dgsGridListSetItemData (  helpmenuUI["tabpanel_helpmenu_subhelps"], row,  helpmenuUI["tabpanel_helpmenu_subhelps_name"], theSubTable )
+                    end
+                    if selectedCategory then
+
+                        DGS:dgsGridListSelectItem( helpmenuUI["tabpanel_helpmenu_subhelps"], selectedCategory, helpmenuUI["tabpanel_helpmenu_subhelps_name"], true )
                     end
                 else
                     -- // Sub elemente löschen (wenn da)
@@ -105,12 +124,15 @@ function createHelpmenuUI ()
         end
    end)
    
+
+
 end
 addCommandHandler("th", createHelpmenuUI)
 
+
 addEventHandler("onClientBrowserCreated", root, function()
     if source == helpmenuUI["trello"] then
-        loadBrowserURL(source,  helpmenuLinks["trello"] ) 
+        loadBrowserURL(source,  "http://mta/local/htmlTest.html" )   
     end
     if source == helpmenuUI["rules"] then
        loadBrowserURL(source,  helpmenuLinks["rules"] )
@@ -119,6 +141,12 @@ addEventHandler("onClientBrowserCreated", root, function()
         loadBrowserURL(source,  helpmenuLinks["forum"] ) 
     end
 end)
+
+addEventHandler ( "onClientBrowserDocumentReady" , root , 
+	function ( url ) 
+		print(url, "wurde geladen")
+	end 
+)
 
 function createSubcategoryElements ()
     if not helpmenuUI["tabpanel_helpmenu_subhelps"] then
@@ -131,6 +159,10 @@ function createSubcategoryElements ()
         -- // Elemente Unsichtbar machen
         DGS:dgsSetVisible(  helpmenuUI["tabpanel_helpmenu_helptitle"], false)
         DGS:dgsSetVisible(  helpmenuUI["tabpanel_helpmenu_helptext"], false)
+
+        addEventHandler("onDgsGridListSelect", helpmenuUI["tabpanel_helpmenu_subhelps"], function ( current, currentcolumn, previous, previouscolumn )
+            outputChatBox("The item of list has been changed. ( Current: "..current.." )")
+            end)
     end
 end
 
@@ -152,13 +184,13 @@ function addHelpToList ()
         local row = DGS:dgsGridListAddRow (  helpmenuUI["tabpanel_helpmenu_helps"] )
         DGS:dgsGridListSetItemText (  helpmenuUI["tabpanel_helpmenu_helps"], row,  helpmenuUI["tabpanel_helpmenu_helps_name"], i, false, false )
         DGS:dgsGridListSetItemData (  helpmenuUI["tabpanel_helpmenu_helps"], row, helpmenuUI["tabpanel_helpmenu_helps_name"], theTable ) -- // Tabelle wird auf die Spalte gesetzt
-    
+        --[[
         if theTable.subCategorys then
             print("Sub von "..i..", startSubCategory: "..theTable.startSubCategory)
             for subI,theSubTable in pairs(theTable.subCategorys) do
-              print(subI, theSubTable )
+                print(subI, theSubTable )
             end
-      end
+        end--]]
     end
 end
 

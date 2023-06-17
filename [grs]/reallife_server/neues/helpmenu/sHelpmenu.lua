@@ -16,3 +16,11 @@ function fetchUpdateDetailsForHelpmenu ()
 end
 addEvent ( "fetchUpdateDetailsForHelpmenu", true )
 addEventHandler ( "fetchUpdateDetailsForHelpmenu", getRootElement(), fetchUpdateDetailsForHelpmenu )
+
+
+function openHelmenu (player)
+    if not getElementClicked ( player ) and vioGetElementData ( player, "loggedin" ) == 1 then
+        triggerClientEvent(player, "createHelpmenu", player)
+    end
+end
+addCommandHandler("helpmenu", openHelmenu)

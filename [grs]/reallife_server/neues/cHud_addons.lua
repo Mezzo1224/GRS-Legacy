@@ -4,6 +4,7 @@
 
 
 -- // EP Boost
+
 function renderEPBoost ()
     addEventHandler("onClientRender", root, epBoostUI)
 end
@@ -29,7 +30,7 @@ function betaWarning ()
         local sx, sy = x/2560, y/1440
         local FrontSize = sy*2.0 
         dxDrawRectangle(895*sx, 0*sy, 773*sx, 38*sy, tocolor(3, 0, 0, 224), false)
-        dxDrawText("GRS Beta Version "..curVersion.." - Bugs in Discord melden, Features nicht Final", 899*sx, 0*sy, 1662*sx, 38*sy, tocolor(255, 255, 255, 255), FrontSize, "default", "left", "top", false, false, false, false, false)
+        dxDrawText(SharedConfig["main"].serverName.." Pre-Release -  "..curVersion.." - Bugs in Discord melden, alles WIP", 899*sx, 0*sy, 1662*sx, 38*sy, tocolor(255, 255, 255, 255), FrontSize, "default", "left", "top", false, false, false, false, false)
     end
 end
 

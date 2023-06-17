@@ -151,7 +151,7 @@ function cropdusterMissionComplete_func ( )
 		end
 		setElementDimension ( player, 0 )
 		infobox ( player, "Auftrag abgeschlossen!\nDu erhälst 250 $!", 5000, 0, 125, 0 )
-		givePlayerXP(player,5)
+		addPlayerXP(player,5)
 		increaseAirportLevel ( player, 2 )
 		local pmoney = vioGetElementData ( player, "money" )
 		vioSetElementData ( player, "money", pmoney + 250 )
@@ -225,7 +225,7 @@ function airportJobFreightFinished_func ( vehid )
 			earned = 1100
 		end
 		infobox ( player, "Auftrag abgeschlossen!\nDu erhälst "..earned.." $!", 5000, 0, 125, 0 )
-		givePlayerXP(player,20)
+		addPlayerXP(player,20)
 		increaseAirportLevel ( player, 2 )
 		local pmoney = vioGetElementData ( player, "money" )
 		vioSetElementData ( player, "money", pmoney + earned )

@@ -64,5 +64,5 @@ addEventHandler ( "submitBetaKey", getRootElement(), submitBetaKey )
 
 
 function isBeta ()
-    return betasystem
+    return ServerConfig["main"].enableBetasystem
 end

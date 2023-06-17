@@ -127,11 +127,11 @@ function showNextFarmerJobMarker ( player, farmJobCounter, i )
 			if i == 2 then
 				infobox ( player, "Du erhaelst 500 $\n10er-Bonus!", 5000, 0, 200, 0 )
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 500 )
-				givePlayerXP(player,30)
+				addPlayerXP(player,30)
 			else
 				infobox ( player, "Du erhaelst 1000 $\n10er-Bonus!", 5000, 0, 200, 0 )
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 1000 )
-				givePlayerXP(player,50)
+				addPlayerXP(player,50)
 			end
 		end
 		JobCounter[player] = farmJobCounter 
@@ -165,7 +165,7 @@ function farmerJobMarkerHit ( typ )
 		vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 100 )
 		vioSetElementData ( player, "farmerLVL", farmerLVL + 1 )
 		setElementFrozen ( player, true )
-		givePlayerXP(player,5)
+		addPlayerXP(player,5)
 		setPedAnimation ( player, "BOMBER", "BOM_Plant_Crouch_In", 1500, false, false, false, true )
 		setTimer ( setPedAnimation, 1500, 1, player, "BOMBER", "BOM_Plant_Loop", -1, true, false, false, true )
 		
@@ -182,11 +182,11 @@ function farmerJobMarkerHit ( typ )
 	elseif typ == 2 then
 		vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 100 )
 		vioSetElementData ( player, "farmerLVL", farmerLVL + 2 )
-		givePlayerXP(player,5)
+		addPlayerXP(player,5)
 		showNextFarmerJobMarker ( player, farmJobCounter, 2 )
 	elseif typ == 3 then
 		vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 160 )
-		givePlayerXP(player,5)
+		addPlayerXP(player,5)
 		vioSetElementData ( player, "farmerLVL", farmerLVL + 2 )
 		showNextFarmerJobMarker ( player, farmJobCounter, 3 )
 	end

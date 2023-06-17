@@ -245,41 +245,41 @@ function swtClickBox ( source, theButton, player )
                 fraktionRearms["SWATSets"] = fraktionRearms["SWATSets"] + SWATSetsDrop
                 fraktionRearms["WeaponSets"] = fraktionRearms["WeaponSets"] + WeaponSetsDrop
                 destroyElement(source)
-                givePlayerXP(player,2)
+                addPlayerXP(player,2)
 
             elseif isMafia(player) then
 				local mats =  math.random(100,200)
 				factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] = factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] + mats
 				sendMSGForFaction (getPlayerName(player).." hat eine Waffenbox aufgesammelt, sie enthielt "..mats.." Mats.", tonumber(vioGetElementData ( player, "fraktion" )),0,205,0 )
                 destroyElement(source)
-                givePlayerXP(player,2)
+                addPlayerXP(player,2)
 
             elseif isTriad(player) then
 				local mats =  math.random(100,200)
 				factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] = factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] + mats
                 sendMSGForFaction (getPlayerName(player).." hat eine Waffenbox aufgesammelt, sie enthielt "..mats.." Mats.", tonumber(vioGetElementData ( player, "fraktion" )),0,205,0 )
                 destroyElement(source)
-                givePlayerXP(player,2)
+                addPlayerXP(player,2)
 				
             elseif isBiker(player) then
 				local mats =  math.random(100,200)
 				factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] = factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] + mats
                 sendMSGForFaction (getPlayerName(player).." hat "..mp5.." MP5(s) (Ammu:"..mp5ammo.."), "..m4.." M4(s) (Ammu:"..m4ammo..") und "..sniper.." Sniper (Ammu:"..sniperammo..") durch das Aufsammeln einer Waffenbox in das Waffenlager eingelagert.", tonumber(vioGetElementData ( player, "fraktion" )),0,205,0 )
                 destroyElement(source)
-                givePlayerXP(player,2)
+                addPlayerXP(player,2)
             elseif isAztecas(player) then
 				local mats =  math.random(100,200)
 				factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] = factionDepotData["mats"][tonumber(vioGetElementData ( player, "fraktion" ))] + mats
 				sendMSGForFaction (getPlayerName(player).." hat eine Waffenbox aufgesammelt, sie enthielt "..mats.." Mats.", tonumber(vioGetElementData ( player, "fraktion" )),0,205,0 )
                 destroyElement(source)
-                givePlayerXP(player,2)
+                addPlayerXP(player,2)
             elseif isGrove(player) or isBallas(player) or ishit(player) or isss(player) or isTerror(player) then
                 local money = math.random(10000,15000)
                 sendMSGForFaction (getPlayerName(player).." hat beim aufheben einer Waffenbox, da es kein Waffenlager gibt, "..money.."$ bekommen, da er die Waffen verkauft hat. ", tonumber(vioGetElementData ( player, "fraktion" )),0,205,0 )
                 local pmoney = tonumber ( vioGetElementData ( player, "money" ) )
                 vioSetElementData ( player, "money", pmoney + money )
                 destroyElement(source)
-                givePlayerXP(player,2)
+                addPlayerXP(player,2)
             else
                 outputChatBox ( "Ungültige Fraktion!", player, 255, 0, 0 )
             end

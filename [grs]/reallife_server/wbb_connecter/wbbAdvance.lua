@@ -8,14 +8,14 @@ local pass = ""
 local db = "test_forum"
 
 addEventHandler("onResourceStart", resourceRoot, function()
-	if forumsync == true then
+	if ServerConfig["forum"].enableForumsynchronization == true then
 		wbb = new(Cwbbc, host, user, pass, db, 3306)
 		wbbHandler = dbConnect ( "mysql", "dbname=".. db .. ";host="..host..";port=3306", user, pass )
 		if wbbHandler then
 			print("WBB Verbunden.")
 		else
 			print("WBB nicht Verbunden. Forumsynchronisation deaktiviert.")
-			forumsync = false
+			ServerConfig["forum"].enableForumsynchronization = false
 		end
 	end
 end)

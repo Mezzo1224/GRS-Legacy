@@ -74,7 +74,6 @@ function createLoginWindow ()
 
     addEventHandler ( "onDgsCheckBoxChange",loginWindow["autologin"], 
     function(state)
-        print(state, "Autologin-State")
         toggleAutoLogin (state)
     end)
 
@@ -96,7 +95,7 @@ function createLoginWindow ()
 
     -- // Autologin-Check
     local autoLoginState = getAutoLogin ()
-    print(autoLoginState, "AutologinState")
+
     if autoLoginState  == true then
         DGS:dgsCheckBoxSetSelected(loginWindow["autologin"], true)
         setTimer ( function()
@@ -122,7 +121,7 @@ function destroyLoginwindow ()
         killTimer ( LVCamFlightTimer )
     end
 	setTempToken () -- // Supporttoken setzen
-    loadClientSettings ()
+    intSettings () 
     -- // Update ?
     checkNewUpdate ()
 end
@@ -184,7 +183,6 @@ addEventHandler("onClientResourceStart", getResourceRootElement(getThisResource(
         for i = 1, 100 do
             outputChatBox (" ")
         end
-        findSettings ()
         intLoginFile ()
         if ( x < 1920 ) and ( y < 1080 ) then 
             outputChatBox ( "WARNUNG: DEINE AUFLÖSUNG IST UNTER 1920x1080 ! DIES KANN ZU PROBLEMEN FÜHREN!" )
@@ -201,7 +199,7 @@ local filePath = ":grs_cache/"..getPlayerName(getLocalPlayer()).."_login.xml"
 function intLoginFile ()
     local loginSettingsNode = xmlLoadFile ( filePath )
     if not loginSettingsNode then
-        loginSettingsNode  = xmlCreateFile(filePath,"loginSettings")
+        loginSettingsNode  = xmlCreateFile(filePath,"login")
         local passwordNode = xmlCreateChild(loginSettingsNode, "password")
         local autologinNode = xmlCreateChild(loginSettingsNode, "enableAutoLogin")
         xmlSaveFile(loginSettingsNode)
@@ -224,10 +222,10 @@ function toggleAutoLogin (state)
     local loginSettingsNode = xmlLoadFile ( filePath )
     local autologinChild = xmlFindChild ( loginSettingsNode, "enableAutoLogin", 0 )
     if state == false then
-        print("Autologin deaktiviert.")
+        newInfobox ("Autologin deaktiviert.", 2)
         xmlNodeSetValue (  autologinChild, "0"  )
     else
-        print("Autologin aktiviert.")
+        newInfobox ("Autologin aktiviert.", 2)
         xmlNodeSetValue (  autologinChild, "1"  )
     end
     xmlSaveFile(loginSettingsNode)
@@ -239,10 +237,10 @@ function safePassword (password)
     local passwordChild = xmlFindChild ( loginSettingsNode, "password", 0 )
     if password == nil then
         xmlNodeSetValue (  passwordChild, ""  )
-        print("Passwort wird nicht mehr gespeichert.")
+        newInfobox ("Passwort wird nicht mehr gespeichert.", 2)
     else
         xmlNodeSetValue (  passwordChild, password  )
-        print("Passwort wird gespeichert.", password)
+        newInfobox ("Passwort wird gespeichert.", 2)
     end
     xmlSaveFile(loginSettingsNode)
     xmlUnloadFile(loginSettingsNode)

@@ -201,3 +201,46 @@ function carEject ( player )
 
 	setPedAnimation ( player )
 end
+
+
+function addJobReward ( player, xp, money )
+	local job = vioGetElementData ( player, "job" )
+	if job ~= "none" then
+		if xp > 0 then
+			addPlayerXP ( player, xp)
+		end
+
+		if money > 0 then
+			if isBankMoney then
+				vioSetElementData ( player, "bankmoney", vioGetElementData ( player, "bankmoney" ) + money )
+				prefix = "Du hast "..money.."$ auf dein Bankkonto als Belohnung bekommen."
+			else
+				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + money )
+				prefix = "Du hast "..money.."$ als Belohnung bekommen."
+			end
+			newInfobox (player, prefix, 4, nil, nil, nil, nil, 5)
+		end
+
+
+		-- // Job-Stats Update
+
+		local result = dbPoll ( dbQuery ( handler, "SELECT * FROM ?? WHERE ??=?", "statistics_jobs", "job", job ), -1 )
+		if #result > 0 then
+			local addXP = tonumber ( result[1]["collectedXP"] + xp )
+			local addMoney = tonumber ( result[1]["collectedMoney"] + money)
+			dbExec ( handler, "UPDATE ?? SET ??=?,??=?,??=? WHERE ??=?", "statistics_jobs", "collectedXP", addXP ,"collectedMoney", addMoney ,"lastUser",  playerUID[getPlayerName(player)] , "job", job )
+		else
+			print("Job Datenbank gibt es nicht", job )
+			local result, num_affected_rows, id =  dbPoll ( dbQuery( handler, "INSERT INTO statistics_jobs (job , collectedXP, collectedMoney, lastUser) VALUES (?,?,?,?)",  job, xp, money,   playerUID[getPlayerName(player)] ), -1)
+			print("Job-Datenbank wurde eingefügt", result, num_affected_rows, id )
+		end
+
+	else
+		triggerClientEvent ( player, "infobox_start", getRootElement(), "Du hast keinen Job?", 7500, 0, 125, 0 )
+	end
+end
+
+function testAddREward (player)
+	addJobReward ( player, 10, 100 )
+end
+addCommandHandler ( "adr",testAddREward )

@@ -250,7 +250,7 @@ function truckerJobTargetMarkerHit ( hit, dim )
 					
 					vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + amount )
 					vioSetElementData ( player, "truckerlvl", vioGetElementData ( player, "truckerlvl" ) + 1 )
-					givePlayerXP(player,tonumber( amount/4))
+					addPlayerXP(player,tonumber( amount/4))
 					cancelTruckerJobForPlayer ( player )
 					triggerClientEvent ( player, "achievsound", player )
 					triggerClientEvent ( player, "showMissionState", player, "Mission erfuellt!\n+ "..amount.." $", 3500, 0, 200, 0 )

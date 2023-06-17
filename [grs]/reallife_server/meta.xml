@@ -3,10 +3,21 @@
     <info author="Zipper" type="gamemode" name="Testserver" description="German Reallife" version="4" />
     <oop>true</oop>
     <min_mta_version client="1.5.7-9.20157" />
-    
+    <download_priority_group>1</download_priority_group>
+
+     <settings>
+        <setting name="host" value="127.0.0.1" /> 
+    </settings>
+
     <include resource="grs_cache" />
     <include resource="gtav" />
-    
+    <include resource="dgs" />
+
+    <!-- Config-->
+    <script src="config/sharedConfig.lua" type="shared"  />
+    <script src="config/sConfig.lua" type="server" />
+    <script src="config/cConfig.lua" type="client" cache="false"  />
+
     <!-- HALLOWEEN EVENT -->
     <file src="models/13.txd" />
     <file src="models/22.txd" />
@@ -26,7 +37,7 @@
     <script src="mysql\mysql_functions.lua" />
     
     <script src="mysql\auto_update_db.lua" />
-    
+    <script src="neues\scriptInstaller\sInstaller.lua" />
     
     <script src="core\data_client.lua" type="client" />
     <!-- Keine UI Elemente davor laden! -->
@@ -48,7 +59,6 @@
     
     <script src="core\license.lua" />
     
-    <script src="settings\neu\sConfig.lua" type="server" />
     <script src="settings\settings_client.lua" type="client" />
     <script src="settings\settings_server.lua" />
     
@@ -89,8 +99,10 @@
     <file src="sounds\klingel.mp3" />
     <file src="sounds\pianochill.mp3" />
     <file src="sounds\tutsound.mp3" />
-     <file src="images\customFaction\gang.png" />
-      <file src="images\customFaction\cooperation.png" />
+    <file src="images\customFaction\gang.png" />
+    <file src="images\customFaction\cooperation.png" />
+    <file src="images\customFaction\gang_blur.png" />
+    <file src="images\customFaction\cooperation_blur.png" />
     
     <file src="images\easter_egg.png" />
     <file src="images\account.png" />
@@ -526,12 +538,8 @@
     <file src="images/carsys/Punkt.png" />
     <file src="images/carsys/Tanknadel.png" />
     
-    <file src="images/hud/air.png" />
-    <file src="images/hud/armour.png" />
     <file src="images/hud/flash.png" />
     <file src="images/hud/gloss.png" />
-    <file src="images/hud/health.png" />
-    <file src="images/hud/hunger.png" />
     
     <file src="images/self/admin.png" />
     <file src="images/self/friends.png" />
@@ -786,19 +794,15 @@
     <script src="clicksys\playerclick\fdepot_click.lua" type="client" />
     <script src="clicksys\playerclick\fraktion_click.lua" type="client" />
     <script src="clicksys\playerclick\fschein_click.lua" type="client" />
-    <script src="clicksys\playerclick\handy_click.lua" type="client" />
     <script src="clicksys\playerclick\hotdog_click.lua" type="client" />
     <script src="clicksys\playerclick\house_click.lua" type="client" />
     <script src="clicksys\playerclick\job_click.lua" type="client" />
-    <script src="clicksys\playerclick\options_click.lua" type="client" />
     <script src="clicksys\playerclick\ped_click.lua" type="client" />
     <script src="clicksys\playerclick\player_click.lua" type="client" />
     <script src="clicksys\playerclick\policecomputer_click.lua" type="client" />
     <script src="clicksys\playerclick\radio_click.lua" type="client" />
     <script src="clicksys\playerclick\rathaus_click.lua" type="client" />
     <script src="clicksys\playerclick\self_click.lua" type="client" />
-    <script src="clicksys\playerclick\stats_click.lua" type="client" />
-    <script src="clicksys\playerclick\spawnselection_click.lua" type="client" />
     <script src="clicksys\playerclick\trunk_click.lua" type="client" />
     <script src="clicksys\playerclick\wdealer_click.lua" type="client" />
     
@@ -1334,8 +1338,9 @@
     
     <export function="infobox_start_func" type="client" />
     
-     <script src="neues/cHud_addons.lua" type="client" />
+    <script src="neues/cHud_addons.lua" type="client" />
     <script src="neues/booster.lua" type="server" />
+    <script src="neues/sEventManager.lua" type="server" />
     <script src="neues/shopsystem.lua" type="server" />
     <script src="neues/betasystem.lua" type="server" />
     <script src="neues/dailylogin.lua" type="server" />
@@ -1347,16 +1352,18 @@
     <script src="neues/levelsystem/cLevelSystem.lua" type="client" cache="false" />
     <script src="neues/levelsystem/sLevelSystem.lua" type="server" />
     <script src="neues/levelsystem/sharedLevelsystem.lua" type="shared" />
-    
-    <!-- Firemsystem -->
-    <script src="neues/coopsystem/sCoop_tables.lua" type="server" />
-    <script src="neues/coopsystem/cCoop.lua" type="client" cache="false" />
-    <script src="neues/coopsystem/cCoop_menu.lua" type="client" cache="false" />
-    <script src="neues/coopsystem/sCoop_menu.lua" type="server" />
-    <script src="neues/coopsystem/sCoop.lua" type="server" />
-    <script src="neues/coopsystem/sCoop_vehicle.lua" type="server" />
-    <script src="neues/coopsystem/sCoop_stocks.lua" type="server" />
-    <script src="neues/coopsystem/sCoop_MySQL.lua" type="server" />
+    <!-- Eigene Fraktionen -->
+    <script src="fraktionen/costumFaction/sCostumFaction_tables.lua" type="server" />
+    <script src="fraktionen/costumFaction/cCostumFaction.lua" type="client" cache="false" />
+    <script src="fraktionen/costumFaction/cCostumFaction_menu.lua" type="client" cache="false" />
+    <script src="fraktionen/costumFaction/sCostumFaction_menu.lua" type="server" />
+    <script src="fraktionen/costumFaction/sCostumFaction.lua" type="server" />
+    <script src="fraktionen/costumFaction/sCostumFaction_vehicle.lua" type="server" />
+    <script src="fraktionen/costumFaction/sCostumFaction_stocks.lua" type="server" />
+    <script src="fraktionen/costumFaction/sCostumFaction_MySQL.lua" type="server" />
+
+    <script src="fraktionen/costumFaction/cCostumFactionCreation.lua" type="client" cache="false" />
+    <script src="fraktionen/costumFaction/sCostumFactionCreation.lua" type="server" />
 
     <!-- Werbesystem-->
     <script src="neues/werbesystem.lua" type="server" />
@@ -1385,10 +1392,10 @@
     <script src="neues\socialStateSystem\sSocial.lua" type="server" />
     <script src="neues\socialStateSystem\cSocial.lua" type="client" />
 
-    <!--Komfortzugang
+    <!--Komfortzugang-->
     <script src="neues\comfortAccess\sComfortAccess.lua" type="server" />
     <script src="neues\comfortAccess\cComfortAccess.lua" type="client" />
-    <file src="neues\comfortAccess\carlock.mp3"  />-->
+    <file src="neues\comfortAccess\carlock.mp3"  />
 
        <!--AdvertSystem-->
     <script src="neues\advert\sAdvert.lua" type="server" />
@@ -1435,10 +1442,8 @@
     
     
     <file src="fonts/DSDIGI.ttf"   />
-    
-    
-    
 
+    <file src="htmlTest.html"/>
 
     <!-- Hud-->
     <file src="fonts/arial.ttf"   />

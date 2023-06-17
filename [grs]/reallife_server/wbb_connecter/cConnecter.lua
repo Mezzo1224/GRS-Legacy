@@ -3,7 +3,7 @@
 function showForumRegister ()
 	 if getSetting (11, 1) == 1 then 
 		forumReg = DGS:dgsCreateWindow(0.43, -0.02, 0.14, 0.18, "Forum",true, nil,nil,nil,nil,nil,nil,nil, true)
-		DGS:dgsMoveTo(forumReg,0.43, 0.41,true,false,"OutQuad",2000)
+		DGS:dgsMoveTo(forumReg,0.43, 0.41,true,"OutQuad",2000)
 		DGS:dgsWindowSetSizable(forumReg,false)
 		DGS:dgsWindowSetMovable(forumReg,false)
 		DGS:dgsCreateLabel(.06, 0.14, 0.91, 0.23, "Du hast momentan kein Foren Account. \nGebe deine E-Mail ein, um einen zu erstellen.",true,forumReg)

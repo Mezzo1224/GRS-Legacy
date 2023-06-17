@@ -92,7 +92,7 @@ function endfishing_func ( fische )
 				setElementPosition ( source, -1725, 1464, 6.5 )
 				
 				vioSetElementData ( source, "money", vioGetElementData ( source, "money" ) + einnahmen )
-				givePlayerXP(source, tonumber(einnahmen/4))
+				addPlayerXP(source, tonumber(einnahmen/4))
 				triggerClientEvent ( source, "achievsound", source )
 				if vioGetElementData ( source, "angler_achiev" ) ~= "done" then																							-- Achiev: Angler
 					vioSetElementData ( source, "angler_achiev", tonumber(vioGetElementData ( source, "angler_achiev" ))+fische )												-- Achiev: Angler

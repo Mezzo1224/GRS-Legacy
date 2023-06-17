@@ -90,7 +90,7 @@ local function hitTramMarker ( hitElement, dim )
 							vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 500 )
 							infobox ( player, "Du bekommst für\ndiese Station\n5000$ Belohnung", 4000, 0, 220, 0 )
 							createTramJobMarker ( player )
-							givePlayerXP(player,10)
+							addPlayerXP(player,10)
 						end
 					end, 3000, 1, hitElement, player )
 				else

@@ -8,17 +8,6 @@ addEvent("checkPlayerLevelUP", true)
 addEventHandler("checkPlayerLevelUP", getRootElement(), checkPlayerLevelUP)
 
 
-
-
-
-
-
-
--- // Wird noch benutzt, aber veraltet
-function givePlayerXP(player,xp)
-    addPlayerXP(player, xp)
-end
-
 function goPrestige ()
 	local player = client
     local level	= tonumber(vioGetElementData ( player, "MainLevel" ))
@@ -41,17 +30,15 @@ addEventHandler("goPrestige", getRootElement(), goPrestige)
 
 function addPlayerXP ( player, xp)
     local level = tonumber(vioGetElementData ( player, "MainLevel" ))
-    if globalXPBoost >= 2 then
-        xp = (xp*globalXPBoost)
-    end
-
+    local xp = ServerConfig["main"].calculateBonus(player, xp)
+    outputChatBox (xp.." bekommst du." )
     -- // XP wird nur gegeben wenn der Spieler unter dem Max. Level ist, sonst Geld. (2 zu 1 Kurs)
     if tonumber(maxLevel) ~= level then
         vioSetElementData ( player, "MainXP", tonumber(xp) + vioGetElementData ( player, "MainXP" ) )
         newInfobox (player, "Du hast "..xp.." Erfahrungspunkte erhalten.", 4, nil, nil, nil, nil, 5)
     else
         local paket = vioGetElementData ( player, "Paket" )
-        local xpToMoney = math.floor(xp / vipEPtoMoney[paket]) 
+        local xpToMoney = math.floor(xp / xpToMoneyRate[paket]) 
         newInfobox (player, "Du hast das maximal Level erreicht.\nDeine erhaltenen EP wurden in "..xpToMoney.."$ umgerechnet", 4, nil, nil, nil, nil, 5)
         vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + xpToMoney )
     end
@@ -68,6 +55,7 @@ function addPlayerXP ( player, xp)
             checkForAdvertiser(player)
         end
     end
+
 end
 
 
@@ -80,4 +68,4 @@ function testLvl (player, cmd, xp)
         calculateLevelProgress ( player )
     end
 end
---addCommandHandler("tl", testLvl)
+addCommandHandler("tl", testLvl)

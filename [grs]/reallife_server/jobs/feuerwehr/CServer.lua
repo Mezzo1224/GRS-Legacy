@@ -609,7 +609,7 @@ cFunc["loesche_feuer"] = function(id)
 					vioSetElementData ( player, "feuer", vioGetElementData ( player, "feuer" )+1 )
 					triggerClientEvent ( player, "plusfeuer", player, vioGetElementData ( player, "feuer" ) )
 					vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + tonumber(deingehalt) )
-					givePlayerXP(player,tonumber(deingehalt)/4))
+					addPlayerXP(player,tonumber(deingehalt)/4))
 						if deinefeuer == 50 then
 							outputChatBox("Herzlichen Glückwunsch! Du wurdest so eben zum Feuerwehrmann befördert.", player, 25, 200, 0 )
 						elseif deinefeuer == 250 then

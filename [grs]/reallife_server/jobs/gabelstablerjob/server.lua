@@ -108,5 +108,5 @@ end)
 addEventHandler("onGabelstablerJobAbgeliefert", getRootElement(), function(lohn2)
 	-- SICHERHEITSHINWEIS --
 	vioSetElementData ( source, "money", vioGetElementData ( source, "money" ) + lohn + lohn2 )
-	givePlayerXP(source,tonumber( lohn + lohn2)/4))
+	addPlayerXP(source,tonumber( lohn + lohn2)/4))
 end)

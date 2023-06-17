@@ -840,7 +840,7 @@ function login_func ( player, passwort )
 							insertPlayerIntoLoggedIn ( pname, getPlayerIP(player), getPlayerSerial(player) )
 							checkExpiredBooster ( player )
 							checkExpiredFactionBan ( player )
-							checkFactionBan ( player )
+							hasFactionBan ( player )
 							giveFreePremiumCar ( player )
 							loadPaydayList ( player )
 							--checkDailyLogin ( player )
@@ -853,14 +853,13 @@ function login_func ( player, passwort )
 								giveAchievement( player, 10 )
 							end
 							achievmentChecker[pname] = setTimer( checkAchievments, 60000, 0, player)
-							bindKey (player, "f2", "down", startReport, player )
 							setElementFrozen ( player, false )
 							-- // Inventar
 							loadPlayerInventory (player)
 							-- // Settings
 							loadPlayerServersideSettings (player)
 							-- // Betatest-Sachen
-							if betasystem == true  then
+							if ServerConfig["main"].enableBetasystem == true  then
 								triggerClientEvent ( player, "renderBetaWarning", getRootElement() )		
 								if vioGetElementData ( player, "premium") == false then
 									newInfobox (player, "Du hast wegen der Beta 5.000.000$\nund Premium Stufe Platin für 90 Tage erhalten.", 4)
@@ -1339,7 +1338,7 @@ addEventHandler ( "logoutPlayer", getRootElement(), logoutPlayer_func )
 
 
 function forumLoad ( player )
-	if forumsync == true  then
+	if ServerConfig["forum"].enableForumsynchronization == true  then
 		local pname = getPlayerName ( player )
 		local dsatz
 		local result = dbPoll ( dbQuery ( handler, "SELECT * from forum_accounts WHERE UID = ?", playerUID[pname] ), -1 )

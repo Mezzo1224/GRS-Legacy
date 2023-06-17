@@ -166,7 +166,7 @@ function showBeginGui_func ()
 
 	gWindow["welcomeInfo"] = guiCreateWindow(507,285,445,266,"Fast geschafft!",false)
 	guiSetAlpha(gWindow["welcomeInfo"],1)
-	gLabel["anfangsText"] = guiCreateLabel(0.0225,0.0789,0.9303,0.3083,"Das Tutorial ist nun beendet!\nNun waere es angebracht, sich im Hilfemenue ( Kurztaste: F1 ) erst einmal\nueber die Serverregeln und anfaenglichen Schritte zu informieren.\n\nViel Spass auf "..servername.."!",true,gWindow["welcomeInfo"])
+	gLabel["anfangsText"] = guiCreateLabel(0.0225,0.0789,0.9303,0.3083,"Das Tutorial ist nun beendet!\nNun waere es angebracht, sich im Hilfemenue ( Kurztaste: F1 ) erst einmal\nueber die Serverregeln und anfaenglichen Schritte zu informieren.\n\nViel Spass auf "..SharedConfig["main"].serverName.."!",true,gWindow["welcomeInfo"])
 	guiSetAlpha(gLabel["anfangsText"],1)
 	guiLabelSetColor(gLabel["anfangsText"],255,255,255)
 	guiLabelSetVerticalAlign(gLabel["anfangsText"],"top")

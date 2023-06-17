@@ -43,7 +43,7 @@ function BusStart ( player, seat, jacked )
 		
 		local driver = busDriver[source]
 		local oldgelddriver = vioGetElementData(getPlayerFromName(driver), "money")
-		givePlayerXP(player,5)
+		addPlayerXP(player,5)
 		vioSetElementData(getPlayerFromName(driver), "money", oldgelddriver + 50)
 	end
 end

@@ -14,6 +14,8 @@ function startReport (player)
         end
     end
 end
+addEvent ( "startReport", true )
+addEventHandler ( "startReport", getRootElement(), startReport )
 addCommandHandler("report", startReport)
 addCommandHandler("rep", startReport)
 addCommandHandler("supp", startReport)

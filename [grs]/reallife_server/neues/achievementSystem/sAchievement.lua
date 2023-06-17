@@ -15,7 +15,7 @@ function giveAchievement( player, id )
 			local rt = getRealTime ()
 			local timesamp = rt.timestamp
             dbExec ( handler, "INSERT INTO ?? (??,??,??) VALUE (?,?,?)", "achievements", "UID", "achievmentID", "data", playerUID[getPlayerName(player)], id, timesamp )
-            givePlayerXP( player, achievement[id].xp )
+            addPlayerXP( player, achievement[id].xp )
             vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + achievement[id].money )
 			local social = socialStateID[achievement[id].socialID]
             if social then

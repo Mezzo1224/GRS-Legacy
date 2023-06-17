@@ -94,7 +94,7 @@ end
 
 function ShowHelpmenueGui_func()
 
-	_CreateHelpmenueGui()
+--	_CreateHelpmenueGui()
 end
 addEvent ( "ShowHelpmenueGui", true)
 addEventHandler ( "ShowHelpmenueGui", getRootElement(), ShowHelpmenueGui_func)

@@ -148,3 +148,27 @@ function testInfobox ()
    setInfoboxTime(infobox_Hello, 60)
 end
 --testInfobox ()
+
+
+-- // TEst neue infobox
+tInfobox = {}
+function test_Newbox (title, text)
+    tInfobox[1] = DGS:dgsCreateWindow ( 2130, 288, 420, 81, title, false )
+
+    local image = DGS:dgsCreateImage (10, 29, 42, 38, ":reallife_server/images/prompt.png", false, tInfobox[1])
+    local text = DGS:dgsCreateLabel(62, 24, 325, 47, text, false, tInfobox[1])    
+    DGS:dgsWindowSetMovable(tInfobox[1], false)
+    DGS:dgsWindowSetSizable(tInfobox[1], false)
+    DGS:dgsWindowSetCloseButtonEnabled(tInfobox[1], false)
+    DGS:dgsWindowSetHorizontalAlign(tInfobox[1], "center")
+    DGS:dgsWindowSetVerticalAlign(tInfobox[1], "center")
+    DGS:dgsSetProperty(tInfobox[1],"titleColor", tocolor(224, 110, 22, 255))
+    DGS:dgsSetProperty(tInfobox[1],"color",tocolor(0, 0, 0, 120))
+
+
+    DGS:dgsSetProperty(image,"ignoreParentTitle",true)
+    DGS:dgsSetProperty(text,"ignoreParentTitle",true)
+    DGS:dgsSetProperty(text,"wordBreak",true)
+    DGS:dgsSetProperty(text,"textSize",{1.1,1.1})
+end
+test_Newbox ("Hinweis", "Du faggot was geht, Elotrix am start.dwa.daw.d.awd.awd.awd.aw.daw.da.w")

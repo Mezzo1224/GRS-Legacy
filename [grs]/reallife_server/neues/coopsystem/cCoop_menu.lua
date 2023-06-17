@@ -269,3 +269,4 @@ function addToCoopGridlist (liste, value1, value2, value3, value4)
 end
 addEvent ( "addToCoopGridlist", true)
 addEventHandler ( "addToCoopGridlist", getLocalPlayer(),  addToCoopGridlist)
+

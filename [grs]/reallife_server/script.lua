@@ -145,6 +145,7 @@ function serverstart ()
 
 	setGameType ( "GRS-Reallife" )
 	setMapName ( "San Andreas" )
+	enableEventsAutomatically ()
 	lastadtime = 0
 	for i = 1, 14 do
 		_G["arenaSlot"..i.."Occupied"] = false
@@ -171,49 +172,8 @@ end
 
 function intGameType ()
     if tonumber(globalXPBoost) > 1 then
-        setGameType ( ""..servername.." Reallife | Ver. "..curVersion.." |"..globalXPBoost.."x EP" )
+        setGameType ( SharedConfig["main"].serverName.." | "..SharedConfig["main"].version.." |"..ServerConfig["main"].globalXPBoost.."x EP" )
     else
-        setGameType ( servername.." Reallife | Ver. "..curVersion )
+        setGameType ( SharedConfig["main"].serverName.." Reallife | "..SharedConfig["main"].version )
     end
 end
-
-
-
--- Vehicle-Handling-File-Creation --
---[[local veh, fileData, handlingData, handlingDataNames, file
-handlingDataNames = {}
-	handlingDataNames["mass"] = true
-	handlingDataNames["turnMass"] = true
-	handlingDataNames["numberOfGears"] = true
-	handlingDataNames["maxVelocity"] = true
-	handlingDataNames["engineAcceleration"] = true
-	handlingDataNames["engineInertia"] = true
-	handlingDataNames["engineType"] = true
-	handlingDataNames["brakeDeceleration"] = true
-	handlingDataNames["collisionDamageMultiplier"] = true
-
-fileData = "defaultVehicleHandlingData = {}"
-file = fileCreate ( "handling_settings.lua" )
-for i = 400, 611 do
-	veh = createVehicle ( i, 0, 0, 0 )
-	if isElement ( veh ) then
-		handlingData = getVehicleHandling ( veh )
-		
-		fileData = fileData.."\n\tdefaultVehicleHandlingData["..i.."] = {}"
-		
-		for prop, index in pairs ( handlingDataNames ) do
-			fileData = fileData.."\n\t\tdefaultVehicleHandlingData["..i.."][\""..prop.."\"] = "
-			if type ( handlingData[prop] ) == "number" then
-				fileData = fileData..handlingData[prop]
-			else
-				fileData = fileData.."\""..handlingData[prop].."\""
-			end
-		end
-		
-		fileData = fileData.."\n"
-		
-		destroyElement ( veh )
-	end
-end
-fileWrite ( file, fileData )
-fileClose ( file )]]

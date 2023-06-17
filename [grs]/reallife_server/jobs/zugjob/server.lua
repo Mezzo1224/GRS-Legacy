@@ -136,18 +136,18 @@ function erfolgreicherMarkerHitZugJob ( hitElement )
 			if playerAnzahlMarkerEingesammelt[player] == 10 then
 				outputChatBox ("Das war dein 10. Marker - dafür kriegst du 150$ Bonus!", player, 0, 0, 255 )
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 150 )
-				givePlayerXP(player,5)
+				addPlayerXP(player,5)
 			elseif playerAnzahlMarkerEingesammelt[player] == 25 then
 				outputChatBox ("Das war dein 25. Marker - dafür kriegst du 350$ Bonus!", player, 0, 0, 255 )
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 350 )
-				givePlayerXP(player,20)
+				addPlayerXP(player,20)
 			elseif playerAnzahlMarkerEingesammelt[player] == 50 then
 				outputChatBox ("Das war dein 50. Marker - dafür kriegst du 600$ Bonus!", player, 0, 0, 255 )
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 600 )
-				givePlayerXP(player,30)
+				addPlayerXP(player,30)
 			elseif playerAnzahlMarkerEingesammelt[player] == 100 then
 				outputChatBox ("Das war dein 100. Marker - dafür kriegst du 1000$ Bonus!", player, 0, 0, 255 )
-				givePlayerXP(player,100)
+				addPlayerXP(player,100)
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 1000 )
 			end
 			vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 300 )

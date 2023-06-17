@@ -56,7 +56,7 @@ vipPayDayExtra= {
     [5] = 300
 }
 
-vipEPtoMoney = {
+xpToMoneyRate = {
     [0] = 10,
     [1] = 8,
     [2] = 6,

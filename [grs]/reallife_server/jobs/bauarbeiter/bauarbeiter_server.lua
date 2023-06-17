@@ -118,7 +118,7 @@ function showNextBauarbeiterJobMarker ( player, BauingJobCounter, i )
 			BauingJobCounter = 1
 			if i == 1 then
 				infobox ( player, "Du erhälst einen\n100 $ Bonus für\ndie Anlage!", 5000, 0, 200, 0 )
-				givePlayerXP(player,10)
+				addPlayerXP(player,10)
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 100 )
 			end
 		end
@@ -126,11 +126,11 @@ function showNextBauarbeiterJobMarker ( player, BauingJobCounter, i )
 			if i == 2 then
 				infobox ( player, "Du erhälst 100 $\n10er-Bonus!", 5000, 0, 200, 0 )
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 100 )
-				givePlayerXP(player,5)
+				addPlayerXP(player,5)
 			else
 				infobox ( player, "Du erhälst 200 $\n10er-Bonus!", 5000, 0, 200, 0 )
 				vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 200 )
-				givePlayerXP(player,5)
+				addPlayerXP(player,5)
 			end
 		end
 		JobCounter[player] = BauingJobCounter
@@ -162,7 +162,7 @@ function BauarbeiterJobMarkerHit ( typ )
 	local bauarbeiterLVL = vioGetElementData ( player, "bauarbeiterLVL" )
 	if typ == 1 then
 		vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 50 )
-		givePlayerXP(player,5)
+		addPlayerXP(player,5)
 		vioSetElementData ( player, "bauarbeiterLVL", bauarbeiterLVL + 1 )
 		setElementFrozen ( player, true )
 		
@@ -183,12 +183,12 @@ function BauarbeiterJobMarkerHit ( typ )
 		vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 110 )
 		vioSetElementData ( player, "bauarbeiterLVL", bauarbeiterLVL + 2 )
 		showNextBauarbeiterJobMarker ( player, BauingJobCounter, 2 )
-		givePlayerXP(player,10)
+		addPlayerXP(player,10)
 	elseif typ == 3 then
 		vioSetElementData ( player, "money", vioGetElementData ( player, "money" ) + 1200 )
 		vioSetElementData ( player, "bauarbeiterLVL", bauarbeiterLVL + 2 )
 		showNextBauarbeiterJobMarker ( player, BauingJobCounter, 3 )
-		givePlayerXP(player,100)
+		addPlayerXP(player,100)
 	end
 	if bauarbeiterLVL == 100 then
 		infobox ( player, "Du hast soeben\nBau-\nLevel 100 erreicht -\ndu kannst nun mit\ndem Dozer fahren.", 5000, 0, 200, 0 )

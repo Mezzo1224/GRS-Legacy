@@ -54,7 +54,6 @@ MySQL_Startup()
 
 
 
-
 function gamemodeReadyCheck (res)
 	if enableStartDebug == true then
 		if not fileExists ( ":reallife_server/ready.txt" )  then

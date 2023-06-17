@@ -68,7 +68,7 @@ function createNewCooperation (player, name, nameShort, coopType, r, g, b)
     
 end
 
-function isNameAvailable (player, name, nameShort)
+local function isNameAvailable (player, name, nameShort)
     if dbExist ( "cooperations", "name LIKE '"..name.."'") then
         newInfobox(player,"Dieser Name ist vergeben.", 3)
         return false
@@ -542,3 +542,4 @@ function getRankPaydays ( coopID )
         return p1, p2, p3, p4
     end
 end
+

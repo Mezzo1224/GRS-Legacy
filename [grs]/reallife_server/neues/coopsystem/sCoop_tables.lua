@@ -18,7 +18,8 @@ cooperationTuningLevelCosts = {
 }
 maxCoopTuningLevel = #cooperationTuningLevelCosts
 maxCoopLevel = #cooperationTuningLevelCosts
-cooperationCreateCosts = 150000 / 100
+
+cooperationCreateCosts = 150000000
 companyInterestPerc = 1
 coopPaydayTimer = (1000 * 60) * 60
 coopType = {
