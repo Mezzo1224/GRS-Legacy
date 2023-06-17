@@ -1,5 +1,5 @@
 ﻿fraktionNames = {}
-fraktionNames = { [0] = "Zivilisten", [1]="SFPD", [2]="Cosa Nostra", [3]="Triaden", [4]="Terroristen", [5]="SAN News", [6]="FBI", [7]="Los Aztecas", [8]="Army", [9]="Angels of Death", [10]="Sanitäter", [11]="Mechaniker", [12]="Ballas", [13]="Grove" }
+fraktionNames = { [0] = "Zivilisten", [1]="SFPD", [2]="Cosa Nostra", [3]="Triaden", [4]="Terroristen", [5]="LTR", [6]="FBI", [7]="Los Aztecas", [8]="Army", [9]="Angels of Death", [10]="Sanitäter", [11]="Mechaniker", [12]="Ballas", [13]="Grove" }
 fraktionJoinable = { ["sfpd"] = true, ["mafia"] = true, ["triaden"] = true, ["terror"] = true, ["reporter"] = true, ["fbi"] = true, ["atzen"] = true, ["army"] = true,["aod"] = true, ["medic"] = true, ["mechaniker"] = true }
 fraktionJoinLevel = { ["sfpd"] = 3, ["mafia"] = 3, ["triaden"] = 3, ["terror"] = 10, ["reporter"] = 5, ["fbi"] = 5, ["atzen"] = 3, ["army"] = 10, ["aod"] = 3, ["medic"] = 1, ["mechaniker"] = 1, ["ballas"] = 3, ["grove"] = 3 }
 fraktionJoinVIP	= { ["sfpd"] = false, ["mafia"] = false, ["triaden"] = false, ["terror"] = true, ["reporter"] = false, ["fbi"] = false, ["atzen"] = false, ["army"] = false, ["aod"] = false, ["medic"] = false, ["mechaniker"] = false, ["ballas"] = false, ["grove"] = false }
