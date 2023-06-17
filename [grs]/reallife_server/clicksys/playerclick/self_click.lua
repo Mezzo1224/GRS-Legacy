@@ -14,7 +14,7 @@ function showSelfMenu (byClick)
 	end
 		self = DGS:dgsCreateWindow(787*sx, -75, 346*sx, 108*sy, "", false )
 		selfMenu = self
-		DGS:dgsMoveTo(self,787*sx, 0,false,false,"OutQuad",500)
+		DGS:dgsMoveTo(self,787*sx, 0,false,"OutQuad",500)
 		DGS:dgsWindowSetMovable ( self, false )
 		DGS:dgsWindowSetSizable ( self, false )
 		DGS:dgsWindowSetCloseButtonEnabled(self, true)
@@ -52,7 +52,7 @@ function showSelfMenu (byClick)
 		showCursor(true)
 
 		-- // Events //
-		addEventHandler( "onDgsWindowClose", selfMenu, closeSelfMenu)
+		addEventHandler(  "onDgsWindowClose", selfMenu, closeSelfMenu)
 		addEventHandler ( "onDgsMouseClickDown", info, showInfoWindow )
 		addEventHandler ( "onDgsMouseClickDown", settings,  showSettingsWindow )
 		addEventHandler ( "onDgsMouseClickDown", shop,  showShopWindow )
