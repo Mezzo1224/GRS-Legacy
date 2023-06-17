@@ -2,7 +2,7 @@ dgsLogLuaMemory()
 local loadstring = loadstring
 ---------------Speed Up
 local tableInsert,tableRemove,tableFind = table.insert,table.remove,table.find
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local type,assert = type,assert
 local isElement = isElement
 local setElementData = setElementData
@@ -22,109 +22,107 @@ function insertResource(res,dgsEle)
 	end
 end
 
-function dgsGetGuiLocationOnScreen(dgsEle,rlt,rndsup)
-	if not isElement(dgsEle) then return false end
-	local pos = dgsElementData[dgsEle].absPos
-	local x,y = getParentLocation(dgsEle,rndsup,pos[1],pos[2])
-	return rlt and x/sW or x,rlt and y/sH or y
-end
--- todo
-function getParentLocation(dgsEle,rndSuspend,x,y,includeSide)
-	local eleData
-	local x,y = 0,0
-	local startEle = dgsEle
-	repeat
-		eleData = dgsElementData[dgsEle]
-		local absPos = eleData.absPos
-		local absPosX,absPosY = 0,0
-		if absPos then
-			absPosX,absPosY = absPos[1],absPos[2]
-		end
-		if includeSide then
-			local parent = dgsElementData[dgsEle].parent
-			local pEleData = dgsElementData[parent]
-			local eleConAlign = parent and pEleData.contentPositionAlignment
-			local eleAlign = eleData.positionAlignment
-			local eleAlignH,eleAlignV = eleAlign[1] or eleConAlign[1], eleAlign[2] or eleConAlign[2]
-			if eleAlignH == "right" then
-				local pWidth = parent and pEleData.absSize[1] or sW
-				absPosX = pWidth-absPosX
-			elseif eleAlignH == "center" then
-				local pWidth = parent and pEleData.absSize[1] or sW
-				absPosX = absPosX+pWidth/2-eleData.absSize[1]/2
-			end
-			if eleAlignV == "bottom" then
-				local pHeight = parent and pEleData.absSize[2] or sH
-				absPosY = pHeight-absPosY
-			elseif eleAlignV == "center" then
-				local pHeight = parent and pEleData.absSize[2] or sH
-				absPosY = absPosY+pHeight/2-eleData.absSize[2]/2
-			end
-		end
-		local _tmp = dgsEle
-		if dgsElementType[dgsEle] == "dgs-dxtab" then
-			dgsEle = eleData.parent
-			eleData = dgsElementData[dgsEle]
-			local h = eleData.absSize[2]
-			local tabHeight = eleData.tabHeight[2] and eleData.tabHeight[1]*h or eleData.tabHeight[1]
-			x,y = x+eleData.absPos[1],y+eleData.absPos[2]+tabHeight
-		elseif eleData.attachedToGridList then
-			local data = eleData.attachedToGridList	--GridList,Row,Column
-			local gridList = data[1]	--Grid List
-			local gridListEleData = dgsElementData[gridList]
-			local scbThickV = dgsElementData[ gridListEleData.scrollbars[1] ].visible and gridListEleData.scrollBarThick or 0
-			local columnData = gridListEleData.columnData
-			local rowData = gridListEleData.rowData
-			local columnOffset = rowData[data[2]][-4] or gridListEleData.columnOffset
-			local columnMoveOffset = gridListEleData.columnMoveOffset
-			local rowHeight = gridListEleData.rowHeight
-			local leading = gridListEleData.leading
-			local w = gridListEleData.absSize[1]
-			x,y = x+columnMoveOffset+gridListEleData.columnOffset+columnOffset+columnData[data[3]][3]*(gridListEleData.columnRelative and (w-scbThickV) or 1), y+gridListEleData.rowMoveOffset+(data[2]-1)*(leading+rowHeight)+gridListEleData.columnHeight
-		end
-		dgsEle = dgsElementData[dgsEle].parent
-		eleData = dgsElementData[dgsEle]
-		if dgsElementType[dgsEle] == "dgs-dxwindow" then
-			local titleHeight = 0
-			if not eleData.ignoreParentTitle and not eleData.ignoreTitle then
-				titleHeight = eleData.titleHeight or 0
-			end
-			x,y = x+absPosX,y+absPosY+titleHeight
-		elseif dgsElementType[dgsEle] == "dgs-dxscrollpane" then
-			x,y = x+absPosX+eleData.horizontalMoveOffset,y+absPosY+eleData.verticalMoveOffset
-		elseif dgsElementType[dgsEle] == "dgs-dxscalepane" then
-			--[[local scrollbar = eleData.scrollbars
-			local scbThick = eleData.scrollBarThick
-			local size = eleData.absSize
-			local relSizX,relSizY = size[1]-(dgsElementData[ scrollbar[1] ].visible and scbThick or 0),size[2]-(dgsElementData[ scrollbar[2] ].visible and scbThick or 0)
-			local maxSize = eleData.maxChildSize
-			local maxX,maxY = (maxSize[1]-relSizX),(maxSize[2]-relSizY)
-			maxX,maxY = maxX > 0 and maxX or 0,maxY > 0 and maxY or 0
-			x,y = x+absPosX-maxX*dgsElementData[ scrollbar[2] ].scrollPosition*0.01,y+absPosY-maxY*dgsElementData[ scrollbar[1] ].scrollPosition*0.01]]
+function dgsGetElementPositionOnScreen(dgsEle,relativeTo)
+	if relativeTo == dgsEle then return 0,0 end
+	if relativeTo == true then relativeTo = "screen" end
+	local parentList = {count=0,[0]=dgsEle}
+	while(true) do
+		local currentElement = parentList[#parentList]
+		local parent = dgsElementData[currentElement].parent
+		if isElement(parent) and parent ~= relativeTo then
+			parentList.count = parentList.count+1
+			parentList[parentList.count] = parent
 		else
-			x,y = x+absPosX,y+absPosY
+			break
 		end
-		if startEle == dgsEle then
-			return _,_,startEle,_tmp
+	end
+	local x,y = 0,0
+	local OffsetX,OffsetY = 0,0
+	local ScaleX,ScaleY = 1,1
+	for i=#parentList,0,-1 do
+		dgsEle = parentList[i]
+		parent = parentList[i+1]
+		local eleData = dgsElementData[dgsEle]
+		local eleType = dgsElementType[dgsEle]
+		--Process Position Alignment 
+		local eleTypeP,eleDataP
+		local elePAlignH,elePAlignV
+		if parent then
+			eleTypeP,eleDataP = dgsElementType[parent],dgsElementData[parent]
+			elePAlignH,elePAlignV = dgsElementData[parent].contentPositionAlignment[1],dgsElementData[parent].contentPositionAlignment[2]
 		end
-	until(not isElement(dgsEle) or (rndSuspend and eleData.renderTarget_parent))
+
+		local absX,absY,absW,absH
+		local absPos,absSize = eleData.absPos,eleData.absSize
+		if not absPos then absX,absY = 0,0 else absX,absY = absPos[1],absPos[2] end
+		if not absSize then absW,absH = 0,0 else absW,absH = absSize[1],absSize[2] end
+		local PosX,PosY,w,h = absX,absY,absW,absH
+		local eleAlign = eleData.positionAlignment
+		local eleAlignH,eleAlignV = eleAlign[1] or elePAlignH, eleAlign[2] or elePAlignV
+		if eleAlignH == "right" then	--Horizontal
+			local pWidth = parent and eleDataP.absSize[1] or sW
+			PosX = pWidth-PosX-eleData.absSize[1]
+		elseif eleAlignH == "center" then
+			local pWidth = parent and eleDataP.absSize[1] or sW
+			PosX = PosX+pWidth/2-eleData.absSize[1]/2
+		end
+		if eleAlignV == "bottom" then --Vertical
+			local pHeight = parent and eleDataP.absSize[2] or sH
+			PosY = pHeight-PosY-eleData.absSize[2]
+		elseif eleAlignV == "center" then
+			local pHeight = parent and eleDataP.absSize[2] or sH
+			PosY = PosY+pHeight/2-eleData.absSize[2]/2
+		end
+		
+		if eleTypeP == "dgs-dxwindow" and eleData.ignoreParentTitle then OffsetY = 0 end
+		x,y = x+(OffsetX+PosX)*ScaleX,y+(OffsetY+PosY)*ScaleY
+		OffsetX,OffsetY = 0,0
+		if i == 0 then break end
+		if eleType == "dgs-dxwindow" then
+			if not eleData.ignoreTitle then
+				OffsetY = eleData.titleHeight
+			end
+		elseif eleType == "dgs-dxtab" then
+			local h = eleDataP.absSize[2]
+			OffsetY = eleDataP.tabHeight[2] and eleDataP.tabHeight[1]*h or eleDataP.tabHeight[1]
+		elseif eleType == "dgs-dxscrollpane" then
+			OffsetX,OffsetY = eleData.horizontalMoveOffset,eleData.verticalMoveOffset
+		elseif eleType == "dgs-dxscalepane" then
+			OffsetX,OffsetY = eleData.horizontalMoveOffset,eleData.verticalMoveOffset
+			local scale = eleData.scale
+			ScaleX,ScaleY = ScaleX*scale[1],ScaleY*scale[2]
+		elseif eleType == "dgs-dxgridlist" then
+			local child = parentList[i-1]
+			if child then
+				local eleDataC = dgsElementData[child]
+				if eleDataC.attachedToGridList then
+					local data = eleDataC.attachedToGridList	--GridList,Row,Column
+					local gridList = data[1]	--Grid List
+					local scbThickV = dgsElementData[eleData.scrollbars[1]].visible and eleData.scrollBarThick or 0
+					local columnData = eleData.columnData
+					local rowData = eleData.rowData
+					local columnOffset = rowData[data[2]][-4] or eleData.columnOffset
+					local columnMoveOffset = eleData.columnMoveOffsetTemp
+					local rowHeight = eleData.rowHeight
+					local leading = eleData.leading
+					local w = eleData.absSize[1]
+					OffsetX,OffsetY = columnMoveOffset+columnOffset+columnData[data[3]][3]*(eleData.columnRelative and (w-scbThickV) or 1),eleData.rowMoveOffsetTemp+(data[2]-1)*(leading+rowHeight)+eleData.columnHeight
+				end
+			end
+		end
+	end
 	return x,y
 end
 
-function dgsGetPosition(dgsEle,relative,includeParent,rndSuspend,includeSide)
+function dgsGetPosition(dgsEle,relative,relativeTo)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsGetPosition",1,"dgs-dxelement")) end
-	if includeParent then
-		local absPos = dgsElementData[dgsEle].absPos
-		local absPosX,absPosY = 0,0
-		if absPos then
-			absPosX,absPosY = absPos[1],absPos[2]
-		end
-		guielex,guieley,startElement,brokenElement = getParentLocation(dgsEle,rndSuspend,absPosX,absPosY,includeSide)
+	if relativeTo then
+		local posX,posY,startElement,brokenElement = dgsGetElementPositionOnScreen(dgsEle,relativeTo)
 		if brokenElement then error("Bad argument @'dgsGetPosition', Found an infinite loop under "..tostring(brokenElement).."("..dgsGetType(brokenElement).."), start from element "..tostring(startElement).."("..dgsGetType(startElement)..")") end
 		if relative then
-			return guielex/sW,guieley/sH
+			return posX/sW,posY/sH
 		else
-			return guielex,guieley
+			return posX,posY
 		end
 	else
 		local pos = dgsElementData[dgsEle][relative and "rltPos" or "absPos"]
@@ -338,6 +336,7 @@ function dgsSetVisible(dgsEle,visible)
 		local parent = dgsGetParent(dgsEle)
 		if parent then parentInherited = dgsElementData[parent].visibleInherited  and dgsElementData[parent].visible end
 		dgsElementData[dgsEle].visibleInherited = parentInherited
+		local eleType = dgsElementType[dgsEle]
 		if dgsOnVisibilityChange[eleType] then dgsOnVisibilityChange[eleType](dgsEle) end
 		dgsApplyVisibleInherited(dgsEle,visible and dgsElementData[dgsEle].visibleInherited)
 		return dgsSetData(dgsEle,"visible",visible)
@@ -422,7 +421,7 @@ function calculateGuiPositionSize(dgsEle,x,y,relativep,sx,sy,relatives,notrigger
 		dgsSetData(dgsEle,"rltPos",{relatx,relaty})
 		dgsSetData(dgsEle,"relative",{relativep,oldRelativeSize})
 		if not notrigger then
-			triggerEvent("onDgsPositionChange",dgsEle,oldPosAbsx,oldPosAbsy,oldPosRltx,oldPosRlty)
+			dgsTriggerEvent("onDgsPositionChange",dgsEle,oldPosAbsx,oldPosAbsy,oldPosRltx,oldPosRlty)
 		end
 	end
 	if sx and sy then
@@ -440,7 +439,7 @@ function calculateGuiPositionSize(dgsEle,x,y,relativep,sx,sy,relatives,notrigger
 		dgsSetData(dgsEle,"rltSize",{relatsx,relatsy})
 		dgsSetData(dgsEle,"relative",{oldRelativePos,relatives})
 		if not notrigger then
-			triggerEvent("onDgsSizeChange",dgsEle,oldSizeAbsx,oldSizeAbsy,oldSizeRltx,oldSizeRlty)
+			dgsTriggerEvent("onDgsSizeChange",dgsEle,oldSizeAbsx,oldSizeAbsy,oldSizeRltx,oldSizeRlty)
 		end
 	end
 	return true
@@ -618,39 +617,53 @@ function dgsSimulateClick(dgsGUI,button)
 	local x,y = dgsGetPosition(dgsGUI,false)
 	local sx,sy = dgsGetSize(dgsGUI,false)
 	local x,y = x+sx*0.5,y+sy*0.5
-	triggerEvent("onDgsMouseClick",dgsGUI,button,"down",x,y)
-	triggerEvent("onDgsMouseClick",dgsGUI,button,"up",x,y)
+	dgsTriggerEvent("onDgsMouseClick",dgsGUI,button,"down",x,y)
+	dgsTriggerEvent("onDgsMouseClick",dgsGUI,button,"up",x,y)
 end
 
-addEventHandler("onDgsMouseClick",root,function(button,state,x,y,isCoolingDown)
+function DGSMouseClickConvert(source,button,state,x,y,isCoolingDown)
 	if not isElement(source) then return end
 	if state == "down" then
-		triggerEvent("onDgsMouseClickDown",source,button,state,x,y,isCoolingDown)
+		dgsTriggerEvent("onDgsMouseClickDown",source,button,state,x,y,isCoolingDown)
 	elseif state == "up" then
-		triggerEvent("onDgsMouseClickUp",source,button,state,x,y,isCoolingDown)
+		dgsTriggerEvent("onDgsMouseClickUp",source,button,state,x,y,isCoolingDown)
 	end
-end)
+end
+dgsRegisterFastEvent("onDgsMouseClick","DGSMouseClickConvert")
 
-addEventHandler("onDgsMouseDoubleClick",root,function(button,state,x,y)
+function DGSMouseDoubleClickConvert(source,button,state,x,y)
 	if not isElement(source) then return end
 	if state == "down" then
-		triggerEvent("onDgsMouseDoubleClickDown",source,button,state,x,y)
+		dgsTriggerEvent("onDgsMouseDoubleClickDown",source,button,state,x,y)
 	elseif state == "up" then
-		triggerEvent("onDgsMouseDoubleClickUp",source,button,state,x,y)
+		dgsTriggerEvent("onDgsMouseDoubleClickUp",source,button,state,x,y)
 	end
-end)
+end
+dgsRegisterFastEvent("onDgsMouseDoubleClick","DGSMouseDoubleClickConvert")
 
 function dgsGetMouseClickGUI(button)
 	if button == "left" then
-		return MouseData.clickl
+		return MouseData.click.left
 	elseif button == "middle" then
-		return MouseData.clickm
+		return MouseData.click.middle
 	else
-		return MouseData.clickr
+		return MouseData.click.right
 	end
 end
 
-function dgsIsMouseWithinGUI(ele) return (isCursorShowing() and MouseData.WithinElements[ele]) and true or false end
+function dgsIsMouseWithinGUI(ele)
+	if type(ele) == "table" then
+		local result = {}
+		if isCursorShowing() then
+			for key,e in pairs(ele) do
+				result[e] = MouseData.WithinElements[e] and true or nil
+			end
+		end
+		return result
+	else
+		return (isCursorShowing() and MouseData.WithinElements[ele]) and true or false
+	end
+end
 function dgsGetMouseEnterGUI() return MouseData.entered end
 function dgsGetMouseLeaveGUI() return MouseData.left end
 function dgsGetFocusedGUI() return MouseData.focused end
@@ -669,21 +682,21 @@ function dgsFocus(dgsEle)
 	if eleType == "dgs-dxbrowser" then
 		focusBrowser(dgsEle)
 	elseif eleType == "dgs-dxedit" then
-		MouseData.editCursor = true
 		resetTimer(MouseData.EditMemoTimer)
+		MouseData.EditMemoCursor = true
 		guiFocus(GlobalEdit)
 		dgsElementData[GlobalEdit].linkedDxEdit = dgsEle
 	elseif eleType == "dgs-dxmemo" then
-		MouseData.editCursor = true
 		resetTimer(MouseData.EditMemoTimer)
+		MouseData.EditMemoCursor = true
 		guiFocus(GlobalMemo)
 		dgsElementData[GlobalMemo].linkedDxMemo = dgsEle
 	end
 	if isElement(lastFront) and dgsEle ~= lastFront then
-		triggerEvent("onDgsBlur",lastFront,dgsEle)
+		dgsTriggerEvent("onDgsBlur",lastFront,dgsEle)
 	end
 	MouseData.focused = dgsEle
-	triggerEvent("onDgsFocus",dgsEle,isElement(lastFront) and lastFront or nil)
+	dgsTriggerEvent("onDgsFocus",dgsEle,isElement(lastFront) and lastFront or nil)
 	return true
 end
 
@@ -697,7 +710,7 @@ function dgsBlur(dgsEle)
 	else
 		blurEditMemo(dgsEle)
 	end
-	triggerEvent("onDgsBlur",dgsEle)
+	dgsTriggerEvent("onDgsBlur",dgsEle)
 	return true
 end
 
@@ -714,57 +727,63 @@ function dgsGetCursorVisible()
 	return (isCursorShowing() or isChatBoxInputActive() or isConsoleActive()) and not isMainMenuActive() --Is visible in game
 end
 
+--to enhance cursor in scale pane
 function dgsGetCursorPosition(rltEle,rlt,forceOnScreen)
 	if dgsGetCursorVisible() then
-		if MouseData.lock3DInterface and not forceOnScreen then
+		if rltEle and dgsIsType(rltEle) then	--relative to element has higher priority
+			local cursorX,cursorY = CursorPosXVisible,CursorPosYVisible
+			local has3DInterface = false
+			local parent = rltEle
+			while(parent) do
+				if dgsGetType(parent) == "dgs-dx3dinterface" then has3DInterface = parent break end
+				parent = dgsGetParent(parent)
+			end
+			if has3DInterface then	--For 3d interface, recalculate position and ignore "forceOnScreen"
+				local hitX,hitY,px,py,pz,isHit = dgs3DInterfaceCalculateMousePosition(has3DInterface)
+				local resolution = dgsElementData[has3DInterface].resolution
+				if rltEle == has3DInterface then
+					if rlt then return hitX, hitY end
+					return hitX*resolution[1], hitY*resolution[2]
+				end
+				cursorX,cursorY = hitX*resolution[1], hitY*resolution[2]
+			end
+			local posX,posY = dgsGetElementPositionOnScreen(rltEle)
+			if rlt then
+				local sizeX, sizeY = false,false
+				local parent = rltEle
+				while(parent) do
+					local size = dgsElementData[parent].absSize
+					if size then
+						sizeX, sizeY = size[1], size[2]
+						break
+					end
+					parent = dgsGetParent(parent)
+				end
+				if sizeX and sizeY then
+					return (cursorX-posX)/sizeX, (cursorY-posY)/sizeY
+				else
+					return (cursorX-posX)/scW, (cursorY-posY)/scH
+				end
+			else
+				return cursorX-posX, cursorY-posY
+			end
+		elseif MouseData.lock3DInterface and not forceOnScreen then	--If no rltEle and there is a 3d interface locked, for 3d interface using calculated position
 			local absX,absY = dgsElementData[MouseData.lock3DInterface].cursorPosition[1],dgsElementData[MouseData.lock3DInterface].cursorPosition[2]
 			local resolution = dgsElementData[MouseData.lock3DInterface].resolution
-			if not rltEle and not dgsIsType(rltEle) then
-				if rlt then
-					return absX/resolution[1],absY/resolution[2]
-				else
-					return absX,absY
-				end
+			if rlt then
+				return absX/resolution[1],absY/resolution[2]
 			else
-				local xPos,yPos = dgsGetGuiLocationOnScreen(rltEle,false)
-				local eleSize = dgsElementData[rltEle].absSize
-				if rlt then
-					return (absX-xPos)/eleSize[1],(absY-yPos)/eleSize[2]
-				else
-					return absX-xPos,absY-yPos
-				end
+				return absX,absY
 			end
 		else
-			local absX,absY = CursorPosXVisible,CursorPosYVisible
-			if dgsIsType(rltEle) then
-				local xPos,yPos = dgsGetGuiLocationOnScreen(rltEle,false)
-				local eleSize = dgsElementData[rltEle].absSize
-				
-				
-				-- todo
-				if dgsElementData[rltEle].scale then
-					x,y = (absX-xPos),(absY-yPos)
-				end
-				--[[
-				OffsetX = -(resolution[1]-relSizX/scale[1])*eleData.horizontalMoveOffsetTemp
-				OffsetY = -(resolution[2]-relSizY/scale[2])*eleData.verticalMoveOffsetTemp
-				mx = (mx-xNRT)/scale[1]-OffsetX+xNRT
-				my = (my-yNRT)/scale[2]-OffsetY+yNRT]]
-	
-				if rlt then
-					return (absX-xPos)/eleSize[1],(absY-yPos)/eleSize[2]
-				else
-					return absX-xPos,absY-yPos
-				end
+			if rlt then
+				return CursorPosXVisible/sW,CursorPosYVisible/sH
 			else
-				if rlt then
-					return absX/sW,absY/sH
-				else
-					return absX,absY
-				end
+				return CursorPosXVisible,CursorPosYVisible
 			end
 		end
 	end
+	return false
 end
 
 addEventHandler("onClientCursorMove",root,function(_,_,x,y)
@@ -774,11 +793,18 @@ addEventHandler("onClientCursorMove",root,function(_,_,x,y)
 	end
 end)
 
+--Multi Click Interval
 function dgsGetMultiClickInterval() return multiClick.Interval end
-
 function dgsSetMultiClickInterval(interval)
 	if not(type(interval) == "number") then error(dgsGenAsrt(interval,"dgsSetClickInterval",1,"number")) end
 	multiClick.Interval = interval
+	return true
+end
+--Mouse Stay Delay
+function dgsGetMouseStayDelay() return mouseStay.delay end
+function dgsSetMouseStayDelay(delay)
+	if not(type(delay) == "number") then error(dgsGenAsrt(delay,"dgsSetMouseStayDelay",1,"number")) end
+	mouseStay.delay = delay
 	return true
 end
 
@@ -918,6 +944,7 @@ function dgsSetTranslationTable(name,tab)
 		LanguageTranslation[name] = tab
 		if not LanguageTranslationAttach[name] then LanguageTranslationAttach[name] = {} end
 		dgsApplyLanguageChange(name,LanguageTranslation[name],LanguageTranslationAttach[name])
+		triggerEvent("onDgsTranslationTableChange",sourceResourceRoot or resourceRoot,name)
 	elseif dgsTranslationTableExists(name) then
 		LanguageTranslation[name] = false
 		for k,v in ipairs(LanguageTranslationAttach[name]) do
@@ -939,17 +966,19 @@ function dgsAttachToTranslation(dgsEle,name)
 		end
 	end
 	dgsSetData(dgsEle,"_translang",name)
-	if LanguageTranslation[name] then
-		LanguageTranslationAttach[name] = LanguageTranslationAttach[name] or {}
-		tableInsert(LanguageTranslationAttach[name],dgsEle)
-	end
-	local text = dgsElementData[dgsEle]._translation_text
-	if text then
-		dgsSetData(dgsEle,"text",text)
-	end
-	local font = dgsElementData[dgsEle]._translation_font
-	if font then
-		dgsSetData(dgsEle,"font",font)
+	if name then
+		if LanguageTranslation[name] then
+			LanguageTranslationAttach[name] = LanguageTranslationAttach[name] or {}
+			tableInsert(LanguageTranslationAttach[name],dgsEle)
+		end
+		local text = dgsElementData[dgsEle]._translation_text
+		if text then
+			dgsSetData(dgsEle,"text",text)
+		end
+		local font = dgsElementData[dgsEle]._translation_font
+		if font then
+			dgsSetData(dgsEle,"font",font)
+		end
 	end
 	return true
 end
@@ -982,7 +1011,8 @@ function dgsGetTranslationValue(name,key)
 	end
 	return false
 end
---------------Translation Internal
+
+local cTranslationBuffer = {}
 local cTranslationEnvMeta = {
 	__index = {
 		table = table,
@@ -995,13 +1025,121 @@ local cTranslationEnvMeta = {
 		end,
 	}
 }
-local cTranslationBuffer = {}
+
+function dgsTranslateText(textTable,translationTableName)
+	if type(textTable) == "table" then
+		local translation = translationTableName or resourceTranslation[sourceResource or getThisResource()]
+		local value = translation and LanguageTranslation[translation] and LanguageTranslation[translation][textTable[1]] or textTable[1]
+		local result,status = value
+		if type(value) == "table" then	--Conditional Translation
+			--[[ --Conditional Translation
+			TestText={
+				"health == 'Superman'",				"You are a superman",
+				"find({0}, health)",				"Your health is 0",
+				"health <= 40",						"Your health is low",
+				"health <= 60",						"Your health is medium",
+				"health <= 80",						"Your health is high",
+				"Your health is $health",
+			},
+			]]
+			if #value%2 == 0 then error("Bad argument @dgsTranslateText at argument 1, Bad conditional translation item count (should be odd, got even), maybe missing default translation") end
+			result = value[#value]
+			for i=1,#value-1,2 do --Odd item is conditional, Even item is translation, and skip default translation
+				if not cTranslationBuffer[value[i]] then
+					local fnc,err = loadstring("return "..value[i])
+					if not fnc then error("Bad argument @dgsTranslateText, failed to load conditional ("..err..") at dictionary:"..translation.."[\""..textTable[1].."\"]["..math.floor(i/2).."]") end
+					cTranslationBuffer[value[i]] = fnc	--buffer
+				end
+				local condition = cTranslationBuffer[value[i]]
+				setmetatable(textTable,cTranslationEnvMeta)
+				setfenv(condition,textTable)
+				status,result = pcall(condition)
+				if status and result then
+					result = value[i+1]
+					break
+				end
+			end
+			local count = 2
+			while true do
+				local textArg = textTable[count]
+				if not textArg then break end
+				if type(textArg) == "table" then
+					textArg = dgsTranslateText(textArg,translationTableName)
+				end
+				local _value = result:gsub("%%rep%%",textArg,1)
+				if _value == result then break end
+				count = count+1
+				result = _value
+			end
+		else	--Replacing Translation
+			local count = 2
+			while true do
+				local textArg = textTable[count]
+				if not textArg then break end
+				if type(textArg) == "table" then
+					textArg = dgsTranslateText(textArg,translationTableName)
+				end
+				local _value = value:gsub("%%rep%%",textArg,1)
+				if _value == value then break end
+				count = count+1
+				result = _value
+			end
+		end
+		for k,v in pairs(textTable) do
+			if type(k) == "string" then
+				result = result:gsub("$"..k,v)
+			end
+		end
+		result = result:gsub("%%rep%%","")
+		return result
+	end
+	return textTable
+end
+--------------Translation Internal
+function dgsTranslationAddPropertyListener(dgsEle,property)
+	local translationListener = dgsElementData[dgsEle].translationListener or {}
+	translationListener[property] = true
+	return dgsSetData(dgsEle,"translationListener",translationListener)
+end
+
+function dgsTranslationRemovePropertyListener(dgsEle,property)
+	local translationListener = dgsElementData[dgsEle].translationListener or {}
+	translationListener[property] = nil
+	return dgsSetData(dgsEle,"translationListener",translationListener)
+end
+
+function dgsGetTranslationFont(dgsEle,fontTable,sourceResource)
+	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsTranslate",1,"dgs-dxelement")) end
+	if type(fontTable) == "table" then
+		local translation = dgsElementData[dgsEle]._translang or resourceTranslation[sourceResource or getThisResource()]
+		local font = translation and LanguageTranslation[translation] and LanguageTranslation[translation][fontTable[1]] or fontTable[1]
+		local fontType = dgsGetType(font)
+		if fontType == "dx-font" then
+			return font
+		elseif fontType == "string" then
+			if not(fontBuiltIn[font]) then return "default" end
+			return font
+		end
+	end
+	return false
+end
+
+function dgsApplyLanguageChange(name,translation,attach)
+	for i=1,#attach do
+		local dgsEle = attach[i]
+		if isElement(dgsEle) then
+			local dgsType = dgsGetType(dgsEle)
+			if dgsOnTranslationUpdate[dgsType] then dgsOnTranslationUpdate[dgsType](dgsEle) else dgsOnTranslationUpdate.default(dgsEle) end
+		end
+	end
+end
+
 function dgsTranslate(dgsEle,textTable,sourceResource,skipPropertyListener)
 	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsTranslate",1,"dgs-dxelement")) end
 	local eleData = dgsElementData[dgsEle]
 	if type(textTable) == "table" then
 		local translation = eleData._translang or resourceTranslation[sourceResource or getThisResource()]
-		local value = translation and LanguageTranslation[translation] and LanguageTranslation[translation][textTable[1]] or textTable[1]
+		local value = translation and LanguageTranslation[translation] and LanguageTranslation[translation][textTable[1]] or textTable[1] or ""
 		local result,status = value
 		if type(value) == "table" then	--Conditional Translation
 			--[[ --Conditional Translation
@@ -1057,9 +1195,9 @@ function dgsTranslate(dgsEle,textTable,sourceResource,skipPropertyListener)
 				result = _value
 			end
 		end
-		for k,v in pairs(textTable) do
-			if type(k) == "string" then
-				result = result:gsub("$"..k,v)
+		for name,value in pairs(textTable) do
+			if type(name) == "string" then
+				result = result:gsub("$"..name,value)
 			end
 		end
 		if not skipPropertyListener and eleData.translationListener then	--Dynamic Translation
@@ -1076,100 +1214,6 @@ function dgsTranslate(dgsEle,textTable,sourceResource,skipPropertyListener)
 	end
 	return false
 end
-
-function dgsTranslationAddPropertyListener(dgsEle,property)
-	local translationListener = dgsElementData[dgsEle].translationListener or {}
-	translationListener[property] = true
-	return dgsSetData(dgsEle,"translationListener",translationListener)
-end
-
-function dgsTranslationRemovePropertyListener(dgsEle,property)
-	local translationListener = dgsElementData[dgsEle].translationListener or {}
-	translationListener[property] = nil
-	return dgsSetData(dgsEle,"translationListener",translationListener)
-end
-
-function dgsGetTranslationFont(dgsEle,fontTable,sourceResource)
-	if not(dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsTranslate",1,"dgs-dxelement")) end
-	if type(fontTable) == "table" then
-		local translation = dgsElementData[dgsEle]._translang or resourceTranslation[sourceResource or getThisResource()]
-		local font = translation and LanguageTranslation[translation] and LanguageTranslation[translation][fontTable[1]] or fontTable[1]
-		local fontType = dgsGetType(font)
-		if fontType == "dx-font" then
-			return font
-		elseif fontType == "string" then
-			if not(fontBuiltIn[font]) then return "default" end
-			return font
-		end
-	end
-	return false
-end
-
-function dgsApplyLanguageChange(name,translation,attach)
-	for i=1,#attach do
-		local dgsEle = attach[i]
-		if isElement(dgsEle) then
-			local dgsType = dgsGetType(dgsEle)
-			if dgsOnTranslationUpdate[dgsType] then dgsOnTranslationUpdate[dgsType](dgsEle) else dgsOnTranslationUpdate.default(dgsEle) end
-		end
-	end
-end
-
-function dgsTranslateText(textTable)
-	if type(textTable) == "table" then
-		local translation = resourceTranslation[sourceResource or getThisResource()]
-		local value = translation and LanguageTranslation[translation] and LanguageTranslation[translation][textTable[1]] or textTable[1]
-		local count = 2
-		while true do
-			local textArg = textTable[count]
-			if not textArg then break end
-			if type(textArg) == "table" then
-				textArg = dgsTranslateText(textArg,sourceResource)
-			end
-			local _value = value:gsub("%%rep%%",textArg,1)
-			if _value == value then break end
-			count = count+1
-			value = _value
-		end
-		value = value:gsub("%%rep%%","")
-		return value
-	end
-	return false
-end
-
-----Compatibility
-dgsRegisterDeprecatedFunction("dgsSetSide","dgsSetPositionAlignment")
-dgsRegisterDeprecatedFunction("dgsGetSide","dgsGetPositionAlignment")
-local _dgsSetSide = dgsSetSide
-local _dgsGetSide = dgsGetSide
-function dgsSetSide(dgsEle,which,where)
-	if which == "lor" then
-		_dgsSetSide(dgsEle,where)
-	elseif which == "tob" then
-		_dgsSetSide(dgsEle,_,where)
-	end
-	return true
-end
-
-function dgsGetSide(dgsEle,which)
-	local h,v = _dgsGetSide(dgsEle,_,where)
-	if which == "lor" then
-		return h
-	elseif which == "tob" then
-		return v
-	end
-end
-
-addEvent("onDgsScrollBarScrollPositionChange",true)
-addEventHandler("onDgsElementScroll",root,function(scb,new,old)
-	if dgsGetType(source) == "scrollbar" then
-		triggerEvent("onDgsScrollBarScrollPositionChange",source,new,old)
-	end
-end)
-
-addEvent("onDgsCursorMove",true)
-addEventHandler("onDgsMouseMove",root,function(...) triggerEvent("onDgsCursorMove",source,...) end)
-
 ---------------DGS XML Loader
 --[[
 function dgsCreateFromXML(xmlFile)
@@ -1215,20 +1259,12 @@ function dgs3DSetPosition(ele3D,x,y,z)
 	if not(type(z) == "number") then error(dgsGenAsrt(z,"dgs3DSetPosition",4,"number")) end
 	return dgsSetData(ele3D,"position",{x,y,z})
 end
-dgsRegisterDeprecatedFunction("dgs3DImageSetPosition","dgs3DSetPosition")
-dgsRegisterDeprecatedFunction("dgs3DInterfaceSetPosition","dgs3DSetPosition")
-dgsRegisterDeprecatedFunction("dgs3DLineSetPosition","dgs3DSetPosition")
-dgsRegisterDeprecatedFunction("dgs3DTextSetPosition","dgs3DSetPosition")
 
 function dgs3DGetPosition(ele3D)
 	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DGetPosition",1,"dgs-dx3delement")) end
 	local pos = dgsElementData[ele3D].position
 	return pos[1],pos[2],pos[3]
 end
-dgsRegisterDeprecatedFunction("dgs3DImageGetPosition","dgs3DGetPosition")
-dgsRegisterDeprecatedFunction("dgs3DInterfaceGetPosition","dgs3DGetPosition")
-dgsRegisterDeprecatedFunction("dgs3DLineGetPosition","dgs3DGetPosition")
-dgsRegisterDeprecatedFunction("dgs3DTextGetPosition","dgs3DGetPosition")
 
 function dgs3DSetInterior(ele3D,interior)
 	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DSetInterior",1,"dgs-dx3delement")) end
@@ -1236,19 +1272,11 @@ function dgs3DSetInterior(ele3D,interior)
 	if not(type(interior) == "number" and inRange) then error(dgsGenAsrt(interior,"dgs3DSetInterior",2,"number","-1~+∞",inRange and "Out Of Range")) end
 	return dgsSetData(ele3D,"interior",interior-interior%1)
 end
-dgsRegisterDeprecatedFunction("dgs3DImageSetInterior","dgs3DSetInterior")
-dgsRegisterDeprecatedFunction("dgs3DInterfaceSetInterior","dgs3DSetInterior")
-dgsRegisterDeprecatedFunction("dgs3DLineSetInterior","dgs3DSetInterior")
-dgsRegisterDeprecatedFunction("dgs3DTextSetInterior","dgs3DSetInterior")
 
 function dgs3DGetInterior(ele3D)
 	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DGetInterior",1,"dgs-dx3delement")) end
 	return dgsElementData[ele3D].interior or -1
 end
-dgsRegisterDeprecatedFunction("dgs3DImageGetInterior","dgs3DGetInterior")
-dgsRegisterDeprecatedFunction("dgs3DInterfaceGetInterior","dgs3DGetInterior")
-dgsRegisterDeprecatedFunction("dgs3DLineGetInterior","dgs3DGetInterior")
-dgsRegisterDeprecatedFunction("dgs3DTextGetInterior","dgs3DGetInterior")
 
 function dgs3DSetDimension(ele3D,dimension)
 	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DSetDimension",1,"dgs-dx3delement")) end
@@ -1256,16 +1284,8 @@ function dgs3DSetDimension(ele3D,dimension)
 	if not(type(dimension) == "number" and dimension) then error(dgsGenAsrt(dimension,"dgs3DSetDimension",2,"number","-1~+∞",inRange and "Out Of Range")) end
 	return dgsSetData(ele3D,"dimension",dimension-dimension%1)
 end
-dgsRegisterDeprecatedFunction("dgs3DImageSetDimension","dgs3DSetDimension")
-dgsRegisterDeprecatedFunction("dgs3DInterfaceSetDimension","dgs3DSetDimension")
-dgsRegisterDeprecatedFunction("dgs3DLineSetDimension","dgs3DSetDimension")
-dgsRegisterDeprecatedFunction("dgs3DTextSetDimension","dgs3DSetDimension")
 
 function dgs3DGetDimension()
 	if not(dgsIsType(ele3D,"dgsType3D")) then error(dgsGenAsrt(ele3D,"dgs3DGetDimension",1,"dgs-dx3delement")) end
 	return dgsElementData[ele3D].dimension or -1
 end
-dgsRegisterDeprecatedFunction("dgs3DImageGetDimension","dgs3DGetDimension")
-dgsRegisterDeprecatedFunction("dgs3DInterfaceGetDimension","dgs3DGetDimension")
-dgsRegisterDeprecatedFunction("dgs3DLineGetDimension","dgs3DGetDimension")
-dgsRegisterDeprecatedFunction("dgs3DTextGetDimension","dgs3DGetDimension")

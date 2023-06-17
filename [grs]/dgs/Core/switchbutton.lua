@@ -42,7 +42,7 @@ local dgsAttachToTranslation = dgsAttachToTranslation
 local calculateGuiPositionSize = calculateGuiPositionSize
 local dgsCreateTextureFromStyle = dgsCreateTextureFromStyle
 --Utilities
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local createElement = createElement
 local assert = assert
 local tonumber = tonumber
@@ -119,7 +119,6 @@ function dgsCreateSwitchButton(...)
 		cursorWidth = style.cursorWidth,
 		troughWidth = style.troughWidth,
 		stateAnim = state and 1 or -1,
-		clickButton = "left"; --"left":LMB;"middle":Wheel;"right":RM,
 		clickState = "up"; --"down":Down;"up":U,
 		cursorLength = style.cursorLength,
 		clip = false,
@@ -186,7 +185,7 @@ end
 ----------------------------------------------------------------
 dgsOnPropertyChange["dgs-dxswitchbutton"] = {
 	state = function(dgsEle,key,value,oldValue)
-		triggerEvent("onDgsSwitchButtonStateChange",dgsEle,value,oldValue)
+		dgsTriggerEvent("onDgsSwitchButtonStateChange",dgsEle,value,oldValue)
 	end,
 }
 
@@ -208,20 +207,39 @@ end
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
 dgsRenderer["dgs-dxswitchbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt)
+	local res = eleData.resource or "global"
+	local style = styleManager.styles[res]
+	local using = style.using
+	style = style.loaded[using]
+	local systemFont = style.systemFontElement
+	
+	local font = eleData.font or systemFont
+	local txtSizX,txtSizY = eleData.textSize[1],eleData.textSize[2] or eleData.textSize[1]
+	local xAdd = eleData.textOffset[2] and w*eleData.textOffset[1] or eleData.textOffset[1]
+	local clip = eleData.clip
+	local wordBreak = eleData.wordBreak
+	local colorCoded = eleData.colorCoded
+	local cursorLength = eleData.cursorLength[2] and w*eleData.cursorLength[1] or eleData.cursorLength[1]
+	local cursorWidth = eleData.cursorWidth[2] and h*eleData.cursorWidth[1] or eleData.cursorWidth[1]
+	local troughWidth = eleData.troughWidth[2] and h*eleData.troughWidth[1] or eleData.troughWidth[1]
 	local isReverse = eleData.isReverse and true or false
 	local textColor,text
-	local xAdd = eleData.textOffset[2] and w*eleData.textOffset[1] or eleData.textOffset[1]
 	if eleData.state ~= isReverse then
 		textColor,text,xAdd = eleData.textColorOn,eleData.textOn,(isReverse and -1 or 1)*xAdd
 	else
 		textColor,text,xAdd = eleData.textColorOff,eleData.textOff,(isReverse and 1 or -1)*xAdd
 	end
+	local textX,textY,textWX,textHY = x+w*0.5+xAdd-cursorLength,y,x+w*0.5+xAdd+cursorLength,y+h
+	local shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont
+	local shadow = eleData.shadow
+	if shadow then
+		shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont = shadow[1],shadow[2],shadow[3],shadow[4],shadow[5]
+		shadowColor = applyColorAlpha(shadowColor or white,parentAlpha)
+	end
+	
 	local style = eleData.style
 	local colorImgBgID = 1
 	local colorImgID = 1
-	local cursorLength = eleData.cursorLength[2] and w*eleData.cursorLength[1] or eleData.cursorLength[1]
-	local cursorWidth = eleData.cursorWidth[2] and h*eleData.cursorWidth[1] or eleData.cursorWidth[1]
-	local troughWidth = eleData.troughWidth[2] and h*eleData.troughWidth[1] or eleData.troughWidth[1]
 	local animProgress = (-eleData.stateAnim+1)*0.5
 	local cursorX,cursorY,cursorW,cursorH = x+animProgress*(w-cursorLength),y+h/2-cursorWidth/2,cursorLength,cursorWidth
 	if MouseData.entered == source then
@@ -230,17 +248,14 @@ dgsRenderer["dgs-dxswitchbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledI
 		if isHitCursor then
 			colorImgID = 2
 		end
-		if eleData.clickType == 1 and MouseData.clickl == source then
+		local mouseButtons = eleData.mouseButtons
+		local canLeftClick,canRightClick,canMiddleClick = true
+		if mouseButtons then
+			canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
+		end		
+		if (canLeftClick and MouseData.click.left == source) or (canRightClick and MouseData.click.right == source) or (canMiddleClick and MouseData.click.middle == source) then
 			colorImgBgID = 3
 			colorImgID = isHitCursor and 3 or colorImgID
-		elseif eleData.clickType == 2 and MouseData.clickr == source then
-			colorImgBgID = 3
-			colorImgID = isHitCursor and 3 or colorImgID
-		else
-			if MouseData.clickl == source or MouseData.clickr == source then
-				colorImgBgID = 3
-				colorImgID = isHitCursor and 3 or colorImgID
-			end
 		end
 	end
 	local cursorImage = type(eleData.cursorImage) ~= "table" and eleData.cursorImage or (eleData.cursorImage[colorImgID] or eleData.cursorImage[1])
@@ -291,6 +306,9 @@ dgsRenderer["dgs-dxswitchbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledI
 		hOff = troughWidth
 		dxDrawImage(xOn,yOn,wOn,hOn,imageOn,0,0,0,colorOn,isPostGUI,rndtgt)
 		dxDrawImage(xOff,yOff,wOff,hOff,imageOff,0,0,0,colorOff,isPostGUI,rndtgt)
+		dgsDrawText(text,textX,textY,textWX,textHY,applyColorAlpha(textColor,parentAlpha),txtSizX,txtSizY,font,"center","center",clip,wordBreak,isPostGUI,colorCoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
+		----Cursor
+		dxDrawImage(cursorX,cursorY,cursorW,cursorH,cursorImage,0,0,0,cursorColor,isPostGUI,rndtgt)
 	elseif style == 2 then
 		if not enabledInherited and not enabledSelf then
 			if type(eleData.disabledColor) == "number" then
@@ -333,6 +351,9 @@ dgsRenderer["dgs-dxswitchbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledI
 		else
 			dxDrawRectangle(xOff,yOff,wOff,hOff,colorOff,isPostGUI)
 		end
+		dgsDrawText(text,textX,textY,textWX,textHY,applyColorAlpha(textColor,parentAlpha),txtSizX,txtSizY,font,"center","center",clip,wordBreak,isPostGUI,colorCoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
+		----Cursor
+		dxDrawImage(cursorX,cursorY,cursorW,cursorH,cursorImage,0,0,0,cursorColor,isPostGUI,rndtgt)
 	elseif style == 3 then
 		local color = colorOn+(colorOff-colorOn)*animProgress
 		if not enabledInherited and not enabledSelf then
@@ -347,42 +368,57 @@ dgsRenderer["dgs-dxswitchbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledI
 			color = applyColorAlpha(color,parentAlpha)
 		end
 		local xOn,yOn,wOn,hOn = x,y,w,h
-		yOn = yOn+hOn/2-troughWidth/2 -- todo
+		yOn = yOn+hOn/2-troughWidth/2
 		hOn = troughWidth
 		if animProgress == 0 then
+			colorOn = applyColorAlpha(colorOn,parentAlpha)
 			dxDrawImage(xOn,yOn,wOn,hOn,imageOn,0,0,0,colorOn,isPostGUI,rndtgt)
 		elseif animProgress == 1 then
+			colorOff = applyColorAlpha(colorOff,parentAlpha)
 			dxDrawImage(xOn,yOn,wOn,hOn,imageOff,0,0,0,colorOff,isPostGUI,rndtgt)
 		else
+			colorOff = applyColorAlpha(colorOff,parentAlpha)
+			colorOn = applyColorAlpha(colorOn,parentAlpha)
 			local offColor = applyColorAlpha(colorOff,animProgress)
 			local onColor = applyColorAlpha(colorOn,1-animProgress)
 			dxDrawImage(xOn,yOn,wOn,hOn,imageOn,0,0,0,onColor,isPostGUI,rndtgt)
 			dxDrawImage(xOn,yOn,wOn,hOn,imageOff,0,0,0,offColor,isPostGUI,rndtgt)
 		end
+		dgsDrawText(text,textX,textY,textWX,textHY,applyColorAlpha(textColor,parentAlpha),txtSizX,txtSizY,font,"center","center",clip,wordBreak,isPostGUI,colorCoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
+		----Cursor
+		dxDrawImage(cursorX,cursorY,cursorW,cursorH,cursorImage,0,0,0,cursorColor,isPostGUI,rndtgt)
+	elseif style == 4 then
+		local color = colorOn+(colorOff-colorOn)*animProgress
+		if not enabledInherited and not enabledSelf then
+			if type(eleData.disabledColor) == "number" then
+				color = applyColorAlpha(eleData.disabledColor,parentAlpha)
+			elseif eleData.disabledColor == true then
+				local r,g,b,a = fromcolor(color)
+				local average = (r+g+b)/3*eleData.disabledColorPercent
+				color = tocolor(average,average,average,a*parentAlpha)
+			end
+		else
+			color = applyColorAlpha(color,parentAlpha)
+		end
+		local xOn,yOn,wOn,hOn = x,y,w,h
+		yOn = yOn+hOn/2-troughWidth/2
+		hOn = troughWidth
+		if animProgress == 0 then
+			colorOn = applyColorAlpha(colorOn,parentAlpha)
+			dxDrawImage(xOn,yOn,wOn,hOn,imageOn,0,0,0,colorOn,isPostGUI,rndtgt)
+		elseif animProgress == 1 then
+			colorOff = applyColorAlpha(colorOff,parentAlpha)
+			dxDrawImage(xOn,yOn,wOn,hOn,imageOff,0,0,0,colorOff,isPostGUI,rndtgt)
+		else
+			colorOff = applyColorAlpha(colorOff,parentAlpha)
+			colorOn = applyColorAlpha(colorOn,parentAlpha)
+			local offColor = applyColorAlpha(colorOff,animProgress)
+			local onColor = applyColorAlpha(colorOn,1-animProgress)
+			dxDrawImage(xOn,yOn,wOn,hOn,imageOn,0,0,0,onColor,isPostGUI,rndtgt)
+			dxDrawImage(xOn,yOn,wOn,hOn,imageOff,0,0,0,offColor,isPostGUI,rndtgt)
+		end
+		dgsDrawText(text,x,y,x+w,y+h,applyColorAlpha(textColor,parentAlpha),txtSizX,txtSizY,font,"center","center",clip,wordBreak,isPostGUI,colorCoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
 	end
-
-	local res = eleData.resource or "global"
-	local style = styleManager.styles[res]
-	local using = style.using
-	style = style.loaded[using]
-	local systemFont = style.systemFontElement
-
-	local font = eleData.font or systemFont
-	local txtSizX,txtSizY = eleData.textSize[1],eleData.textSize[2] or eleData.textSize[1]
-	local clip = eleData.clip
-	local wordBreak = eleData.wordBreak
-	local colorCoded = eleData.colorCoded
-	local textX,textY,textWX,textHY = x+w*0.5+xAdd-cursorLength,y,x+w*0.5+xAdd+cursorLength,y+h
-	local shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont
-	local shadow = eleData.shadow
-	if shadow then
-		shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont = shadow[1],shadow[2],shadow[3],shadow[4],shadow[5]
-		shadowColor = applyColorAlpha(shadowColor or white,parentAlpha)
-	end
-	dgsDrawText(text,textX,textY,textWX,textHY,applyColorAlpha(textColor,parentAlpha),txtSizX,txtSizY,font,"center","center",clip,wordBreak,isPostGUI,colorCoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
-	----Cursor
-	dxDrawImage(cursorX,cursorY,cursorW,cursorH,cursorImage,0,0,0,cursorColor,isPostGUI,rndtgt)
-
 	local state = eleData.state and 1 or -1
 	if eleData.stateAnim ~= state then
 		local stat = eleData.stateAnim+state*eleData.cursorMoveSpeed

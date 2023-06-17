@@ -9,7 +9,6 @@ dgsRegisterProperties("dgs-dxwindow",{
 	font = 					{	PArg.Font+PArg.String	},
 	ignoreTitle = 			{	PArg.Bool	},
 	image = 				{	PArg.Material+PArg.Nil	},
-	maxSize = 				{	{ PArg.Number,PArg.Number }	},
 	minSize = 				{	{ PArg.Number,PArg.Number }	},
 	movable = 				{	PArg.Bool	},
 	closeButtonEnabled = 	{	PArg.Bool	},
@@ -25,12 +24,29 @@ dgsRegisterProperties("dgs-dxwindow",{
 	titleImage = 			{	PArg.Material+PArg.Nil	},
 	wordBreak = 			{	PArg.Bool	},
 })
+--[[
+dgsRegisterPropertyDefaultValue("dgs-dxwindow",{
+	alignment = 			{ "center", "center" },
+	clip = 					true,
+	colorCoded = 			false,
+	ignoreTitle = 			false,
+	minSize = 				{ 60, 60 },
+	movable = 				true,
+	sizable = 				true,
+	textOffset =			nil,
+	titleColor = 			{	PArg.Color	},
+	titleColorBlur = 		{	PArg.Color	},
+	titleHeight = 			{	PArg.Number	},
+	titleImage = 			{	PArg.Material+PArg.Nil	},
+	wordBreak = 			{	PArg.Bool	},
+})
+]]
 --Dx Functions
 local dxDrawImage = dxDrawImage
 local dgsDrawText = dgsDrawText
 local dxDrawRectangle = dxDrawRectangle
 --
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local isElement = isElement
 local createElement = createElement
 local addEventHandler = addEventHandler
@@ -103,7 +119,6 @@ function dgsCreateWindow(...)
 		alignment = {"center","center"},
 		font = style.font or systemFont,
 		minSize = {60,60},
-		maxSize = {20000,20000},
 	}
 	dgsSetParent(window,nil,true,true)
 	dgsAttachToTranslation(window,resourceTranslation[sRes])
@@ -260,17 +275,15 @@ function dgsWindowGetCloseButtonSize(window,relative)
 	return false
 end
 
-local dgsClosingElement = nil
 function dgsCloseWindow(window)
 	if not(dgsGetType(window) == "dgs-dxwindow") then error(dgsGenAsrt(window,"dgsCloseWindow",1,"dgs-dxwindow")) end
-	if dgsElementData[window]._DGSI_BeingClosed then return false end
-	dgsSetData(window,"_DGSI_BeingClosed",true)
-	dgsClosingElement = window
-	triggerEvent("onDgsWindowClose",window)
-	dgsClosingElement = nil
+	if dgsElementData[window]._DGSI_isClosing then return false end
+	dgsSetData(window,"_DGSI_isClosing",true)
+	dgsTriggerEvent("onDgsWindowClose",window)
 	if not wasEventCancelled() then
 		return destroyElement(window)
 	end
+	dgsSetData(window,"_DGSI_isClosing",nil)
 	return false
 end
 
@@ -371,5 +384,10 @@ dgsRenderer["dgs-dxwindow"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherit
 		shadowColor = applyColorAlpha(shadowColor or white,parentAlpha)
 	end
 	dgsDrawText(text,x,y,x+w,y+titsize,textColor,txtSizX,txtSizY,font,alignment[1],alignment[2],clip,wordBreak,isPostGUI,colorCoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
-	return rndtgt,false,mx,my,0,0
+	
+	local titleOffset = 0
+	if not eleData.ignoreTitle then
+		titleOffset = eleData.titleHeight
+	end
+	return rndtgt,false,mx,my,0,titleOffset
 end

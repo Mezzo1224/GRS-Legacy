@@ -2,7 +2,7 @@ dgsLogLuaMemory()
 ---------------Speed Up
 local type = type
 local tonumber = tonumber
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local isElement = isElement
 local getEasingValue = getEasingValue
 local animationID = 0
@@ -84,13 +84,13 @@ function dgsStopAniming(...)
 				local theEle = anim[1]
 				table.remove(animQueue,index)	--Remove
 				local property = anim[2]
-				triggerEvent("onDgsStopAniming",theEle,anim[-2],property,anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
+				dgsTriggerEvent("onDgsStopAniming",theEle,anim[-2],property,anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
 				if property == "rltPos" or property == "absPos" then
-					triggerEvent("onDgsStopMoving",theEle,anim[-2])
+					dgsTriggerEvent("onDgsStopMoving",theEle,anim[-2])
 				elseif property == "rltSize" or property == "absSize" then
-					triggerEvent("onDgsStopSizing",theEle,anim[-2])
+					dgsTriggerEvent("onDgsStopSizing",theEle,anim[-2])
 				elseif property == "alpha" then
-					triggerEvent("onDgsStopAlphaing",theEle,anim[-2])
+					dgsTriggerEvent("onDgsStopAlphaing",theEle,anim[-2])
 				end
 				return true
 			else
@@ -104,13 +104,13 @@ function dgsStopAniming(...)
 			local anim = animQueue[index]
 			if anim[1] == dgsEle and anim[2] == property then --Confirm
 				table.remove(animQueue,index)	--Remove
-				triggerEvent("onDgsStopAniming",dgsEle,anim[-2],property,anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
+				dgsTriggerEvent("onDgsStopAniming",dgsEle,anim[-2],property,anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
 				if property == "rltPos" or property == "absPos" then
-					triggerEvent("onDgsStopMoving",dgsEle,anim[-2])
+					dgsTriggerEvent("onDgsStopMoving",dgsEle,anim[-2])
 				elseif property == "rltSize" or property == "absSize" then
-					triggerEvent("onDgsStopSizing",dgsEle,anim[-2])
+					dgsTriggerEvent("onDgsStopSizing",dgsEle,anim[-2])
 				elseif property == "alpha" then
-					triggerEvent("onDgsStopAlphaing",dgsEle,anim[-2])
+					dgsTriggerEvent("onDgsStopAlphaing",dgsEle,anim[-2])
 				end
 			else
 				index = index+1
@@ -125,13 +125,13 @@ function dgsStopAniming(...)
 				for i=1,#property do
 					if anim[2] == property[i] then
 						table.remove(animQueue,index)	--Remove
-						triggerEvent("onDgsStopAniming",dgsEle,anim[-2],property[i],anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
+						dgsTriggerEvent("onDgsStopAniming",dgsEle,anim[-2],property[i],anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
 						if property[i] == "rltPos" or property[i] == "absPos" then
-							triggerEvent("onDgsStopMoving",dgsEle,anim[-2])
+							dgsTriggerEvent("onDgsStopMoving",dgsEle,anim[-2])
 						elseif property[i] == "rltSize" or property[i] == "absSize" then
-							triggerEvent("onDgsStopSizing",dgsEle,anim[-2])
+							dgsTriggerEvent("onDgsStopSizing",dgsEle,anim[-2])
 						elseif property[i] == "alpha" then
-							triggerEvent("onDgsStopAlphaing",dgsEle,anim[-2])
+							dgsTriggerEvent("onDgsStopAlphaing",dgsEle,anim[-2])
 						end
 						break
 					end
@@ -145,13 +145,13 @@ function dgsStopAniming(...)
 			local anim = animQueue[index]
 			if anim[1] == dgsEle then --Confirm
 				table.remove(animQueue,index)	--Remove
-				triggerEvent("onDgsStopAniming",dgsEle,anim[-2],anim[2],anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
+				dgsTriggerEvent("onDgsStopAniming",dgsEle,anim[-2],anim[2],anim[3],anim[4],anim[5],anim[7],anim[6],stopTick)
 				if anim[2] == "rltPos" or anim[2] == "absPos" then
-					triggerEvent("onDgsStopMoving",dgsEle,anim[-2])
+					dgsTriggerEvent("onDgsStopMoving",dgsEle,anim[-2])
 				elseif anim[2] == "rltSize" or anim[2] == "absSize" then
-					triggerEvent("onDgsStopSizing",dgsEle,anim[-2])
+					dgsTriggerEvent("onDgsStopSizing",dgsEle,anim[-2])
 				elseif anim[2] == "alpha" then
-					triggerEvent("onDgsStopAlphaing",dgsEle,anim[-2])
+					dgsTriggerEvent("onDgsStopAlphaing",dgsEle,anim[-2])
 				end
 			else
 				index = index+1
@@ -233,7 +233,7 @@ function onAnimQueueProcess()
 					if animItem[-1] and animItem[-3] then
 						local debugContext = animItem[-3] 
 						if type(debugContext) == "table" then
-							triggerEvent("DGSI_onDebug",animItem[-1],"AnimationError",property,debugContext.file,debugContext.line,debugContext.fncName)
+							dgsTriggerEvent("DGSI_onDebug",animItem[-1],"AnimationError",property,debugContext.file,debugContext.line,debugContext.fncName)
 						end
 					end
 				end
@@ -246,10 +246,22 @@ function onAnimQueueProcess()
 				animIndex = animIndex+1
 			end
 		else
-			table.remove(animItem,animIndex)
+			table.remove(animQueue,animIndex)
 		end
 	end
 end
+
+--[[
+if not getElementData(resourceRoot,"DGS-disableCompatibilityCheck") then
+	if not getElementData(localPlayer,"DGS-DEBUG-C") then
+		outputDebugString("Deprecated usage of @'dgsMoveTo' at argument 5, 'moveType' is no longer supported, use '/debugdgs c' to find",2)
+		if getElementData(localPlayer,"DGS-DEBUG") == 3 then
+			dgsTriggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"ArgumentCompatibility",5,"'moveType' is no longer supported")
+		end
+	else
+		error("Found deprecated usage of @'dgsMoveTo' at argument 5, 'moveType' is no longer supported")
+	end
+end]]
 
 function dgsMoveTo(...)
 	local dgsEle,x,y,relative,easing,duration,delay,reversedProgress
@@ -264,21 +276,7 @@ function dgsMoveTo(...)
 		delay = argTable.delay or argTable[7]
 		reversedProgress = argTable.reversed or argTable[8]
 	else
-		if type(select(5,...)) == "boolean" then
-			dgsEle,x,y,relative,moveType,easing,duration,delay = ...
-			if not getElementData(resourceRoot,"DGS-disableCompatibilityCheck") then
-				if not getElementData(localPlayer,"DGS-DEBUG-C") then
-					outputDebugString("Deprecated usage of @'dgsMoveTo' at argument 5, 'moveType' is no longer supported, use '/debugdgs c' to find",2)
-					if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-						triggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"ArgumentCompatibility",5,"'moveType' is no longer supported")
-					end
-				else
-					error("Found deprecated usage of @'dgsMoveTo' at argument 5, 'moveType' is no longer supported")
-				end
-			end
-		else
-			dgsEle,x,y,relative,easing,duration,delay,reversedProgress = ...
-		end
+		dgsEle,x,y,relative,easing,duration,delay,reversedProgress = ...
 	end
 	local delay = tonumber(delay) or 0
 	if not(type(dgsEle) == "table" or dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsMoveTo",1,"dgs-dxelement/table")) end
@@ -318,21 +316,7 @@ function dgsSizeTo(...)
 		delay = argTable.delay or argTable[7]
 		reversedProgress = argTable.reversed or argTable[8]
 	else
-		if type(select(5,...)) == "boolean" then
-			dgsEle,w,h,relative,moveType,easing,duration,delay = ...
-			if not getElementData(resourceRoot,"DGS-disableCompatibilityCheck") then
-				if not getElementData(localPlayer,"DGS-DEBUG-C") then
-					outputDebugString("Deprecated usage of @'dgsSizeTo' at argument 5, 'moveType' is no longer supported, use '/debugdgs c' to find",2)
-					if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-						triggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"ArgumentCompatibility",5,"'moveType' is no longer supported")
-					end
-				else
-					error("Found deprecated usage of @'dgsSizeTo' at argument 5, 'moveType' is no longer supported")
-				end
-			end
-		else
-			dgsEle,w,h,relative,easing,duration,delay,reversedProgress = ...
-		end
+		dgsEle,w,h,relative,easing,duration,delay,reversedProgress = ...
 	end
 	local delay = tonumber(delay) or 0
 	if not(type(dgsEle) == "table" or dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsSizeTo",1,"dgs-dxelement/table")) end
@@ -370,21 +354,7 @@ function dgsAlphaTo(...)
 		delay = argTable.delay or argTable[5]
 		reversedProgress = argTable.reversed or argTable[6]
 	else
-		if type(select(3,...)) == "boolean" then
-			dgsEle,alpha,moveType,easing,duration,delay,reversedProgress = ...
-			if not getElementData(resourceRoot,"DGS-disableCompatibilityCheck") then
-				if not getElementData(localPlayer,"DGS-DEBUG-C") then
-					outputDebugString("Deprecated usage of @'dgsAlphaTo' at argument 3, 'moveType' is no longer supported, use '/debugdgs c' to find",2)
-					if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-						triggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"ArgumentCompatibility",3,"'moveType' is no longer supported")
-					end
-				else
-					error("Found deprecated usage of @'dgsAlphaTo' at argument 3, 'moveType' is no longer supported")
-				end
-			end
-		else
-			dgsEle,alpha,easing,duration,delay,reversedProgress = ...
-		end
+		dgsEle,alpha,easing,duration,delay,reversedProgress = ...
 	end
 	local delay = tonumber(delay) or 0
 	if not(type(dgsEle) == "table" or dgsIsType(dgsEle)) then error(dgsGenAsrt(dgsEle,"dgsAlphaTo",1,"dgs-dxelement/table")) end

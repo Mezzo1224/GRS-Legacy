@@ -32,7 +32,6 @@ local dgsAttachToAutoDestroy = dgsAttachToAutoDestroy
 local calculateGuiPositionSize = calculateGuiPositionSize
 local dgsCreateTextureFromStyle = dgsCreateTextureFromStyle
 --Utilities
-local triggerEvent = triggerEvent
 local createElement = createElement
 local assert = assert
 local tonumber = tonumber
@@ -127,10 +126,9 @@ function dgsLabelSetHorizontalAlign(label,align,wordbreak)
 	return dgsSetData(label,"alignment",{align,alignment[2]})
 end
 
-function dgsLabelSetVerticalAlign(label,align,wordbreak)
+function dgsLabelSetVerticalAlign(label,align)
 	if dgsGetType(label) ~= "dgs-dxlabel" then error(dgsGenAsrt(label,"dgsLabelSetVerticalAlign",1,"dgs-dxlabel")) end
 	if not VerticalAlign[align] then error(dgsGenAsrt(align,"dgsLabelSetVerticalAlign",2,"string","top/center/bottom")) end
-	dgsSetData(label,"wordBreak",wordbreak)
 	local alignment = dgsElementData[label].alignment
 	return dgsSetData(label,"alignment",{alignment[1],align})
 end

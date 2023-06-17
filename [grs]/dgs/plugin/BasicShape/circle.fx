@@ -2,8 +2,8 @@
 #define PI2 PI*2
 float4 color = float4(1,1,1,1);
 float borderSoft = 0.01;
-float angle = 2*PI;
-float outsideRadius = 0.5;
+float angle = PI2;
+float outsideRadius = 0.9;
 float insideRadius = 0.2;
 float textureRot = 0;
 float2 textureRotCenter = float2(0.5,0.5);
@@ -11,6 +11,7 @@ texture sourceTexture;
 bool direction = true; //anticlockwise
 bool textureLoad = false;
 bool colorOverwritten = true;
+float4 UV = float4(0,0,1,1);
 
 SamplerState tSampler{
 	Texture = sourceTexture;
@@ -20,23 +21,22 @@ SamplerState tSampler{
 };
 
 float4 circleShader(float2 tex:TEXCOORD0,float4 _color:COLOR0):COLOR0{
+	float2 tempTex = (tex*UV.zw+UV.xy)%1;
 	float thetaCos = cos(-textureRot/180.0*PI);
 	float thetaSin = sin(-textureRot/180.0*PI);
 	float2x2 rot = float4(thetaCos,-thetaSin,thetaSin,thetaCos);
-	float2 rotedTex = mul(tex-textureRotCenter,rot)+textureRotCenter;
+	float2 rotedTex = mul(tempTex-textureRotCenter,rot)+textureRotCenter;
 	float4 result = colorOverwritten?color:_color;
 	if(textureLoad) result *= tex2D(tSampler,rotedTex);
-	float2 dxy = float2(length(ddx(tex)),length(ddy(tex)));
+	float2 dxy = float2(length(ddx(tempTex)),length(ddy(tempTex)));
 	float nBorderSoft = borderSoft*sqrt(dxy.x*dxy.y)*100;
-	float xDistance = tex.x-0.5,yDistance = 0.5-tex.y;
+	float xDistance = tempTex.x-0.5,yDistance = 0.5-tempTex.y;
 	float angle_p = atan2(yDistance,xDistance);	//angle_p
 	if(angle_p>PI2) angle_p -= PI2;
 	if(angle_p<0) angle_p += PI2;
 	float2 P = float2(xDistance,yDistance);
 	float ang = angle;
-	if(!direction){
-		ang = PI2-angle;
-	}
+	if(!direction) ang = PI2-angle;
 	float2 Q = float2(cos(ang),sin(ang));
 	float2 N = float2(-Q.y,Q.x)*nBorderSoft;
 	float oRadius = 1-outsideRadius;
@@ -84,7 +84,7 @@ float4 circleShader(float2 tex:TEXCOORD0,float4 _color:COLOR0):COLOR0{
 		if(a >= 0 && dis1 < nBorderSoft && _a>=0) alpha = max(alpha,clamp(dis1/nBorderSoft,0,1));
 		if(b >= 0 && dis2 < nBorderSoft && _b<=0) alpha = max(alpha,clamp(dis2/nBorderSoft,0,1));
 	}
-	alpha *= clamp((1-distance(tex,0.5)-oRadius+nBorderSoft)/nBorderSoft,0,1)*clamp((distance(tex,0.5)-insideRadius+nBorderSoft)/nBorderSoft,0,1);
+	alpha *= clamp((1-distance(tempTex,0.5)-oRadius)/nBorderSoft,0,1)*clamp((distance(tempTex,0.5)-insideRadius)/nBorderSoft,0,1);
 	result.a *= alpha;
 	return result;
 }

@@ -49,7 +49,7 @@ local dxSetRenderTarget = dxSetRenderTarget
 local dxGetTextWidth = dxGetTextWidth
 local dxSetBlendMode = dxSetBlendMode
 local __dxDrawImage = __dxDrawImage
-local dxCreateRenderTarget = dxCreateRenderTarget
+local dgsCreateRenderTarget = dgsCreateRenderTarget
 --DGS Functions
 local dgsSetType = dgsSetType
 local dgsSetParent = dgsSetParent
@@ -63,7 +63,7 @@ local isConsoleActive = isConsoleActive
 local isMainMenuActive = isMainMenuActive
 local isChatBoxInputActive = isChatBoxInputActive
 local getKeyState = getKeyState
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local addEventHandler = addEventHandler
 local createElement = createElement
 local assert = assert
@@ -83,10 +83,57 @@ local strChar = string.char
 local mathMin = math.min
 local mathMax = math.max
 ----Initialize
-GlobalEditParent = guiCreateLabel(-1,0,0,0,"",true)
-GlobalEdit = guiCreateEdit(-1,0,0,0,"",true,GlobalEditParent)
-addEventHandler("onClientGUIBlur",GlobalEdit,GlobalEditMemoBlurCheck,false)
-dgsSetData(GlobalEdit,"linkedDxEdit",nil)
+function dgsGlobalEditDestroyDetector(oldGlobalEdit)
+	outputDebugString("DGS Global Edit has been destroyed by external resource ("..(sourceResource and getResourceName(sourceResource) or "Unknown").."), recreating",1)
+	local dgsEdit = dgsElementData[oldGlobalEdit].linkedDxEdit
+	dgsInitializeGlobalEdit()
+	dgsElementData[GlobalEdit].linkedDxEdit = dgsEdit
+end
+
+function dgsInitializeGlobalEdit()
+	if not isElement(GlobalEditParent) then
+		GlobalEditParent = guiCreateLabel(-1,0,0,0,"",true)
+	end
+	if not isElement(GlobalEdit) then
+		GlobalEdit = guiCreateEdit(-1,0,0,0,"",true,GlobalEditParent)
+		dgsSetData(GlobalEdit,"linkedDxEdit",nil)
+		addEventHandler("onClientGUIBlur",GlobalEdit,GlobalEditMemoBlurCheck,false)
+		addEventHandler("onClientGUIAccepted",GlobalEdit,function()
+			local dgsEdit = dgsElementData[source].linkedDxEdit
+			if dgsGetType(dgsEdit) == "dgs-dxedit" then
+				dgsTriggerEvent("onDgsEditAccepted",dgsEdit,dgsEdit)
+			end
+		end,true)
+		addEventHandler("onClientGUIChanged",GlobalEdit,function()
+			if getElementType(GlobalEdit) == "gui-edit" then
+				local dgsEdit = dgsElementData[GlobalEdit].linkedDxEdit
+				if isElement(dgsEdit) then
+					local text = guiGetText(GlobalEdit)
+					local eleData = dgsElementData[dgsEdit]
+					local cool = eleData.CoolTime
+					if #text ~= 0 then
+						if not cool then
+							if not eleData.readOnly then
+								local caretPos = eleData.caretPos
+								local selectFrom = eleData.selectFrom
+								if selectFrom-caretPos ~= 0 then
+									dgsEditReplaceText(dgsEdit,caretPos,selectFrom,text)
+								else
+									handleDxEditText(dgsEdit,text,true)
+								end
+							end
+							eleData.CoolTime = true
+							guiSetText(GlobalEdit,"")
+							eleData.CoolTime = false
+						end
+					end
+				end
+			end
+		end,true)
+		addEventHandler("onClientElementDestroy",GlobalEdit,dgsGlobalEditDestroyDetector,false)
+	end
+end
+dgsInitializeGlobalEdit()
 local splitChar = "\r\n"
 local splitChar2 = "\n"
 local editsCount = 1
@@ -197,6 +244,7 @@ function dgsCreateEdit(...)
 	}
 	dgsSetParent(edit,parent,true,true)
 	editsCount = editsCount+1
+	dgsAttachToTranslation(edit,resourceTranslation[sRes])
 	calculateGuiPositionSize(edit,x,y,relative or false,w,h,relative or false,true)
 	handleDxEditText(edit,text,false,true)
 	dgsEditSetCaretPosition(edit,utf8Len(text))
@@ -217,7 +265,7 @@ function dgsEditRecreateRenderTarget(edit,lateAlloc)
 		local padding = eleData.padding
 		local width,height = eleData.absSize[1]-padding[1]*2,eleData.absSize[2]-padding[2]*2
 		width,height = width-width%1,height-height%1
-		local bgRT,err = dxCreateRenderTarget(width,height,true,edit)
+		local bgRT,err = dgsCreateRenderTarget(width,height,true,edit)
 		if bgRT ~= false then
 			dgsAttachToAutoDestroy(bgRT,edit,-1)
 		else
@@ -230,25 +278,34 @@ end
 
 function dgsEditCheckMultiClick(button,state,x,y,times)
 	if state == "down" then
+		local mouseButtons = dgsElementData[source].mouseButtons
+		local mouseClicked
+		if mouseButtons then
+			if button == "left" then
+				mouseClicked = mouseButtons[1]
+			elseif button == "middle" then
+				mouseClicked = mouseButtons[2]
+			elseif button == "right" then
+				mouseClicked = mouseButtons[3]
+			end
+		else
+			mouseClicked = button == "left"
+		end
+		if not mouseClicked then return end
+
 		if times== 1 then
-			if button ~= "middle" then
-				local shift = getKeyState("lshift") or getKeyState("rshift")
-				local pos,side = searchEditMousePosition(source,x)
-				dgsEditSetCaretPosition(source,pos,shift)
-			end
+			local shift = getKeyState("lshift") or getKeyState("rshift")
+			local pos,side = searchEditMousePosition(source,x)
+			dgsEditSetCaretPosition(source,pos,shift)
 		elseif times == 2 then
-			if button == "left" then
-				local pos,side = searchEditMousePosition(source,x)
-				local text = dgsElementData[source].text
-				local s,e = dgsSearchFullWordType(text,pos,side)
-				dgsEditSetCaretPosition(source,s)
-				dgsEditSetCaretPosition(source,e,true)
-			end
+			local pos,side = searchEditMousePosition(source,x)
+			local text = dgsElementData[source].text
+			local s,e = dgsSearchFullWordType(text,pos,side)
+			dgsEditSetCaretPosition(source,s)
+			dgsEditSetCaretPosition(source,e,true)
 		elseif times == 3 then
-			if button == "left" then
-				dgsEditSetCaretPosition(source,_)
-				dgsEditSetCaretPosition(source,0,true)
-			end
+			dgsEditSetCaretPosition(source,_)
+			dgsEditSetCaretPosition(source,0,true)
 		end
 	end
 end
@@ -344,7 +401,7 @@ function dgsEditCheckPreSwitch()
 					dgsEditSetCaretPosition(theResult,utf8Len(dgsElementData[theResult].text or ""))
 				end
 				dgsBringToFront(theResult)
-				triggerEvent("onDgsEditSwitched",theResult,source)
+				dgsTriggerEvent("onDgsEditSwitched",theResult,source)
 			end
 		end
 	end
@@ -487,9 +544,8 @@ function dgsEditSetTextFilter(edit,str)
 	dgsSetData(edit,"undoHistory",{})
 	dgsSetData(edit,"redoHistory",{})
 	eleData.updateRTNextFrame = true
-	triggerEvent("onDgsTextChange",edit,oldText)
+	dgsTriggerEvent("onDgsTextChange",edit,oldText)
 end
-dgsRegisterDeprecatedFunction("dgsEditSetWhiteList","dgsEditSetTextFilter")
 
 function dgsEditInsertText(edit,index,text)
 	if not dgsIsType(edit,"dgs-dxedit") then error(dgsGenAsrt(edit,"dgsEditInsertText",1,"dgs-dxedit")) end
@@ -559,7 +615,7 @@ function dgsEditDeleteText(edit,fromIndex,toIndex,noAffectCaret,historyRecState)
 	end
 	eleData.textFontLen = dxGetTextWidth(text,eleData.textSize[1],eleData.font)
 	eleData.updateRTNextFrame = true
-	triggerEvent("onDgsTextChange",edit,oldText)
+	dgsTriggerEvent("onDgsTextChange",edit,oldText)
 	return deletedText
 end
 
@@ -571,7 +627,7 @@ function dgsEditClearText(edit)
 	dgsSetData(edit,"selectFrom",0)
 	dgsElementData[edit].textFontLen = 0
 	dgsElementData[edit].updateRTNextFrame = true
-	triggerEvent("onDgsTextChange",edit,oldText)
+	dgsTriggerEvent("onDgsTextChange",edit,oldText)
 	return true
 end
 
@@ -640,10 +696,18 @@ function configEdit(edit)
 end
 
 function resetEdit(x,y)
-	if dgsGetType(MouseData.focused) == "dgs-dxedit" then
-		if MouseData.focused == MouseData.clickl then
-			local pos = searchEditMousePosition(MouseData.focused,MouseData.cursorPos[1] or x*sW)
-			dgsEditSetCaretPosition(MouseData.focused,pos,true)
+	local dgsEdit = MouseData.focused
+	if dgsGetType(dgsEdit) == "dgs-dxedit" then
+		local mouseButtons = dgsElementData[dgsEdit].mouseButtons
+		local clickedEle 
+		if mouseButtons and not mouseButtons[1] then 
+			clickedEle = (mouseButtons[2] and MouseData.click.right) or (mouseButtons[3] and MouseData.click.middle)
+		else 
+			clickedEle = MouseData.click.left
+		end
+		if dgsEdit == clickedEle then
+			local pos = searchEditMousePosition(dgsEdit,MouseData.cursorPos[1] or x*sW)
+			dgsEditSetCaretPosition(dgsEdit,pos,true)
 		end
 	end
 end
@@ -728,13 +792,6 @@ function searchEditMousePosition(edit,posx)
 	return -1,0
 end
 
-addEventHandler("onClientGUIAccepted",GlobalEdit,function()
-	local dgsEdit = dgsElementData[source].linkedDxEdit
-	if dgsGetType(dgsEdit) == "dgs-dxedit" then
-		triggerEvent("onDgsEditAccepted",dgsEdit,dgsEdit)
-	end
-end,true)
-
 function dgsEditAlignmentShowPosition(edit,text)
 	local eleData = dgsElementData[edit]
 	local alignment = eleData.alignment
@@ -811,7 +868,7 @@ function handleDxEditText(edit,text,noclear,noAffectCaret,index,historyRecState)
 		end
 	end
 	eleData.updateRTNextFrame = true
-	triggerEvent("onDgsTextChange",edit,oldText)
+	dgsTriggerEvent("onDgsTextChange",edit,oldText)
 	if eleData.enableRedoUndoRecord then
 		historyRecState = historyRecState or 1
 		if historyRecState ~= 0 and textLen ~= 0 then
@@ -1071,33 +1128,6 @@ function dgsEditDoOpposite(edit,isUndo)
 	return false
 end
 
-addEventHandler("onClientGUIChanged",GlobalEdit,function()
-	if getElementType(source) == "gui-edit" then
-		local dgsEdit = dgsElementData[source].linkedDxEdit
-		if isElement(dgsEdit) then
-			local text = guiGetText(source)
-			local eleData = dgsElementData[dgsEdit]
-			local cool = eleData.CoolTime
-			if #text ~= 0 then
-				if not cool then
-					if not eleData.readOnly then
-						local caretPos = eleData.caretPos
-						local selectFrom = eleData.selectFrom
-						if selectFrom-caretPos ~= 0 then
-							dgsEditReplaceText(dgsEdit,caretPos,selectFrom,text)
-						else
-							handleDxEditText(dgsEdit,text,true)
-						end
-					end
-					eleData.CoolTime = true
-					guiSetText(source,"")
-					eleData.CoolTime = false
-				end
-			end
-		end
-	end
-end,true)
-
 ----------------------------------------------------------------
 -----------------------PropertyListener-------------------------
 ----------------------------------------------------------------
@@ -1201,7 +1231,7 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	local bgColor = eleData.isFocused and eleData.bgColor or (eleData.bgColorBlur or eleData.bgColor)
 	bgColor = applyColorAlpha(bgColor,parentAlpha)
 	local caretColor = applyColorAlpha(eleData.caretColor,parentAlpha)
-	local isFocused = MouseData.focused == source
+	local isFocused = MouseData.focused
 	if isFocused == source then
 		if isConsoleActive() or isMainMenuActive() or isChatBoxInputActive() then
 			MouseData.focused = false
@@ -1256,7 +1286,7 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	elseif alignment[1] == "center" then
 		local __width = eleData.textFontLen
 		width = dxGetTextWidth(utf8Sub(text,0,caretPos),txtSizX,font)
-		textLeft,textRight = showPos,w-paddingX
+		textLeft,textRight = showPos-paddingX,w-paddingX
 		selectX,selectW = width+showPos*0.5+w*0.5-__width*0.5-paddingX+1,selx
 		posFix = ((text:reverse():find("%S") or 1)-1)*dxGetTextWidth(" ",txtSizX,font)
 	elseif alignment[1] == "right" then
@@ -1338,7 +1368,9 @@ dgsRenderer["dgs-dxedit"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	end
 	dxDrawImage(x,y,w,h,bgImage,0,0,0,finalcolor,isPostGUI,rndtgt)
 	dxSetBlendMode(rndtgt and "modulate_add" or "add")
-	__dxDrawImage(px,py,pw,ph,eleData.bgRT,0,0,0,white,isPostGUI)
+	if eleData.bgRT then
+		__dxDrawImage(px,py,pw,ph,eleData.bgRT,0,0,0,white,isPostGUI)
+	end
 	if placeHolderIgnoreRndTgt then
 		if isPlaceHolderShown then
 			local pColor = applyColorAlpha(eleData.placeHolderColor,parentAlpha)

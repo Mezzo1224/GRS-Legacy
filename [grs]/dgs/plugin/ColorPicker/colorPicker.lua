@@ -79,7 +79,7 @@ function dgsCreateColorPicker(style,...)
 		dgsSetData(mainElement,"componentSelectors",{})
 		dgsSetData(mainElement,"style",style)
 		dgsColorPickerSetColor(mainElement,0,0,255,255)
-		triggerEvent("onDgsPluginCreate",mainElement,sourceResource)
+		dgsTriggerEvent("onDgsPluginCreate",mainElement,sourceResource)
 		return mainElement
 	end
 	return false
@@ -199,7 +199,7 @@ function dgsColorPickerSetComponentSelectorValue(cs,value)
 	else
 		dgsSetPosition(images[2],-offset,value*absSize[2]/100-thickness/2,false)
 	end
-	triggerEvent("onDgsColorPickerComponentSelectorChange",cs,value,oldV)
+	dgsTriggerEvent("onDgsColorPickerComponentSelectorChange",cs,value,oldV)
 end
 
 AvailableColorType = {
@@ -456,6 +456,7 @@ function dgsBindToColorPicker(cs,colorPicker,colorType,colorAttribute,staticMode
 			dgsImageSetImage(cs,ALPComponent)
 			dxSetShaderValue(ALPComponent,"vertical",dgsElementData[cs].voh)
 			dxSetShaderValue(ALPComponent,"isReversed",isReversed and true or false)
+			dgsAttachToAutoDestroy(ALPComponent,cs,-1)
 		elseif colorType == "RGB" then
 			local RGBComponent = dxCreateShader("plugin/ColorPicker/RGBComponent.fx")
 			dgsSetData(cs,"shader",RGBComponent)
@@ -471,6 +472,7 @@ function dgsBindToColorPicker(cs,colorPicker,colorType,colorAttribute,staticMode
 			else
 				dxSetShaderValue(RGBComponent,"StaticMode",{1,1,1})
 			end
+			dgsAttachToAutoDestroy(HSLComponent,cs,-1)
 		elseif colorType == "HSL" then
 			local HSLComponent = dxCreateShader("plugin/ColorPicker/HSLComponent.fx")
 			dgsSetData(cs,"shader",HSLComponent)
@@ -486,6 +488,7 @@ function dgsBindToColorPicker(cs,colorPicker,colorType,colorAttribute,staticMode
 			else
 				dxSetShaderValue(HSLComponent,"StaticMode",{1,1,1})
 			end
+			dgsAttachToAutoDestroy(HSLComponent,cs,-1)
 		elseif colorType == "HSV" then
 			local HSVComponent = dxCreateShader("plugin/ColorPicker/HSVComponent.fx")
 			dgsSetData(cs,"shader",HSVComponent)
@@ -501,6 +504,7 @@ function dgsBindToColorPicker(cs,colorPicker,colorType,colorAttribute,staticMode
 			else
 				dxSetShaderValue(HSVComponent,"StaticMode",{1,1,1})
 			end
+			dgsAttachToAutoDestroy(HSVComponent,cs,-1)
 		end
 		
 		if dgsElementData[cs].maskTexture then
@@ -628,7 +632,7 @@ function dgsColorPickerSetColor(cp,...)
 	dgsSetData(cp,"HSV",newColorHSV)
 	dgsSetData(cp,"RGB",newColorRGB)
 	dgsSetData(cp,"A",newA)
-	triggerEvent("onDgsColorPickerChange",cp,oldRGB,oldHSL,oldHSV,oldAlp)
+	dgsTriggerEvent("onDgsColorPickerChange",cp,oldRGB,oldHSL,oldHSV,oldAlp)
 	for cs,_ in pairs(componentSelectors) do
 		if not isElement(cs) then componentSelectors[cs] = nil end
 		local csType = dgsGetPluginType(cs)
@@ -677,8 +681,8 @@ end
 ---------------------HSVRing Color Picker
 function HSVRingChange()
 	local cx,cy = dgsGetCursorPosition()
+	local rot,CenDisX,CenDisY = dgsFindRotationByCenter(source,cx,cy,90)
 	if eventName == "onDgsMouseClickDown" then
-		local rot,CenDisX,CenDisY = dgsFindRotationByCenter(source,cx,cy,90)
 		local clickRadius = (CenDisX^2+CenDisY^2)^0.5
 		dgsSetData(source,"clickRadius",clickRadius)
 		if clickRadius >= 0.4 and clickRadius <= 0.5 then
@@ -691,10 +695,8 @@ function HSVRingChange()
 	else
 		local clickRadius = dgsElementData[source].clickRadius or 1
 		if clickRadius >= 0.4 and clickRadius <= 0.5 then
-			local rot = dgsFindRotationByCenter(source,cx,cy,90)
-			dgsColorPickerSetColor(source,rot,_,_,_,"HSL")
+			dgsColorPickerSetColor(source,rot,_,_,_,"HSV")
 		elseif clickRadius< 0.4 then
-			local rot,CenDisX,CenDisY = dgsFindRotationByCenter(source,cx,cy,90)
 			local HSV = dgsElementData[source].HSV
 			local S,V = dgsProjectHXYToSV(HSV[1],CenDisX,CenDisY)
 			dgsColorPickerSetColor(source,_,S,V,_,"HSV")

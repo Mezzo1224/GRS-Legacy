@@ -51,7 +51,7 @@ local dgsAttachToAutoDestroy = dgsAttachToAutoDestroy
 local calculateGuiPositionSize = calculateGuiPositionSize
 local dgsCreateTextureFromStyle = dgsCreateTextureFromStyle
 --Utilities
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local addEventHandler = addEventHandler
 local createElement = createElement
 local mathLerp = math.lerp
@@ -218,7 +218,7 @@ function dgsComboBoxRecreateRenderTarget(combobox,lateAlloc)
 	else
 		local box = dgsElementData[combobox].myBox
 		local boxSize = dgsElementData[box].absSize
-		local bgRT,err = dxCreateRenderTarget(boxSize[1],boxSize[2],true,combobox)
+		local bgRT,err = dgsCreateRenderTarget(boxSize[1],boxSize[2],true,combobox)
 		if bgRT ~= false then
 			dgsAttachToAutoDestroy(bgRT,combobox,-1)
 		else
@@ -240,7 +240,7 @@ function checkComboBoxScrollBar(scb,new,old)
 			local temp = -new*(itemLength-sy)/100
 			local temp = dgsElementData[combobox].scrollFloor and mathFloor(temp) or temp
 			dgsSetData(combobox,"itemMoveOffset",temp)
-			triggerEvent("onDgsElementScroll",combobox,source,new,old)
+			dgsTriggerEvent("onDgsElementScroll",combobox,source,new,old)
 		end
 	end
 end
@@ -622,7 +622,7 @@ function dgsComboBoxSetSelectedItem(combobox,i)
 	local i = i-i%1
 	local old = dgsElementData[combobox].select
 	dgsSetData(combobox,"select",i)
-	triggerEvent("onDgsComboBoxSelect",combobox,i,old)
+	dgsTriggerEvent("onDgsComboBoxSelect",combobox,i,old)
 	return true
 end
 
@@ -848,7 +848,7 @@ dgsOnPropertyChange["dgs-dxcombobox"] = {
 		configComboBox(dgsEle)
 	end,
 	listState = function(dgsEle,key,value,oldValue)
-		triggerEvent("onDgsComboBoxStateChange",dgsEle,value == 1 and true or false)
+		dgsTriggerEvent("onDgsComboBoxStateChange",dgsEle,value == 1 and true or false)
 	end,
 	viewCount = function(dgsEle,key,value,oldValue)
 		dgsComboBoxSetViewCount(dgsEle,value)
@@ -913,18 +913,13 @@ dgsRenderer["dgs-dxcombobox"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 	local buttonLen = textBox and (eleData.buttonLen[2] and eleData.buttonLen[1]*h or eleData.buttonLen[1]) or w
 	if MouseData.entered == source then
 		selectState = 2
-		if eleData.clickType == 1 then
-			if MouseData.clickl == source then
-				selectState = 3
-			end
-		elseif eleData.clickType == 2 then
-			if MouseData.clickr == source then
-				selectState = 3
-			end
-		else
-			if MouseData.clickl == source or MouseData.clickr == source then
-				selectState = 3
-			end
+		local mouseButtons = eleData.mouseButtons
+		local canLeftClick,canRightClick,canMiddleClick = true
+		if mouseButtons then
+			canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
+		end		
+		if (canLeftClick and MouseData.click.left == source) or (canRightClick and MouseData.click.right == source) or (canMiddleClick and MouseData.click.middle == source) then
+			selectState = 3
 		end
 	end
 	local finalcolor

@@ -19,7 +19,7 @@ dgsRegisterProperties("dgs-dxbutton",{
 	shadow = 				{	{ PArg.Number, PArg.Number, PArg.Color, PArg.Number+PArg.Bool+PArg.Nil, PArg.Font+PArg.Nil }, PArg.Nil	},
 	subPixelPositioning = 	{	PArg.Bool	},
 	text = 					{	PArg.Text	},
-	textColor = 			{	PArg.Color	},
+	textColor = 			{	PArg.Color, { PArg.Color, PArg.Color, PArg.Color }	},
 	textOffset = 			{	{ PArg.Number, PArg.Number, PArg.Bool }	},
 	textSize = 				{	{ PArg.Number, PArg.Number }	},
 	wordBreak = 			{	PArg.Bool	},
@@ -42,7 +42,7 @@ local dgsAttachToAutoDestroy = dgsAttachToAutoDestroy
 local calculateGuiPositionSize = calculateGuiPositionSize
 local dgsCreateTextureFromStyle = dgsCreateTextureFromStyle
 --Utilities
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local createElement = createElement
 local assert = assert
 local tonumber = tonumber
@@ -96,7 +96,6 @@ function dgsCreateButton(...)
 	dgsElementData[button] = {
 		alignment = {"center","center"},
 		clickOffset = {0,0},
-		clickType = 1;	--1:LMB;2:Wheel;3:RM,
 		clip = nil,
 		colorTransitionPeriod = 0, --ms
 		color = {normalColor, hoveringColor, clickedColor},
@@ -107,7 +106,7 @@ function dgsCreateButton(...)
 		iconImage = nil,
 		iconRelative = true,	--true for text, false for button
 		iconOffset = {0,0,false},-- Can be false/true
-		iconSize = {1,1,"text"}; -- Can be false/true/"text"
+		iconSize = {1,1,"text"}, -- Can be false/true/"text"
 		--iconShadow = {},
 		imageTransformTime = 0, --ms
 		image = {normalImage, hoveringImage, clickedImage},
@@ -173,7 +172,7 @@ function dgsButtonSubmitForm()
 			texts[key] = false
 		end
 	end
-	triggerEvent("onDgsFormSubmit",source,texts)
+	dgsTriggerEvent("onDgsFormSubmit",source,texts)
 end
 
 function dgsButtonMakeForm(button,forms)
@@ -194,25 +193,50 @@ end
 --function dgsButtonSetIconImage()
 --function dgsButtonSetIconColor()
 ----------------------------------------------------------------
+-----------------------PropertyListener-------------------------
+----------------------------------------------------------------
+dgsOnPropertyChange["dgs-dxbutton"] = {
+	color = function(dgsEle,key,value,oldValue)
+		local eleData = dgsElementData[dgsEle]
+		if eleData.colorTransitionPeriod <= 0 then return end
+		local renderBuffer = eleData.renderBuffer
+		local context = renderBuffer.startContext
+		if context then
+			local colorFrom = type(value) ~= "table" and value or value[context[1] or eleData.currentState or 1]
+			local colorTo = type(value) ~= "table" and value or value[context[2] or eleData.currentState or 1]
+			renderBuffer.startColor = interpolateColor(colorFrom,colorTo,renderBuffer.currentProgress)
+		end
+	end,
+	textColor = function(dgsEle,key,value,oldValue)
+		local eleData = dgsElementData[dgsEle]
+		if eleData.colorTransitionPeriod <= 0 then return end
+		local renderBuffer = eleData.renderBuffer
+		local context = renderBuffer.startContext
+		if context then
+			local colorFrom = type(value) ~= "table" and value or value[context[1] or eleData.currentState or 1]
+			local colorTo = type(value) ~= "table" and value or value[context[2] or eleData.currentState or 1]
+			renderBuffer.startTextColor = interpolateColor(colorFrom,colorTo,renderBuffer.currentProgress)
+		end
+	end,
+}
+----------------------------------------------------------------
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
 dgsRenderer["dgs-dxbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt)
 	local renderBuffer = eleData.renderBuffer
+	local color = eleData.color
+	local image = eleData.image
+	local textColor = eleData.textColor
 	local buttonState = 1
 	if MouseData.entered == source then
 		buttonState = 2
-		if eleData.clickType == 1 then
-			if MouseData.clickl == source then
-				buttonState = 3
-			end
-		elseif eleData.clickType == 2 then
-			if MouseData.clickr == source then
-				buttonState = 3
-			end
-		else
-			if MouseData.clickl == source or MouseData.clickr == source then
-				buttonState = 3
-			end
+		local mouseButtons = eleData.mouseButtons
+		local canLeftClick,canRightClick,canMiddleClick = true
+		if mouseButtons then
+			canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
+		end		
+		if (canLeftClick and MouseData.click.left == source) or (canRightClick and MouseData.click.right == source) or (canMiddleClick and MouseData.click.middle == source) then
+			buttonState = 3
 		end
 	end
 	if eleData.lastState ~= buttonState then
@@ -222,10 +246,15 @@ dgsRenderer["dgs-dxbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherit
 	if eleData.currentState ~= buttonState then
 		eleData.currentState = buttonState
 		eleData.currentStateTick = getTickCount()
-		renderBuffer.startColor = renderBuffer.currentColor or (type(eleData.color) ~= "table" and eleData.color or eleData.color[eleData.lastState])
+		if not renderBuffer.startContext then renderBuffer.startContext = {} end
+		renderBuffer.startContext[1] = eleData.lastState
+		renderBuffer.startContext[2] = eleData.currentState
+		renderBuffer.startColor = renderBuffer.currentColor or (type(color) ~= "table" and color or color[eleData.lastState])
+		renderBuffer.startTextColor = renderBuffer.currentTextColor or (type(textColor) ~= "table" and textColor or textColor[eleData.lastState])
 	end
-	local bgColor = type(eleData.color) ~= "table" and eleData.color or eleData.color[buttonState] 
-	local bgImage = type(eleData.image) ~= "table" and eleData.image or eleData.image[buttonState]
+	local bgColor = type(color) ~= "table" and color or color[buttonState] 
+	local bgImage = type(image) ~= "table" and image or image[buttonState]
+	local textColor = type(textColor) ~= "table" and textColor or (textColor[buttonState] or textColor[1])
 	local finalcolor
 	if not enabledInherited and not enabledSelf then
 		if type(eleData.disabledColor) == "number" then
@@ -237,7 +266,7 @@ dgsRenderer["dgs-dxbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherit
 		else
 			local targetColor = bgColor
 			if eleData.colorTransitionPeriod > 0 then
-				renderBuffer.currentColor = interpolateColor(renderBuffer.startColor or targetColor,targetColor,(getTickCount()-eleData.currentStateTick)/eleData.colorTransitionPeriod) -- todo
+				renderBuffer.currentColor = interpolateColor(renderBuffer.startColor or targetColor,targetColor,(getTickCount()-eleData.currentStateTick)/eleData.colorTransitionPeriod)
 				finalcolor = applyColorAlpha(renderBuffer.currentColor,parentAlpha)
 			else
 				finalcolor = applyColorAlpha(targetColor,parentAlpha)
@@ -245,21 +274,20 @@ dgsRenderer["dgs-dxbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherit
 		end
 	else
 		local targetColor = bgColor
+		local targetTextColor = textColor
 		if eleData.colorTransitionPeriod > 0 and getTickCount()-eleData.currentStateTick <= eleData.colorTransitionPeriod then
-			renderBuffer.currentColor = interpolateColor(renderBuffer.startColor or targetColor,targetColor,(getTickCount()-eleData.currentStateTick)/eleData.colorTransitionPeriod) -- todo
+			local progress = (getTickCount()-eleData.currentStateTick)/eleData.colorTransitionPeriod
+			renderBuffer.currentColor = interpolateColor(renderBuffer.startColor or targetColor,targetColor,progress)
+			renderBuffer.currentTextColor = interpolateColor(renderBuffer.startTextColor or targetTextColor,targetTextColor,progress)
+			renderBuffer.currentProgress = progress
+			textColor = renderBuffer.currentTextColor
 			finalcolor = applyColorAlpha(renderBuffer.currentColor,parentAlpha)
 		else
+			renderBuffer.currentProgress = 1
+			renderBuffer.currentColor = targetColor
 			finalcolor = applyColorAlpha(targetColor,parentAlpha)
 		end
 	end
-	------------------------------------
-	if eleData.functionRunBefore then
-		local fnc = eleData.functions
-		if type(fnc) == "table" then
-			fnc[1](unpack(fnc[2]))
-		end
-	end
-	------------------------------------
 	if finalcolor/0x1000000%256 >= 1 then	--Optimise when alpha = 0
 		dxDrawImage(x,y,w,h,bgImage,0,0,0,finalcolor,isPostGUI,rndtgt)
 	end
@@ -279,6 +307,7 @@ dgsRenderer["dgs-dxbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherit
 	local txtoffsetsX = textOffset[3] and textOffset[1]*w or textOffset[1]
 	local txtoffsetsY = textOffset[3] and textOffset[2]*h or textOffset[2]
 	local alignment = eleData.alignment
+	local subPixelPos = eleData.subPixelPositioning
 	local iconImage = eleData.iconImage
 	if iconImage then
 		local iconColor = eleData.iconColor
@@ -399,7 +428,6 @@ dgsRenderer["dgs-dxbutton"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherit
 			shadowColor = applyColorAlpha(shadowColor or white,parentAlpha)
 		end
 		
-		local textColor = type(eleData.textColor) ~= "table" and eleData.textColor or (eleData.textColor[buttonState] or eleData.textColor[1])
 		dgsDrawText(text,textX,textY,textX+w,textY+h,applyColorAlpha(textColor,parentAlpha),textSizeX,textSizeY,font,alignment[1],alignment[2],clip,wordBreak,isPostGUI,colorCoded,subPixelPos,0,0,0,0,shadowOffsetX,shadowOffsetY,shadowColor,shadowIsOutline,shadowFont)
 	end
 

@@ -7,7 +7,7 @@ local dxDrawRectangle = dxDrawRectangle
 local dxSetShaderValue = dxSetShaderValue
 local dxSetRenderTarget = dxSetRenderTarget
 local dxSetBlendMode = dxSetBlendMode
-local dxCreateRenderTarget = dxCreateRenderTarget
+local dgsCreateRenderTarget = dgsCreateRenderTarget
 --DGS Functions
 local dgsSetType = dgsSetType
 local dgsGetType = dgsGetType
@@ -20,7 +20,7 @@ local dgsAttachToAutoDestroy = dgsAttachToAutoDestroy
 local calculateGuiPositionSize = calculateGuiPositionSize
 local dgsCreateTextureFromStyle = dgsCreateTextureFromStyle
 --Utilities
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local addEventHandler = addEventHandler
 local createElement = createElement
 local isElement = isElement
@@ -70,6 +70,8 @@ function dgsCreateScalePane(...)
 		scrollBarLength = {},
 		horizontalMoveOffsetTemp = 0,
 		verticalMoveOffsetTemp = 0,
+		horizontalMoveOffset = 0,
+		verticalMoveOffset = 0,
 		moveHardness = {0.1,0.9},
 		scale = {1,1},
 		scalable = true,
@@ -128,7 +130,7 @@ function dgsScalePaneRecreateRenderTarget(scalepane,lateAlloc)
 		dgsSetData(scalepane,"retrieveRT",true)
 	else
 		local resolution = dgsElementData[scalepane].resolution
-		local mainRT,err = dxCreateRenderTarget(resolution[1],resolution[2],true,scalepane)
+		local mainRT,err = dgsCreateRenderTarget(resolution[1],resolution[2],true,scalepane)
 		if mainRT ~= false then
 			dxSetTextureEdge(mainRT,"border",tocolor(0,0,0,0))
 			dgsAttachToAutoDestroy(mainRT,scalepane,-1)
@@ -145,7 +147,7 @@ function checkScalePaneScrollBar(scb,new,old)
 	if dgsGetType(parent) == "dgs-dxscalepane" then
 		local scrollbars = dgsElementData[parent].scrollbars
 		if source == scrollbars[1] or source == scrollbars[2] then
-			triggerEvent("onDgsElementScroll",parent,source,new,old)
+			dgsTriggerEvent("onDgsElementScroll",parent,source,new,old)
 		end
 	end
 end
@@ -233,12 +235,10 @@ function dgsScalePaneCheckMove(scalepane)
 	local scale = eleData.scale
 	local resolution = eleData.resolution
 	local relSizX,relSizY = w-xthick,h-ythick
-	local mx,my = dgsGetCursorPosition()
-	local xScroll = eleData.horizontalMoveOffsetTemp
-	local yScroll = eleData.verticalMoveOffsetTemp
+	local xScroll = dgsElementData[scrollbar[2]].scrollPosition*0.01
+	local yScroll = dgsElementData[scrollbar[1]].scrollPosition*0.01
 	local renderOffsetX = -(resolution[1]-relSizX/scale[1])*xScroll
 	local renderOffsetY = -(resolution[2]-relSizY/scale[2])*yScroll
-	local moveData = eleData.moveOffsetData
 	MouseData.MoveScale[0] = true
 	MouseData.MoveScale[1] = MouseData.cursorPos[1]-x	--OffsetX
 	MouseData.MoveScale[2] = MouseData.cursorPos[2]-y	--OffsetY
@@ -374,14 +374,8 @@ dgsRenderer["dgs-dxscalepane"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInhe
 	eleData.verticalMoveOffsetTemp = yScroll
 	OffsetX = -(resolution[1]-relSizX/scale[1])*xScroll
 	OffsetY = -(resolution[2]-relSizY/scale[2])*yScroll
-	------------------------------------
-	if eleData.functionRunBefore then
-		local fnc = eleData.functions
-		if type(fnc) == "table" then
-			fnc[1](unpack(fnc[2]))
-		end
-	end
-	------------------------------------
+	eleData.horizontalMoveOffset = OffsetX
+	eleData.verticalMoveOffset = OffsetY
 	local newRndTgt = eleData.mainRT
 	if newRndTgt then
 		dxSetRenderTarget(rndtgt)
@@ -408,20 +402,18 @@ dgsRenderer["dgs-dxscalepane"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInhe
 			eleData.sourceTexture = false
 		end
 		dxDrawImageSection(x,y,relSizX,relSizY,-OffsetX,-OffsetY,relSizX/scale[1],relSizY/scale[2],drawTarget,0,0,0,tocolor(255,255,255,255*parentAlpha),isPostGUI)
+
 		if MouseData.hit == source then
 			mx = (mx-xNRT)/scale[1]-OffsetX+xNRT
 			my = (my-yNRT)/scale[2]-OffsetY+yNRT
 		end
-	end
-	dxSetRenderTarget(newRndTgt,true)
-	
-	if newRndTgt then
+		dxSetRenderTarget(newRndTgt,true)
 		local bgColor = eleData.bgColor
 		if eleData.bgImage then
 			bgColor = bgColor or 0xFFFFFFFF
 			dxSetBlendMode("blend")
-			dxDrawImage(0,0,resolution[1],resolution[2],eleData.bgImage,0,0,0,tocolor(255,255,255,255*parentAlpha))
-			bgColor = applyColorAlpha(bgColor,parentAlpha)
+			bgColor = applyColorAlpha(bgColor or 0xFFFFFFFF,parentAlpha)
+			dxDrawImage(0,0,resolution[1],resolution[2],eleData.bgImage,0,0,0,bgColor)
 		elseif eleData.bgColor then
 			bgColor = applyColorAlpha(bgColor,parentAlpha)
 			dxSetBlendMode("modulate_add")

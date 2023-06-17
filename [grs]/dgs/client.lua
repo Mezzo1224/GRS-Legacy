@@ -29,7 +29,9 @@ local tableCount = table.count
 local tableRemoveItemFromArray = table.removeItemFromArray
 local applyColorAlpha = applyColorAlpha
 local getCursorPosition = getCursorPosition
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
+local insertResource = insertResource
+local dgsAddEventHandler = dgsAddEventHandler
 local unpack = unpack
 local tostring = tostring
 local tonumber = tonumber
@@ -81,7 +83,11 @@ MouseData = {
 		middle={[0]=false,0,0},
 		right={[0]=false,0,0},
 	},
-	
+	click = {
+		left = false,
+		right = false,
+		middle = false,
+	},
 	scbEnterData = false,
 	scbEnterRltPos = false,
 	topScrollable = false,
@@ -136,10 +142,10 @@ function dgsCoreRender()
 	dgsRenderInfo.frames = dgsRenderInfo.frames+1
 	dgsRenderInfo.frameStartScreen = getTickCount()
 	dgsRenderInfo.rendering = 0
-	--triggerEvent("onDgsPreRender",resourceRoot)
+	--dgsTriggerEvent("onDgsPreRender",resourceRoot)
 	local frameStart3DOnScreen,frameEnd3DOnScreen = 0,0
 	MouseData.cursorPos3D[0] = false
-	local mx,my = -1000,-1000
+	local mx,my
 	local cursorShowing = dgsGetCursorVisible()
 	if cursorShowing then
 		mx,my = dgsGetCursorPosition(_,_,true)
@@ -153,14 +159,17 @@ function dgsCoreRender()
 			MouseData.scbClickData = false
 			MouseData.selectorClickData = false
 			MouseData.lock3DInterface = false
-			MouseData.clickl = false
-			MouseData.clickr = false
-			MouseData.clickm = false
+			MouseData.click.left = false
+			MouseData.click.right = false
+			MouseData.click.middle = false
 			MouseData.Scale[0] = false
 			MouseData.Move[0] = false
+			MouseData.Move[3] = nil
 			MouseData.MoveScale[0] = false
 			MouseData.cursorPosWld[0] = false
 			MouseData.cursorPosScr[0] = false
+			MouseData.cursorPos[0] = false
+			MouseData.entered = false
 		end
 		MouseData.visibleLastFrame = cursorShowing
 	end
@@ -174,6 +183,7 @@ function dgsCoreRender()
 	MouseData.hit = false
 	MouseData.hitDebug = false
 	if #BottomFatherTable+#CenterFatherTable+#TopFatherTable+#BackEndTable+#dgsWorld3DTable+#dgsScreen3DTable ~= 0 then
+		local preBlendMode = dxGetBlendMode()
 		--Animation Processing
 		onAnimQueueProcess()
 		----
@@ -190,6 +200,7 @@ function dgsCoreRender()
 				dgsRendererFunction(v)
 			end
 		end
+		dxSetBlendMode(preBlendMode)
 		--
 		frameStart3DOnScreen = getTickCount()
 		MouseData.hitData3D[0] = false
@@ -206,10 +217,10 @@ function dgsCoreRender()
 			local selfDimen = eleData.dimension
 			if (selfDimen == -1 or selfDimen == dimension) and (eleData.interior == -1 or eleData.interior == interior) then
 				dxSetBlendMode(eleData.blendMode)
-				renderGUI(v,mx,my,eleData.enabled,eleData.enabled,eleData.mainRT,0,0,0,0,0,0,1,MouseData.clickl)
+				renderGUI(v,mx,my,eleData.enabled,eleData.enabled,eleData.mainRT,0,0,0,0,0,0,1,MouseData.click.left)
 			end
 		end
-		dxSetBlendMode("blend")
+		dxSetBlendMode(preBlendMode)
 		dxSetRenderTarget()
 		for i=1,#dgsScreen3DTable do
 			local v = dgsScreen3DTable[i]
@@ -244,32 +255,21 @@ function dgsCoreRender()
 		local hit2D = MouseData.hit
 		
 		if hit2D then
-			MouseData.cursorPos = dgsElementData[hit2D].cursorPosition
+			MouseData.cursorPos[0] = true
+			MouseData.cursorPos[1] = dgsElementData[hit2D].cursorPosition[1]
+			MouseData.cursorPos[2] = dgsElementData[hit2D].cursorPosition[2]
 			MouseData.hitData2D[0] = true
 			MouseData.hitData2D[1] = MouseData.cursorPos[1]
 			MouseData.hitData2D[2] = MouseData.cursorPos[2]
 			MouseData.hitData2D[3] = hit2D
 		elseif hit3D then
-			MouseData.cursorPos = dgsElementData[hit3D].cursorPosition
+			MouseData.cursorPos[0] = true
+			MouseData.cursorPos[1] = dgsElementData[hit3D].cursorPosition[1]
+			MouseData.cursorPos[2] = dgsElementData[hit3D].cursorPosition[2]
 		end
 		MouseData.hit = hit2D or hit3D 
 		dxSetRenderTarget()
-		--[[if not cursorShowing then
-			MouseData.hit = false
-			MouseData.Move[0] = false
-			MouseData.Scale[0] = false
-			MouseData.MoveScale[0] = false
-			MouseData.MoveScroll[0] = false
-			MouseData.scbClickData = false
-			MouseData.selectorClickData = false
-			MouseData.lock3DInterface = false
-			MouseData.clickl = false
-			MouseData.clickr = false
-			MouseData.clickm = false
-			MouseData.cursorPosWld[0] = false
-			MouseData.cursorPosScr[0] = false
-		end]]
-		triggerEvent("onDgsRender",resourceRoot)
+		dgsTriggerEvent("onDgsRender",resourceRoot)
 		if KeyHolder.repeatKey then
 			local tick = getTickCount()
 			if tick-KeyHolder.repeatStartTick >= KeyHolder.repeatDuration then
@@ -381,7 +381,7 @@ function dgsCoreRender()
 		local version = getElementData(resourceRoot,"Version") or "?"
 		local freeMemory = " | Free VMemory: "..(dxGetStatus().VideoMemoryFreeForMTA).."M" or "N/A"
 		
-		dgsDrawText("DGS "..version..freeMemory,5,sH*0.4-130,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+		dgsDrawText("DGS "..version..freeMemory,5,sH*0.4-160,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		local renderTimeStr = dgsRenderInfo.frameRenderTimeTotal.."ms-"..dgsRenderInfo.frameRenderTimeScreen.."ms-"..dgsRenderInfo.frameRenderTime3D.."ms"
 		local tickColor
 		if dgsRenderInfo.frameRenderTimeTotal <= 8 then
@@ -391,26 +391,31 @@ function dgsCoreRender()
 		else
 			tickColor = red
 		end
-		dgsDrawText("CPU Time(All-2D-3D): "..renderTimeStr,5,sH*0.4-115,sW,sH,tickColor,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+		dgsDrawText("CPU Time(All-2D-3D): "..renderTimeStr,5,sH*0.4-145,sW,sH,tickColor,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		local Focused = MouseData.focused and dgsGetPluginType(MouseData.focused).."("..getElementID(MouseData.focused)..")" or "None"
 		local enterStr = MouseData.hit and dgsGetPluginType(MouseData.hit).." ("..getElementID(MouseData.hit)..")" or "None"
-		local leftStr = MouseData.clickl and dgsGetPluginType(MouseData.clickl).." ("..getElementID(MouseData.clickl)..")" or "None"
-		local rightStr = MouseData.clickr and dgsGetPluginType(MouseData.clickr).." ("..getElementID(MouseData.clickr)..")" or "None"
+		local leftStr = MouseData.click.left and dgsGetPluginType(MouseData.click.left).." ("..getElementID(MouseData.click.left)..")" or "None"
+		local middleStr = MouseData.click.middle and dgsGetPluginType(MouseData.click.middle).." ("..getElementID(MouseData.click.middle)..")" or "None"
+		local rightStr = MouseData.click.right and dgsGetPluginType(MouseData.click.right).." ("..getElementID(MouseData.click.right)..")" or "None"
+		dgsDrawText("Cursor Pos On Screen: "..(mx or "Hidden")..","..(my or "Hidden"),10,sH*0.4-130,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+		local cursorPosDGS = MouseData.cursorPos
+		dgsDrawText("Cursor Pos DGS: "..(cursorPosDGS[0] and cursorPosDGS[1]-cursorPosDGS[1]%1 or "Hidden")..","..(cursorPosDGS[0] and cursorPosDGS[2]-cursorPosDGS[2]%1 or "Hidden"),10,sH*0.4-115,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		dgsDrawText("Focused: "..Focused,10,sH*0.4-100,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		dgsDrawText("Enter: "..enterStr,10,sH*0.4-85,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		dgsDrawText("Click:",10,sH*0.4-70,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		dgsDrawText("L: "..leftStr,40,sH*0.4-70,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
-		dgsDrawText("R: "..rightStr,40,sH*0.4-55,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+		dgsDrawText("M: "..middleStr,40,sH*0.4-55,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+		dgsDrawText("R: "..rightStr,40,sH*0.4-40,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		dgsRenderInfo.created = 0
 		local index = 1
 		for value in pairs(dgsType) do
 			local elements = #getElementsByType(value)
 			dgsRenderInfo.created = dgsRenderInfo.created+elements
-			dgsDrawText(value.." : "..elements,15,sH*0.4-30+15*index+5,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+			dgsDrawText(value.." : "..elements,15,sH*0.4-15+15*index+5,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 			index = index+1
 		end
-		dgsDrawText("Rendering: "..dgsRenderInfo.rendering,10,sH*0.4-40,sW,sH,green,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
-		dgsDrawText("Created: "..dgsRenderInfo.rendering,10,sH*0.4-25,sW,sH,yellow,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+		dgsDrawText("Rendering: "..dgsRenderInfo.rendering,10,sH*0.4-25,sW,sH,green,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+		dgsDrawText("Created: "..dgsRenderInfo.rendering,10,sH*0.4-10,sW,sH,yellow,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		dgsRenderInfo.runningAnimation = #animQueue
 		dgsDrawText("Running Animations: "..dgsRenderInfo.runningAnimation,300,sH*0.4-115,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 		ResCount = 0
@@ -424,7 +429,7 @@ function dgsCoreRender()
 				end
 				if resDGSCnt ~= 0 then
 					ResCount = ResCount +1
-					dgsDrawText(getResourceName(ka).." : #00FF00"..(dgsRenderInfo.renderingResource[ka] or 0).."#FFFFFF/#FFFF00"..resDGSCnt,300,sH*0.4-60+100*ResCount,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
+					dgsDrawText(getResourceName(ka).." : #00FF00"..(dgsRenderInfo.renderingResource[ka] or 0).."#FFFFFF/#FFFF00"..resDGSCnt,300,sH*0.4-100+15*ResCount,sW,sH,white,1,1,"default","left","top",false,false,true,true,false,0,0,0,0,1,1,black)
 				end
 			end
 			dgsRenderInfo.renderingResource[ka] = 0
@@ -435,56 +440,50 @@ end
 
 function renderGUI(source,mx,my,enabledInherited,enabledSelf,rndtgt,xRT,yRT,xNRT,yNRT,OffsetX,OffsetY,parentAlpha)
 	local eleData = dgsElementData[source]
-	local enabledInherited,enabledSelf = enabledInherited and eleData.enabledInherited and eleData.enabled,eleData.enabled
 	local visible = eleData.visible
 	local visibleInherited = eleData.visibleInherited
 	if visible and visibleInherited and isElement(source) then
-		local parentOffsetX,parentOffsetY
-		local eleType = dgsElementType[source]
-		if eleType == "dgs-dxscrollbar" then
+		if debugMode then	--Debug Mode
+			dgsRenderInfo.rendering = dgsRenderInfo.rendering+1
+			if eleData.resource then
+				dgsRenderInfo.renderingResource[eleData.resource] = (dgsRenderInfo.renderingResource[eleData.resource] or 0)+1
+			end
+		end
+		local enabledSelf = eleData.enabled								--Seld enabled
+		local enabledInherited = enabledInherited and eleData.enabledInherited and enabledSelf	--Enabled inherited
+		local eleType = dgsElementType[source]							--Element type of current element
+		local parent = dgsElementData[source].parent					--Parent
+		local children = dgsElementData[source].children				--Children
+		local rndtgt = isElement(rndtgt) and rndtgt or false			--Parent render target
+		dxSetRenderTarget(rndtgt)										--Use parent render target
+		local globalBlendMode = rndtgt and "modulate_add" or "blend"	--Blend mode by default
+		dxSetBlendMode(globalBlendMode)									--Apply blend mode
+		local dgsPreRendererFunction = dgsPreRenderer[eleType]
+		if dgsPreRendererFunction then dgsPreRendererFunction(source) end	--Process something before render
+
+		--Apply parent alpha
+		if eleType == "dgs-dxscrollbar" then							--For scrollpane	(should be optimised soon)
 			local attachedToParent = eleData.attachedToParent
 			if isElement(attachedToParent) and dgsElementData[attachedToParent] then
 				if not dgsElementData[attachedToParent].visible then return end
 				parentAlpha = parentAlpha*dgsElementData[attachedToParent].alpha
 			end
 		end
-		local rndtgt = isElement(rndtgt) and rndtgt or false
-		local globalBlendMode = rndtgt and "modulate_add" or "blend"
-		dxSetBlendMode(globalBlendMode)
-		if debugMode then
-			dgsRenderInfo.rendering = dgsRenderInfo.rendering+1
-			if eleData.resource then
-				dgsRenderInfo.renderingResource[eleData.resource] = (dgsRenderInfo.renderingResource[eleData.resource] or 0)+1
-			end
-		end
-		local parent,children,parentAlpha = dgsElementData[source].parent,dgsElementData[source].children,(eleData.alpha or 1)*parentAlpha
+		parentAlpha = (eleData.alpha or 1)*parentAlpha					--Apply parent alpha with element alpha
+
+		--Process Position Alignment 
 		local eleTypeP,eleDataP
 		local elePAlignH,elePAlignV
 		if parent then
 			eleTypeP,eleDataP = dgsElementType[parent],dgsElementData[parent]
 			elePAlignH,elePAlignV = dgsElementData[parent].contentPositionAlignment[1],dgsElementData[parent].contentPositionAlignment[2]
 		end
-		dxSetRenderTarget(rndtgt)
-		--Side Processing
-		local PosX,PosY,w,h = 0,0,0,0
-		if eleTypeP == "dgs-dxwindow" then
-			PosY = (not eleDataP.ignoreTitle and not eleData.ignoreParentTitle) and PosY+(eleDataP.titleHeight or 0) or PosY
-		elseif eleTypeP == "dgs-dxtab" then
-			local gpEleData = dgsElementData[dgsElementData[parent].parent]
-			local gpSize = gpEleData.absSize
-			local tabHeight = gpEleData.tabHeight[2] and gpEleData.tabHeight[1]*gpSize[2] or gpEleData.tabHeight[1]
-			PosY = PosY+tabHeight
-			w,h = gpSize[1],gpSize[2]-tabHeight
-		end
-		if eleType ~= "dgs-dxtab" then
-			local absX,absY,absW,absH
-			local absPos = eleData.absPos
-			local absSize = eleData.absSize
-			if not absPos then absX,absY = 0,0 else absX,absY = absPos[1],absPos[2] end
-			if not absSize then absW,absH = 0,0 else absW,absH = absSize[1],absSize[2] end
-			PosX,PosY = PosX+absX,PosY+absY
-			w,h = absW,absH
-		end
+
+		local absX,absY,absW,absH
+		local absPos,absSize = eleData.absPos,eleData.absSize
+		if not absPos then absX,absY = 0,0 else absX,absY = absPos[1],absPos[2] end
+		if not absSize then absW,absH = 0,0 else absW,absH = absSize[1],absSize[2] end
+		local PosX,PosY,w,h = absX,absY,absW,absH
 		local eleAlign = eleData.positionAlignment
 		local eleAlignH,eleAlignV = eleAlign[1] or elePAlignH, eleAlign[2] or elePAlignV
 		if eleAlignH == "right" then	--Horizontal
@@ -501,6 +500,8 @@ function renderGUI(source,mx,my,enabledInherited,enabledSelf,rndtgt,xRT,yRT,xNRT
 			local pHeight = parent and eleDataP.absSize[2] or sH
 			PosY = PosY+pHeight/2-eleData.absSize[2]/2
 		end
+		
+		if eleTypeP == "dgs-dxwindow" and eleData.ignoreParentTitle then OffsetY = 0 end
 		local x,y = PosX+OffsetX,PosY+OffsetY
 		OffsetX,OffsetY = 0,0
 		xRT,yRT,xNRT,yNRT = xRT+x,yRT+y,xNRT+x,yNRT+y
@@ -512,186 +513,148 @@ function renderGUI(source,mx,my,enabledInherited,enabledSelf,rndtgt,xRT,yRT,xNRT
 		end
 		if eleDataP and eleDataP.mainRT == rndtgt and rndtgt then xRT,yRT = x,y end
 		self = source
-		renderArguments[1] = xRT
-		renderArguments[2] = yRT
-		renderArguments[3] = w
-		renderArguments[4] = h
-		renderArguments[5] = xNRT
-		renderArguments[6] = yNRT
-		if xRT and yRT then
-			------------------------------------
-			if eleData.functionRunBefore then
-				local fnc = eleData.functions
-				if type(fnc) == "table" and fnc[1] then
-					fnc[1](unpack(fnc[2]))
-				end
+		renderArguments[1],renderArguments[2] = xRT,yRT
+		renderArguments[3],renderArguments[4] = w,h
+		renderArguments[5],renderArguments[6] = xNRT,yNRT
+		local disableOutline
+		------------------------------------
+		if eleData.functionRunBefore then
+			local fnc = eleData.functions
+			if type(fnc) == "table" and fnc[1] then
+				fnc[1](unpack(fnc[2]))
 			end
-			------------------------------------
-			if eleData.PixelInt then xRT,yRT,w,h = xRT-xRT%1,yRT-yRT%1,w-w%1,h-h%1 end
-			------------------------------------Main Renderer
-			local _mx,_my,rt,disableOutline
-			local daDebugColor,daDebugTexture = 0xFFFFFF,nil
-			local dgsRendererFunction = dgsRenderer[eleType]
-			if dgsRendererFunction then
-				local _hitElement
-				if checkDisabledElement then
-					if mx and eleType ~= "dgs-dxdetectarea" then
-						local collider = eleData.dgsCollider
-						if collider and dgsElementType[collider] == "dgs-dxdetectarea" then
-							local daEleData = dgsElementData[collider]
-							local checkPixel = daEleData.checkFunction
-							if checkPixel then
-								local _mx,_my = (mx-xNRT)/w,(my-yNRT)/h
-								if _mx > 0 and _my > 0 and _mx <= 1 and _my <= 1 then
-									if type(checkPixel) == "function" then
-										local checkFnc = daEleData.checkFunction
-										if checkFnc((mx-xNRT)/w,(my-yNRT)/h,mx,my) then
-											if enabledInherited then
-												MouseData.hit = source
-											end
-											MouseData.hitDebug = source
-											daDebugColor = 0xFF0000
-										end
-									else
-										local px,py = dxGetPixelsSize(checkPixel)
-										local pixX,pixY = _mx*px,_my*py
-										local r,g,b = dxGetPixelColor(checkPixel,pixX-1,pixY-1)
-										local gray = ((r or 0)+(g or 0)+(b or 0))/3
-										if gray >= 128 then
-											if enabledInherited then
-												MouseData.hit = source
-											end
-											MouseData.hitDebug = source
-											daDebugColor = 0xFF0000
-										end
+		end
+		------------------------------------
+		if eleData.PixelInt then xRT,yRT,w,h = xRT-xRT%1,yRT-yRT%1,w-w%1,h-h%1 end
+		------------------------------------Main Renderer
+		local daDebugColor,daDebugTexture = 0xFFFFFF,nil
+		local dgsRendererFunction = dgsRenderer[eleType]
+		if dgsRendererFunction then
+			local _hitElement
+			if (enabledInherited or checkDisabledElement) and mx and eleType ~= "dgs-dxdetectarea" then
+				local collider = eleData.dgsCollider
+				if collider and dgsElementType[collider] == "dgs-dxdetectarea" then
+					local daEleData = dgsElementData[collider]
+					local checkPixel = daEleData.checkFunction
+					if checkPixel then
+						local _mx,_my = (mx-xNRT)/w,(my-yNRT)/h
+						if _mx > 0 and _my > 0 and _mx <= 1 and _my <= 1 then
+							if type(checkPixel) == "function" then
+								local checkFnc = daEleData.checkFunction
+								if checkFnc(_mx,_my,mx,my) then
+									if enabledInherited then
+										MouseData.hit = source
+									elseif checkDisabledElement then
+										MouseData.hitDebug = source
 									end
+									daDebugColor = 0xFF0000
 								end
-								daDebugTexture = daEleData.debugTexture
-								daDebugColor = daEleData.debugModeAlpha*0x1000000+daDebugColor
+							else
+								local px,py = dxGetPixelsSize(checkPixel)
+								local pixX,pixY = _mx*px,_my*py
+								local r,g,b = dxGetPixelColor(checkPixel,pixX-1,pixY-1)
+								local gray = ((r or 0)+(g or 0)+(b or 0))/3
+								if gray >= 128 then
+									if enabledInherited then
+										MouseData.hit = source
+									elseif checkDisabledElement then
+										MouseData.hitDebug = source
+									end
+									daDebugColor = 0xFF0000
+								end
 							end
-						else
-							local hit = (dgsCollider[eleType] or dgsCollider.default)(source,mx,my,xNRT,yNRT,w,h) 
-							if enabledInherited then
-								MouseData.hit = hit or MouseData.hit
-							end
-							MouseData.hitDebug = hit or MouseData.hitDebug
 						end
-						if eleType == "dgs-dxgridlist" and enabledInherited then
-							_hitElement = MouseData.hit
-						end
+						daDebugTexture = daEleData.debugTexture
+						daDebugColor = daEleData.debugModeAlpha*0x1000000+daDebugColor
 					end
 				else
-					if enabledInherited and mx and eleType ~= "dgs-dxdetectarea" then
-						local collider = eleData.dgsCollider
-						if collider and dgsElementType[collider] == "dgs-dxdetectarea" then
-							local daEleData = dgsElementData[collider]
-							local checkPixel = daEleData.checkFunction
-							if checkPixel then
-								local _mx,_my = (mx-xNRT)/w,(my-yNRT)/h
-								if _mx > 0 and _my > 0 and _mx <= 1 and _my <= 1 then
-									if type(checkPixel) == "function" then
-										local checkFnc = daEleData.checkFunction
-										if checkFnc(_mx,_my,mx,my) then
-											MouseData.hit = source
-											daDebugColor = 0xFF0000
-										end
-									else
-										local px,py = dxGetPixelsSize(checkPixel)
-										local pixX,pixY = _mx*px,_my*py
-										local r,g,b = dxGetPixelColor(checkPixel,pixX-1,pixY-1)
-										local gray = ((r or 0)+(g or 0)+(b or 0))/3
-										if gray >= 128 then
-											MouseData.hit = source
-											daDebugColor = 0xFF0000
-										end
-									end
-								end
-								daDebugTexture = daEleData.debugTexture
-								daDebugColor = daEleData.debugModeAlpha*0x1000000+daDebugColor
-							end
-						else
-							MouseData.hit = (dgsCollider[eleType] or dgsCollider.default)(source,mx,my,xNRT,yNRT,w,h) or MouseData.hit
-						end
-						if eleType == "dgs-dxgridlist" then
-							_hitElement = MouseData.hit
-						end
+					hit = (dgsCollider[eleType] or dgsCollider.default)(source,mx,my,xNRT,yNRT,w,h) or MouseData.hit
+					if enabledInherited then
+						MouseData.hit = hit or MouseData.hit
+					elseif checkDisabledElement then
+						MouseData.hitDebug = hit or MouseData.hitDebug
 					end
 				end
-				if MouseData.hit then
-					if _hitElement and _hitElement ~= MouseData.hit then
-						local scbThickV = dgsElementData[ eleData.scrollbars[1] ].visible and eleData.scrollBarThick or 0
-						local scbThickH = dgsElementData[ eleData.scrollbars[2] ].visible and eleData.scrollBarThick or 0
-						if mx > xNRT+w-scbThickH or my > yNRT+h-scbThickV then
-							MouseData.hit = source
-						end
-					end
-					MouseData.WithinElements[MouseData.hit] = true
-					if MouseData.hit == source then
-						eleData.cursorPosition[0] = dgsRenderInfo.frames
-						eleData.cursorPosition[1],eleData.cursorPosition[2] = mx,my
-					end
-				end
-				rt,disableOutline,_mx,_my,parentOffsetX,parentOffsetY = dgsRendererFunction(source,xRT,yRT,w,h,mx,my,xNRT,yNRT,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt,xRT,yRT,xNRT,yNRT,OffsetX,OffsetY,visible)
-				mx,my = _mx or mx,_my or my
-				if debugMode then
-					dgsElementData[source].debugData = {xNRT,yNRT,w,h,xNRT,yNRT}
-					if daDebugTexture then
-						__dxDrawImage(xRT,yRT,w,h,daDebugTexture,0,0,0,daDebugColor,isPostGUI)
-					end
-				end
-				rndtgt = rt or rndtgt
-				OffsetX,OffsetY = parentOffsetX or OffsetX,parentOffsetY or OffsetY
-			end
-			------------------------------------
-			if not eleData.functionRunBefore then
-				local fnc = eleData.functions
-				if type(fnc) == "table" then
-					fnc[1](unpack(fnc[2]))
+				if eleType == "dgs-dxgridlist" then
+					_hitElement = MouseData.hit
 				end
 			end
-			------------------------------------OutLine
-			if not disableOutline then
-				local outlineData = eleData.outline
-				if outlineData then
-					local sideColor = outlineData[3]
-					local sideSize = outlineData[2]
-					local hSideSize = sideSize*0.5
-					sideColor = applyColorAlpha(sideColor,parentAlpha)
-					local side = outlineData[1]
-					if side == "in" then
-						if outlineData[6] ~= false then dxDrawLine(xRT,yRT+hSideSize,xRT+w,yRT+hSideSize,sideColor,sideSize,isPostGUI) end
-						if outlineData[4] ~= false then dxDrawLine(xRT+hSideSize,yRT,xRT+hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
-						if outlineData[5] ~= false then dxDrawLine(xRT+w-hSideSize,yRT,xRT+w-hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
-						if outlineData[7] ~= false then dxDrawLine(xRT,yRT+h-hSideSize,xRT+w,yRT+h-hSideSize,sideColor,sideSize,isPostGUI) end
-					elseif side == "center" then
-						if outlineData[6] ~= false then dxDrawLine(xRT-hSideSize,yRT,xRT+w+hSideSize,yRT,sideColor,sideSize,isPostGUI) end
-						if outlineData[4] ~= false then dxDrawLine(xRT,yRT+hSideSize,xRT,yRT+h-hSideSize,sideColor,sideSize,isPostGUI) end
-						if outlineData[5] ~= false then dxDrawLine(xRT+w,yRT+hSideSize,xRT+w,yRT+h-hSideSize,sideColor,sideSize,isPostGUI) end
-						if outlineData[7] ~= false then dxDrawLine(xRT-hSideSize,yRT+h,xRT+w+hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
-					elseif side == "out" then
-						if outlineData[6] ~= false then dxDrawLine(xRT-sideSize,yRT-hSideSize,xRT+w+sideSize,yRT-hSideSize,sideColor,sideSize,isPostGUI) end
-						if outlineData[4] ~= false then dxDrawLine(xRT-hSideSize,yRT,xRT-hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
-						if outlineData[5] ~= false then dxDrawLine(xRT+w+hSideSize,yRT,xRT+w+hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
-						if outlineData[7] ~= false then dxDrawLine(xRT-sideSize,yRT+h+hSideSize,xRT+w+sideSize,yRT+h+hSideSize,sideColor,sideSize,isPostGUI) end
+			if MouseData.hit then
+				if _hitElement and _hitElement ~= MouseData.hit then
+					local scbThickV = dgsElementData[ eleData.scrollbars[1] ].visible and eleData.scrollBarThick or 0
+					local scbThickH = dgsElementData[ eleData.scrollbars[2] ].visible and eleData.scrollBarThick or 0
+					if mx > xNRT+w-scbThickH or my > yNRT+h-scbThickV then
+						MouseData.hit = source
 					end
 				end
-			else
-				visible = false
+				MouseData.WithinElements[MouseData.hit] = true
 			end
-			------------------------------------
+			local parentOffsetX,parentOffsetY
+			rt,disableOutline,mx,my,parentOffsetX,parentOffsetY = dgsRendererFunction(source,xRT,yRT,w,h,mx,my,xNRT,yNRT,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt,xRT,yRT,xNRT,yNRT,OffsetX,OffsetY,visible)
+			if MouseData.hit == source then
+				eleData.cursorPosition[0] = dgsRenderInfo.frames
+				eleData.cursorPosition[1],eleData.cursorPosition[2] = mx,my
+			end
+			if debugMode then
+				if not dgsElementData[source].debugData then dgsElementData[source].debugData = {} end
+				dgsElementData[source].debugData[1] = x
+				dgsElementData[source].debugData[2] = y
+				dgsElementData[source].debugData[3] = w
+				dgsElementData[source].debugData[4] = h
+				dgsElementData[source].debugData[5] = xNRT
+				dgsElementData[source].debugData[6] = yNRT
+				if daDebugTexture then __dxDrawImage(xRT,yRT,w,h,daDebugTexture,0,0,0,daDebugColor,isPostGUI) end
+			end
+			rndtgt = rt or rndtgt
+			OffsetX,OffsetY = parentOffsetX or OffsetX,parentOffsetY or OffsetY
+		end
+		------------------------------------
+		if not eleData.functionRunBefore then
+			local fnc = eleData.functions
+			if type(fnc) == "table" then
+				fnc[1](unpack(fnc[2]))
+			end
+		end
+		------------------------------------OutLine
+		if not disableOutline then
+			local outlineData = eleData.outline
+			if outlineData then
+				local sideColor = outlineData[3]
+				local sideSize = outlineData[2]
+				local hSideSize = sideSize*0.5
+				sideColor = applyColorAlpha(sideColor,parentAlpha)
+				local side = outlineData[1]
+				if side == "in" then
+					if outlineData[6] ~= false then dxDrawLine(xRT,yRT+hSideSize,xRT+w,yRT+hSideSize,sideColor,sideSize,isPostGUI) end
+					if outlineData[4] ~= false then dxDrawLine(xRT+hSideSize,yRT,xRT+hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
+					if outlineData[5] ~= false then dxDrawLine(xRT+w-hSideSize,yRT,xRT+w-hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
+					if outlineData[7] ~= false then dxDrawLine(xRT,yRT+h-hSideSize,xRT+w,yRT+h-hSideSize,sideColor,sideSize,isPostGUI) end
+				elseif side == "center" then
+					if outlineData[6] ~= false then dxDrawLine(xRT-hSideSize,yRT,xRT+w+hSideSize,yRT,sideColor,sideSize,isPostGUI) end
+					if outlineData[4] ~= false then dxDrawLine(xRT,yRT+hSideSize,xRT,yRT+h-hSideSize,sideColor,sideSize,isPostGUI) end
+					if outlineData[5] ~= false then dxDrawLine(xRT+w,yRT+hSideSize,xRT+w,yRT+h-hSideSize,sideColor,sideSize,isPostGUI) end
+					if outlineData[7] ~= false then dxDrawLine(xRT-hSideSize,yRT+h,xRT+w+hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
+				elseif side == "out" then
+					if outlineData[6] ~= false then dxDrawLine(xRT-sideSize,yRT-hSideSize,xRT+w+sideSize,yRT-hSideSize,sideColor,sideSize,isPostGUI) end
+					if outlineData[4] ~= false then dxDrawLine(xRT-hSideSize,yRT,xRT-hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
+					if outlineData[5] ~= false then dxDrawLine(xRT+w+hSideSize,yRT,xRT+w+hSideSize,yRT+h,sideColor,sideSize,isPostGUI) end
+					if outlineData[7] ~= false then dxDrawLine(xRT-sideSize,yRT+h+hSideSize,xRT+w+sideSize,yRT+h+hSideSize,sideColor,sideSize,isPostGUI) end
+				end
+			end
 		else
 			visible = false
 		end
+		------------------------------------
 		local oldMouseIn = eleData.rndTmp_mouseIn or false
 		local newMouseIn = MouseData.hit and true or false
 		if eleData.enableFullEnterLeaveCheck then
 			if oldMouseIn ~= newMouseIn then
 				eleData.rndTmp_mouseIn = newMouseIn
-				triggerEvent("onDgsElement"..(newMouseIn and "Enter" or "Leave"),source)
+				dgsTriggerEvent("onDgsElement"..(newMouseIn and "Enter" or "Leave"),source,mx,my)
 			end
 		end
 		if eleData.renderEventCall then
-			triggerEvent("onDgsElementRender",source,xRT,yNRT,w,h)
+			dgsTriggerEvent("onDgsElementRender",source,xNRT,yNRT,w,h)
 		end
 		local childrenCnt = children and #children or 0
 		if childrenCnt ~= 0 then
@@ -718,13 +681,26 @@ function dgsCore3DRender()	--This renderer will only be attached to onClientPreR
 	local rendering3D = 0
 	if #dgsWorld3DTable ~= 0 then
 		cameraPos[1],cameraPos[2],cameraPos[3] = getCameraMatrix()
+		local dimension = getElementDimension(localPlayer)
+		local interior = getCameraInterior()
+		local preBlendMode = dxGetBlendMode()
 		for i=1,#dgsWorld3DTable do
 			local ele = dgsWorld3DTable[i]
 			local dgsType = dgsElementType[ele]
-			if dgs3DRenderer[dgsType] and dgs3DRenderer[dgsType](ele) then
-				rendering3D = rendering3D+1
+			local eleData = dgsElementData[ele]
+			local selfDimen = eleData.dimension
+			if (selfDimen == -1 or selfDimen == dimension) and (eleData.interior == -1 or eleData.interior == interior) then
+				dxSetBlendMode(eleData.blendMode)
+				local visible = eleData.visible
+				local visibleInherited = eleData.visibleInherited
+				if visible and visibleInherited and isElement(ele) then
+					if dgs3DRenderer[dgsType] and dgs3DRenderer[dgsType](ele) then
+						rendering3D = rendering3D+1
+					end
+				end
 			end
 		end
+		dxSetBlendMode(preBlendMode)
 	end
 	dgsRenderInfo.rendering3D = rendering3D
 	dgsRenderInfo.frameEnd3D = getTickCount()
@@ -744,7 +720,7 @@ end
 addEventHandler("onClientKey",root,function(button,state)
 	if button == "mouse_wheel_up" or button == "mouse_wheel_down" then
 		if isElement(MouseData.entered) then
-			triggerEvent("onDgsMouseWheel",MouseData.entered,button == "mouse_wheel_down" and -1 or 1)
+			dgsTriggerEvent("onDgsMouseWheel",MouseData.entered,button == "mouse_wheel_down" and -1 or 1)
 		end
 		local scroll = button == "mouse_wheel_down" and 1 or -1
 		local enteredElement = MouseData.topScrollable or MouseData.entered
@@ -924,6 +900,9 @@ function onClientKeyCheck(button,state)
 			cancelEvent()
 		end
 	end
+	if isElement(MouseData.focused) then
+		triggerEvent("onDgsKey",MouseData.focused,button,state)
+	end
 end
 
 function onClientKeyTriggered(button)
@@ -1029,7 +1008,7 @@ function onClientKeyTriggered(button)
 			if autoCompleteShow.result then
 				dgsSetText(edit,autoCompleteShow.result)
 			else
-				triggerEvent("onDgsEditPreSwitch",edit)
+				dgsTriggerEvent("onDgsEditPreSwitch",edit)
 			end
 		elseif button == "a" and ctrl then
 			dgsSetData(edit,"caretPos",0)
@@ -1157,7 +1136,7 @@ function onClientKeyTriggered(button)
 		elseif button == "a" and ctrl then
 			dgsMemoSetSelectedArea(memo,0,1,"all")
 		end
-	elseif dgsGetType(MouseData.focused) == "dgs-dxgridlist" then
+	elseif dgsGetType(MouseData.focused) == "dgs-dxgridlist" then--todo
 		local gridlist = MouseData.focused
 		if eleData.enableNavigation and eleData.visible and eleData.enabled then
 			if button == "arrow_u" then
@@ -1212,10 +1191,36 @@ function onClientKeyTriggered(button)
 end
 
 function dgsCheckHit(hits,cursorShowing)
-	if not cursorShowing then return false end
+	if not cursorShowing then -- Also checks if main menu is visible https://github.com/multitheftauto/mtasa-blue/issues/2944
+		if CursorData.enabled and CursorData[MouseData.cursorType] then
+			setCursorAlpha(255)
+		end
+		return false
+	end
 	local enteredElementType = dgsGetType(MouseData.entered)
+	local clickedElement
+	local clickedButton
+	if isElement(MouseData.click.left) then
+		local mouseButtons = dgsElementData[MouseData.click.left].mouseButtons
+		if not mouseButtons or mouseButtons[1] then 
+			clickedElement = MouseData.click.left
+			clickedButton = "left"
+		end
+	elseif isElement(MouseData.click.right) then
+		local mouseButtons = dgsElementData[MouseData.click.right].mouseButtons
+		if mouseButtons and mouseButtons[2] then 
+			clickedElement = MouseData.click.right
+			clickedButton = "right"
+		end
+	elseif isElement(MouseData.click.middle) then
+		local mouseButtons = dgsElementData[MouseData.click.middle].mouseButtons
+		if mouseButtons and mouseButtons[3] then 
+			clickedElement = MouseData.click.middle
+			clickedButton = "middle"
+		end
+	end
 	local mx,my = MouseData.cursorPos[1],MouseData.cursorPos[2]
-	if not isElement(MouseData.clickl) or not (dgsGetType(MouseData.clickl) == "dgs-dxscrollbar" and MouseData.scbClickData == 3) then
+	if not clickedElement or not (dgsGetType(clickedElement) == "dgs-dxscrollbar" and MouseData.scbClickData == 3) then
 		if MouseData.entered ~= hits then
 			if isElement(MouseData.entered) then
 				if enteredElementType == "dgs-dxgridlist" then
@@ -1223,17 +1228,25 @@ function dgsCheckHit(hits,cursorShowing)
 					preSelect[1],preSelect[2] = -1,-1
 					dgsSetData(MouseData.entered,"preSelect",preSelect)
 				end
-				triggerEvent("onDgsMouseLeave",MouseData.entered,mx,my,hits)
+				dgsTriggerEvent("onDgsMouseLeave",MouseData.entered,mx,my,hits)
 			end
+			--Clear mouse stay data
+			mouseStay.element = false
+			mouseStay.stayed = false
 			if isElement(hits) then
-				triggerEvent("onDgsMouseEnter",hits,mx,my,MouseData.entered)
+				mouseStay.element = hits
+				mouseStay.stayed = false
+				mouseStay.x = mx
+				mouseStay.y = my
+				mouseStay.tick = getTickCount()
+				dgsTriggerEvent("onDgsMouseEnter",hits,mx,my,MouseData.entered)
 			end
 			MouseData.left = MouseData.entered
 			MouseData.entered = hits
 			MouseData.hoverTick = getTickCount()
 		else
 			if isElement(hits) then
-				triggerEvent("onDgsMouseHover",hits,getTickCount()-(MouseData.hoverTick or getTickCount()),mx,my)
+				dgsTriggerEvent("onDgsMouseHover",hits,getTickCount()-(MouseData.hoverTick or getTickCount()),mx,my)
 			end
 		end
 	end
@@ -1243,19 +1256,32 @@ function dgsCheckHit(hits,cursorShowing)
 	end
 	if isElement(hits) then
 		if MouseData.lastPos[1] ~= mx or MouseData.lastPos[2] ~= my then
-			triggerEvent("onDgsMouseMove",hits,mx,my)
+			dgsTriggerEvent("onDgsMouseMove",hits,mx,my)
 		end
 	end
-	if isElement(MouseData.clickl) then
+	if not mouseStay.stayed and isElement(mouseStay.element) then	--Check mouse stay
+		if mouseStay.x == mx and mouseStay.y == my then
+			if getTickCount()-mouseStay.tick > mouseStay.delay then
+				mouseStay.stayed = true
+				dgsTriggerEvent("onDgsMouseStay",mouseStay.element,mouseStay.x,mouseStay.y)
+			end
+		else
+			mouseStay.tick = getTickCount()
+			mouseStay.x = mx
+			mouseStay.y = my
+		end
+	end
+	if clickedElement then
 		if MouseData.lastPos[1] ~= mx or MouseData.lastPos[2] ~= my then
-			triggerEvent("onDgsMouseDrag",MouseData.clickl,mx,my)
-			if not dgsDragDropBoard.lock and MouseData.clickPosition.left[0] then
-				if ((MouseData.clickPosition.left[1]-mx)^2+(MouseData.clickPosition.left[2]-my)^2)^0.5 > 10 then
+			dgsTriggerEvent("onDgsMouseDrag",clickedElement,mx,my)
+			if not dgsDragDropBoard.lock and MouseData.clickPosition[clickedButton][0] then
+				if ((MouseData.clickPosition[clickedButton][1]-mx)^2+(MouseData.clickPosition[clickedButton][2]-my)^2)^0.5 > 10 then
 					dgsDragDropBoard.lock = true
-					triggerEvent("onDgsDrag",MouseData.clickl)
+					dgsDragDropBoard.button = clickedButton
+					dgsTriggerEvent("onDgsDrag",clickedElement)
 					if not wasEventCancelled() then
-						if dgsElementData[MouseData.clickl].dragHandler then
-							dgsSendDragNDropData(unpack(dgsElementData[MouseData.clickl].dragHandler))
+						if dgsElementData[clickedElement].dragHandler then
+							dgsSendDragNDropData(unpack(dgsElementData[clickedElement].dragHandler))
 						end
 					end
 				end
@@ -1263,11 +1289,11 @@ function dgsCheckHit(hits,cursorShowing)
 		end
 		if MouseData.Move[0] then
 			local posX,posY = 0,0
-			local parent = dgsElementData[MouseData.clickl].parent
+			local parent = dgsElementData[clickedElement].parent
 			if parent then
-				posX,posY = getParentLocation(parent)
+				posX,posY = dgsGetPosition(parent,false,"screen")
 				if dgsElementType[parent] == "dgs-dxwindow" then
-					if not dgsElementData[MouseData.clickl].ignoreParentTitle and not dgsElementData[parent].ignoreTitle then
+					if not dgsElementData[clickedElement].ignoreParentTitle and not dgsElementData[parent].ignoreTitle then
 						posY = posY + (dgsElementData[parent].titleHeight or 0)
 					end
 				elseif dgsElementType[parent] == "dgs-dxtab" then
@@ -1278,19 +1304,19 @@ function dgsCheckHit(hits,cursorShowing)
 				end
 			end
 			local posX,posY = mx-MouseData.Move[1]-posX,my-MouseData.Move[2]-posY
-			local absPos = dgsElementData[MouseData.clickl].absPos
+			local absPos = dgsElementData[clickedElement].absPos
 			if absPos[1] ~= posX or absPos[2] ~= posY then
-				calculateGuiPositionSize(MouseData.clickl,posX,posY,false)
+				calculateGuiPositionSize(clickedElement,posX,posY,false)
 			end
 		end
 		if MouseData.Scale[0] then
-			local posX,posY = dgsGetPosition(MouseData.clickl,false,true)
+			local posX,posY = dgsGetPosition(clickedElement,false,true)
 			local addPosX,addPosY = 0,0
-			local parent = dgsElementData[MouseData.clickl].parent
+			local parent = dgsElementData[clickedElement].parent
 			if parent then
-				addPosX,addPosY = getParentLocation(parent)
+				addPosX,addPosY = dgsGetPosition(parent,false,"screen")
 				if dgsElementType[parent] == "dgs-dxwindow" then
-					if not dgsElementData[MouseData.clickl].ignoreParentTitle and not dgsElementData[parent].ignoreTitle then
+					if not dgsElementData[clickedElement].ignoreParentTitle and not dgsElementData[parent].ignoreTitle then
 						addPosY = addPosY + (dgsElementData[parent].titleHeight or 0)
 					end
 				elseif dgsElementType[parent] == "dgs-dxtab" then
@@ -1300,15 +1326,13 @@ function dgsCheckHit(hits,cursorShowing)
 					addPosY = addPosY + height
 				end
 			end
-			local absPos = dgsElementData[MouseData.clickl].absPos
-			local absSize = dgsElementData[MouseData.clickl].absSize
+			local absPos = dgsElementData[clickedElement].absPos
+			local absSize = dgsElementData[clickedElement].absSize
 			local sizeW,sizeH = absSize[1],absSize[2]
 			local endr = posX + sizeW
 			local endd = posY + sizeH
-			local minSize = dgsElementData[MouseData.clickl].minSize
-			local maxSize = dgsElementData[MouseData.clickl].maxSize
+			local minSize = dgsElementData[clickedElement].minSize
 			local minSizeX,minSizeY = minSize and minSize[1] or 10,minSize and minSize[2] or 10
-			local maxSizeX,maxSizeY = maxSize and maxSize[1] or 20000,maxSize and maxSize[2] or 20000
 			if MouseData.Scale[5] == 1 then
 				local old = posX
 				sizeW = sizeW-(mx-MouseData.Scale[1]-old)
@@ -1316,21 +1340,13 @@ function dgsCheckHit(hits,cursorShowing)
 					sizeW = minSizeX
 					posX = endr-sizeW
 				else
-					if sizeW > maxSizeX then
-						sizeW = maxSizeX
-						posX = endr-sizeW
-					else
-						posX = mx-MouseData.Scale[1]
-					end
+					posX = mx-MouseData.Scale[1]
 				end
 			end
 			if MouseData.Scale[5] == 3 then
 				sizeW = (mx-posX-MouseData.Scale[3])
 				if sizeW < minSizeX then
 					sizeW = minSizeX
-				end
-				if sizeW > maxSizeX then
-					sizeW = maxSizeX
 				end
 			end
 			if MouseData.Scale[6] == 2 then
@@ -1340,12 +1356,7 @@ function dgsCheckHit(hits,cursorShowing)
 					sizeH = minSizeY
 					posY = endd-sizeH
 				else
-					if sizeH > maxSizeY then
-						sizeH = maxSizeY
-						posY = endd-sizeH
-					else
-						posY = my-MouseData.Scale[2]
-					end
+					posY = my-MouseData.Scale[2]
 				end
 			end
 			if MouseData.Scale[6] == 4 then
@@ -1353,28 +1364,62 @@ function dgsCheckHit(hits,cursorShowing)
 				if sizeH < minSizeY then
 					sizeH = minSizeY
 				end
-				if sizeH > maxSizeY then
-					sizeH = maxSizeY
-				end
 			end
 			local posX,posY = posX-addPosX,posY-addPosY
 			if posX+posY-absPos[1]-absPos[2] ~= 0 or sizeW+sizeH-absSize[1]-absSize[2] ~= 0 then
-				calculateGuiPositionSize(MouseData.clickl,posX,posY,false,sizeW,sizeH,false)
+				calculateGuiPositionSize(clickedElement,posX,posY,false,sizeW,sizeH,false)
 			end
 		else
 			MouseData.lastPos[1] = -1
 			MouseData.lastPos[2] = -1
 		end
 		if not getKeyState("mouse1") then
-			MouseData.clickl = false
-			MouseData.scbClickData = false
-			MouseData.selectorClickData = false
-			MouseData.Move[0] = false
+			MouseData.click.left = false
+			if MouseData.scbClickButton == "left" then
+				MouseData.scbClickData = false
+				MouseData.scbClickButton = nil
+			end
+			if MouseData.selectorClickButton == "left" then
+				MouseData.selectorClickData = false
+				MouseData.selectorClickButton = nil
+			end
+			if MouseData.Move[3] == "left" then
+				MouseData.Move[0] = false
+				MouseData.Move[3] = nil
+			end
 			MouseData.Scale[0] = false
 			MouseData.lock3DInterface = false
 		end
 		if not getKeyState("mouse2") then
-			MouseData.clickr = false
+			MouseData.click.right = false
+			if MouseData.scbClickButton == "right" then
+				MouseData.scbClickData = false
+				MouseData.scbClickButton = nil
+			end
+			if MouseData.selectorClickButton == "right" then
+				MouseData.selectorClickData = false
+				MouseData.selectorClickButton = nil
+			end
+			if MouseData.Move[3] == "right" then
+				MouseData.Move[0] = false
+				MouseData.Move[3] = nil
+			end
+		end
+		
+		if not getKeyState("mouse3") then
+			MouseData.click.middle = false
+			if MouseData.scbClickButton == "middle" then
+				MouseData.scbClickData = false
+				MouseData.scbClickButton = nil
+			end
+			if MouseData.selectorClickButton == "middle" then
+				MouseData.selectorClickData = false
+				MouseData.selectorClickButton = nil
+			end
+			if MouseData.Move[3] == "middle" then
+				MouseData.Move[0] = false
+				MouseData.Move[3] = nil
+			end
 		end
 	else
 		MouseData.lastPos[1] = nil
@@ -1399,10 +1444,10 @@ function dgsCheckHit(hits,cursorShowing)
 				local yScroll = dgsElementData[scrollbar[1]].scrollPosition*0.01
 				local renderOffsetX = -(resolution[1]-relSizX)*xScroll
 				local renderOffsetY = -(resolution[2]-relSizY)*yScroll
-				
-				local posX,posY = mx+renderOffsetX-x-MouseData.MoveScale[1],my+renderOffsetY-y-MouseData.MoveScale[2]
-				local xScr = -posX/(resolution[1]-relSizX)
-				local yScr = -posY/(resolution[2]-relSizY)
+				local posX,posY = mx-x+renderOffsetX-MouseData.MoveScale[1],my-y+renderOffsetY-MouseData.MoveScale[2]
+				local xScr,yScr = 0,0
+				if resolution[1]-relSizX ~= 0 then xScr = -posX/(resolution[1]-relSizX) end
+				if resolution[2]-relSizY ~= 0 then yScr = -posY/(resolution[2]-relSizY) end
 				dgsScrollBarSetScrollPosition(scrollbar[2],mathClamp(xScr,0,1)*100)
 				dgsScrollBarSetScrollPosition(scrollbar[1],mathClamp(yScr,0,1)*100)
 			end
@@ -1410,7 +1455,7 @@ function dgsCheckHit(hits,cursorShowing)
 	end
 	MouseData.lastPos[1] = mx
 	MouseData.lastPos[2] = my
-	if not isElement(MouseData.clickl) then
+	if not clickedElement then
 		local _cursorType = "arrow"
 		if MouseData.entered then
 			local eleData = dgsElementData[MouseData.entered]
@@ -1473,10 +1518,11 @@ function dgsCheckHit(hits,cursorShowing)
 			_cursorType = guiGetCursorType()
 		end
 		if _cursorType ~= MouseData.cursorType then
-			triggerEvent("onDgsCursorTypeChange",root,_cursorType,MouseData.cursorType)
+			dgsTriggerEvent("onDgsCursorTypeChange",root,_cursorType,MouseData.cursorType)
 			MouseData.cursorType = _cursorType
 		end
 	end
+
 	if CursorData.enabled then
 		local cData = CursorData[MouseData.cursorType]
 		if cData then
@@ -1484,8 +1530,7 @@ function dgsCheckHit(hits,cursorShowing)
 			if image and not isElement(image) then
 				CursorData[MouseData.cursorType] = nil
 				cData = nil
-			end
-			if cursorShowing then
+			else
 				local color = CursorData.color
 				local cursorSize = CursorData.size
 
@@ -1499,8 +1544,6 @@ function dgsCheckHit(hits,cursorShowing)
 				local cursorX,cursorY = cursorScrX+offset[1]*cursorW,cursorScrY+offset[2]*cursorH
 				setCursorAlpha(0)
 				__dxDrawImage(cursorX,cursorY,cursorW,cursorH,image,rotation,rotCenter[1],rotCenter[2],color,true)
-			else
-				setCursorAlpha(255)
 			end
 		else
 			setCursorAlpha(255)
@@ -1508,12 +1551,13 @@ function dgsCheckHit(hits,cursorShowing)
 	end
 end
 
-function onClientMouseTriggered()
+function onClientMouseTriggered(button)
 	if MouseHolder.element == MouseData.entered then
 		local dgsType = dgsGetType(MouseHolder.element)
 		if dgsType == "dgs-dxscrollbar" then
 			if MouseData.scbEnterData then
 				MouseData.scbClickData = MouseData.scbEnterData
+				MouseData.scbClickButton = button
 			end
 			local scrollbar = MouseHolder.element
 			if MouseData.scbEnterData == 1 or MouseData.scbEnterData == 5 then
@@ -1534,6 +1578,7 @@ function onClientMouseTriggered()
 			local selector = MouseHolder.element
 			if MouseData.selectorEnterData then
 				MouseData.selectorClickData = MouseData.selectorEnterData
+				MouseData.selectorClickButton = button
 			end
 			local scrollbar = MouseHolder.element
 			if MouseData.selectorEnterData == 1 then
@@ -1571,12 +1616,15 @@ function onClientMouseTriggered()
 end
 
 MouseHolder = {}
-MouseKeyConverter = {left="mouse1",right="mouse2",middle="mouse3"}
-MouseKeySupports = {["dgs-dxscrollbar"] = true,["dgs-dxselector"] = true}
-function onDGSMouseCheck(button,state)
-	local button = MouseKeyConverter[button]
+function onDGSMouseCheck(source,button,state)
+	local eleData = dgsElementData[source]
+	local mouseButtons = eleData and eleData.mouseButtons
+	local canLeftClick,canRightClick,canMiddleClick = true
+	if mouseButtons then
+		canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
+	end	
 	if state == "down" then
-		if MouseKeySupports[dgsGetType(source)] then
+		if (button == "left" and canLeftClick) or (button == "right" and canRightClick) or (button == "middle" and canMiddleClick) then
 			if not MouseHolder.lastKey then
 				if isTimer(MouseHolder.Timer) then killTimer(MouseHolder.Timer) end
 				MouseHolder = {
@@ -1600,15 +1648,23 @@ function onDGSMouseCheck(button,state)
 		MouseHolder = {}
 	end
 end
-addEventHandler("onDgsMouseClick",root,onDGSMouseCheck)
+dgsRegisterFastEvent("onDgsMouseClick","onDGSMouseCheck")
+
+function DGSDestroy(element)
+	if isElement(MouseData.entered) and MouseData.entered == element then
+		dgsTriggerEvent("onDgsMouseLeave",MouseData.entered,mx,my,hits)
+		MouseData.entered = false
+	end
+end
+dgsRegisterFastEvent("onDgsDestroy","DGSDestroy")
 
 function dgsCleanElement(source)
 	local isAlive = isElement(source)
-	local dgsType = dgsElementType[source]
+	local dgsType = dgsIsType(source)
 	if dgsType then
 		local eleData = dgsElementData[source] or {}
 		if isAlive then
-			triggerEvent("onDgsDestroy",source)
+			dgsTriggerEvent("onDgsDestroy",source)
 		end
 		local isAttachedToGridList = eleData.attachedToGridList
 		if isAttachedToGridList and isAlive then dgsDetachFromGridList(source) end
@@ -1632,10 +1688,8 @@ function dgsCleanElement(source)
 					destroyElement(arrow)
 				end
 			end
-		elseif dgsType == "dgs-dxedit" then
-			blurEditMemo()
-		elseif dgsType == "dgs-dxmemo" then
-			blurEditMemo()
+		elseif dgsType == "dgs-dxedit" or dgsType == "dgs-dxmemo" then
+			blurEditMemo()		
 		elseif dgsType == "dgs-dxtabpanel" then
 			local tabs = eleData.tabs
 			if tabs then
@@ -1720,9 +1774,9 @@ function dgsCleanElement(source)
 		boundResource[tresource][source] = nil
 	end
 	if MouseData.entered == source then MouseData.entered = nil end
-	if MouseData.clickl == source then MouseData.clickl = nil end
-	if MouseData.clickm == source then MouseData.clickm = nil end
-	if MouseData.clickr == source then MouseData.clickr = nil end
+	if MouseData.click.left == source then MouseData.click.left = nil end
+	if MouseData.click.middle == source then MouseData.click.middle = nil end
+	if MouseData.click.right == source then MouseData.click.right = nil end
 	dgsElementData[source] = nil
 	dgsElementType[source] = nil
 end
@@ -1738,7 +1792,7 @@ addEventHandler("onClientElementDestroy",root,function()
 	end
 end,true,"low")
 
-function checkMove(source)
+function checkMove(source,button)
 	local eleData = dgsElementData[source]
 	local moveData = eleData.moveHandlerData
 	if moveData then
@@ -1756,7 +1810,8 @@ function checkMove(source)
 		MouseData.Move[0] = true
 		MouseData.Move[1] = offsetx
 		MouseData.Move[2] = offsety
-		triggerEvent("onDgsElementMove",source,offsetx,offsety)
+		MouseData.Move[3] = button
+		dgsTriggerEvent("onDgsElementMove",source,offsetx,offsety)
 	elseif dgsGetType(source) == "dgs-dxwindow" then
 		local x,y = dgsGetPosition(source,false,true)
 		local w,h = eleData.absSize[1],eleData.absSize[2]
@@ -1769,7 +1824,8 @@ function checkMove(source)
 		MouseData.Move[0] = true
 		MouseData.Move[1] = offsetx
 		MouseData.Move[2] = offsety
-		triggerEvent("onDgsElementMove",source,offsetx,offsety)
+		MouseData.Move[3] = button
+		dgsTriggerEvent("onDgsElementMove",source,offsetx,offsety)
 	end
 end
 
@@ -1816,7 +1872,7 @@ function checkScale(source)
 		MouseData.Scale[4] = offB
 		MouseData.Scale[5] = horzState
 		MouseData.Scale[6] = vertState
-		triggerEvent("onDgsElementSize",source,offL,offT)
+		dgsTriggerEvent("onDgsElementSize",source,offL,offT)
 		return true
 	elseif dgsGetType(source) == "dgs-dxwindow" then
 		local x,y = dgsGetPosition(source,false,true)
@@ -1848,7 +1904,7 @@ function checkScale(source)
 		MouseData.Scale[4] = offB
 		MouseData.Scale[5] = horzState
 		MouseData.Scale[6] = vertState
-		triggerEvent("onDgsElementSize",source,offL,offT)
+		dgsTriggerEvent("onDgsElementSize",source,offL,offT)
 		return true
 	end
 	return false
@@ -1859,6 +1915,15 @@ multiClick = {
 	left = {up = {0,false,false},down = {0,false,false}},
 	right = {up = {0,false,false},down = {0,false,false}},
 	middle = {up = {0,false,false},down = {0,false,false}},
+}
+
+mouseStay = {
+	delay = 1000,
+	element = false,
+	stayed = false,
+	x = false,
+	y = false,
+	tick = false,
 }
 
 GirdListDoubleClick = {}
@@ -1888,23 +1953,30 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 		if not isElement(dgsEle) then return end
 		if state == "up" then
 			if button == "left" then
-				if MouseData.clickl == dgsEle then
-					triggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
+				if MouseData.click.left == dgsEle then
+					dgsTriggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
 				end
 			elseif button == "right" then
-				if MouseData.clickr == dgsEle then
-					triggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
+				if MouseData.click.right == dgsEle then
+					dgsTriggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
 				end
 			elseif button == "middle" then
-				if MouseData.clickm == dgsEle then
-					triggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
+				if MouseData.click.middle == dgsEle then
+					dgsTriggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
 				end
 			end
 		else
-			triggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
+			dgsTriggerEvent("onDgsMousePreClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
 		end
 		if not isElement(dgsEle) then return end
 		if wasEventCancelled() then return end
+
+		local mouseButtons = eleData.mouseButtons
+		local canLeftClick,canRightClick,canMiddleClick = true
+		if mouseButtons then
+			canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
+		end		
+		local mouseClicked = (button == "left" and canLeftClick) or (button == "right" and canRightClick) or (button == "middle" and canMiddleClick)
 
 		local guitype = dgsGetType(dgsEle)
 		if guitype == "dgs-dxbrowser" then
@@ -1914,7 +1986,7 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 		end
 		local parent = dgsGetParent(dgsEle)
 		if guitype == "dgs-dxswitchbutton" then
-			if eleData.clickState == state and eleData.clickButton == button then
+			if eleData.clickState == state and mouseClicked then
 				dgsSetData(dgsEle,"state", not eleData.state)
 			end
 		end
@@ -1925,10 +1997,12 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 				dgsBringToFront(scrollbar[1],_,_,true)
 				dgsBringToFront(scrollbar[2],_,_,true)
 			end
-			if button == "left" then
+			if mouseClicked then
 				if not checkScale(dgsEle) then
-					checkMove(dgsEle)
+					checkMove(dgsEle,button)
 				end
+			end
+			if mouseClicked then
 				if guitype == "dgs-dxscrollbar" then
 					local scrollArrow = eleData.scrollArrow
 					local x,y = dgsGetPosition(dgsEle,false,true)
@@ -1963,7 +2037,7 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 					if comboEleData.autoHideAfterSelected then
 						dgsSetData(combobox,"listState",-1)
 					end
-					triggerEvent("onDgsComboBoxSelect",combobox,preSelect,oldSelect)
+					dgsTriggerEvent("onDgsComboBoxSelect",combobox,preSelect,oldSelect)
 				elseif guitype == "dgs-dxtab" then
 					local tabpanel = eleData.parent
 					dgsBringToFront(tabpanel)
@@ -1973,17 +2047,15 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 				elseif guitype == "dgs-dxcombobox" then
 					dgsSetData(dgsEle,"listState",eleData.listState == 1 and -1 or 1)
 				--elseif guitype == "dgs-dxselector" then
-
 				end
-			elseif button == "middle" then
+			end
+			if button == "middle" then
 				if dgsGetType(MouseData.topScrollable) == "dgs-dxscalepane" then
 					dgsScalePaneCheckMove(MouseData.topScrollable)
 				end
 			end
 			if guitype == "dgs-dxgridlist" then
-				local clickButton = eleData.mouseSelectButton
-				local isSelectButtonEnabled = clickButton[mouseButtonOrder[button]]
-				if isSelectButtonEnabled then
+				if mouseClicked then
 					local oPreSelect = eleData.oPreSelect
 					local rowData = eleData.rowData
 					----Sort
@@ -2099,7 +2171,7 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 					end
 				end
 				if pass then
-					triggerEvent("onDgsGridListItemDoubleClick",dgsEle,GirdListDoubleClick[state].but,state,clicked[1],clicked[2])
+					dgsTriggerEvent("onDgsGridListItemDoubleClick",dgsEle,GirdListDoubleClick[state].but,state,clicked[1],clicked[2])
 				end
 			end
 			killTimer(GirdListDoubleClick[state].timer)
@@ -2126,41 +2198,25 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 
 		if not isElement(dgsEle) then return end
 		if state == "up" then
-			if button == "left" then
-				if MouseData.clickl == dgsEle then
-					triggerEvent("onDgsMouseClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
-					if eleData.clickingSound and eleData.clickingSound.left and eleData.clickingSound.left.up then
-						local sound = playSound(eleData.clickingSound.left.up)
-						setSoundVolume(sound,dgsGetClickingSoundVolume(dgsEle,button,state))
-					end
-				end
-			elseif button == "right" then
-				if MouseData.clickr == dgsEle then
-					triggerEvent("onDgsMouseClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
-					if eleData.clickingSound and eleData.clickingSound.right and eleData.clickingSound.right.up then
-						local sound = playSound(eleData.clickingSound.right.up)
-						setSoundVolume(sound,dgsGetClickingSoundVolume(dgsEle,button,state))
-					end
-				end
-			else
-				if eleData.clickingSound and eleData.clickingSound.middle and eleData.clickingSound.middle.up then
-					local sound = playSound(eleData.clickingSound.middle.up)
+			if MouseData.click[button] == dgsEle then
+				dgsTriggerEvent("onDgsMouseClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
+				if eleData.clickingSound and eleData.clickingSound[button] and eleData.clickingSound[button].up then
+					local sound = playSound(eleData.clickingSound[button].up)
 					setSoundVolume(sound,dgsGetClickingSoundVolume(dgsEle,button,state))
 				end
-				triggerEvent("onDgsMouseClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
 			end
 		else
+			dgsTriggerEvent("onDgsMouseClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
 			if eleData.clickingSound and eleData.clickingSound[button] and eleData.clickingSound[button].down then
 				local sound = playSound(eleData.clickingSound[button].down)
 				setSoundVolume(sound,dgsGetClickingSoundVolume(dgsEle,button,state))
 			end
-			triggerEvent("onDgsMouseClick",dgsEle,button,state,mouseX,mouseY,isCoolingDown)
 		end
 		if not isElement(dgsEle) then return end
 		if state == "down" then
-			triggerEvent("onDgsMouseDown",dgsEle,button,mouseX,mouseY,isCoolingDown)
+			dgsTriggerEvent("onDgsMouseDown",dgsEle,button,mouseX,mouseY,isCoolingDown)
 		elseif state == "up" then
-			triggerEvent("onDgsMouseUp",dgsEle,button,mouseX,mouseY,isCoolingDown)
+			dgsTriggerEvent("onDgsMouseUp",dgsEle,button,mouseX,mouseY,isCoolingDown)
 		end
 		if not isElement(dgsEle) then return end
 		if isTimer(multiClick[button][state][3]) then killTimer(multiClick[button][state][3]) end
@@ -2168,10 +2224,10 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 		if multiClick[button][state][2] == dgsEle then
 			multiClick[button][state][1] = multiClick[button][state][1]+1
 			if multiClick[button][state][1] == 2 then
-				triggerEvent("onDgsMouseDoubleClick",dgsEle,button,state,mouseX,mouseY)
+				dgsTriggerEvent("onDgsMouseDoubleClick",dgsEle,button,state,mouseX,mouseY)
 			end
 			if not isElement(dgsEle) then return end
-			triggerEvent("onDgsMouseMultiClick",dgsEle,button,state,mouseX,mouseY,multiClick[button][state][1])
+			dgsTriggerEvent("onDgsMouseMultiClick",dgsEle,button,state,mouseX,mouseY,multiClick[button][state][1])
 			multiClick[button][state][3] = setTimer(function(button,state)
 				multiClick[button][state] = {0,false,false}
 			end,multiClick.Interval,1,button,state)
@@ -2185,28 +2241,34 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 			blurEditMemo()
 		end
 		if isElement(MouseData.focused) then
-			triggerEvent("onDgsBlur",MouseData.focused,false)
+			dgsTriggerEvent("onDgsBlur",MouseData.focused,false)
 		end
 	end
 	if state == "up" then
+		MouseData.click[button] = false
 		if button == "left" then
-			MouseData.clickl = false
+			MouseData.click.left = false
 			MouseData.lock3DInterface = false
-			MouseData.MoveScroll[0] = false
-			if dgsDragDropBoard[0] then
-				local data = dgsRetrieveDragNDropData()
-				if isElement(dgsEle) then
-					triggerEvent("onDgsDrop",dgsEle,data)
-				end
-			end
-			dgsDragDropBoard.lock = false
-		elseif button == "right" then
-			MouseData.clickr = false
 		end
+		if button == MouseData.scbClickButton then 
+			MouseData.MoveScroll[0] = false
+		end
+		if dgsDragDropBoard[0] and button == dgsDragDropBoard.button then 
+			local data = dgsRetrieveDragNDropData()
+			if isElement(dgsEle) then
+				dgsTriggerEvent("onDgsDrop",dgsEle,data)
+			end
+		end
+		dgsDragDropBoard.button = nil
+		dgsDragDropBoard.lock = false
+
+
 		MouseData.Move[0] = false
+		MouseData.Move[3] = nil
 		MouseData.MoveScale[0] = false
 		MouseData.Scale[0] = false
 		MouseData.scbClickData = nil
+		MouseData.scbClickButton = nil
 		MouseData.selectorClickData = nil
 	end
 	if state == "down" then
@@ -2221,15 +2283,16 @@ addEventHandler("onClientClick",root,function(button,state,x,y)
 	end
 end)
 
-addEventHandler("onDgsPositionChange",root,function(oldx,oldy)
+function DGSPositionChange(source,oldx,oldy)
 	local parent = dgsGetParent(source)
 	if isElement(parent) and dgsGetType(parent) == "dgs-dxscrollpane" then
 		resizeScrollPane(parent,source)
 	end
-	local attachedBy = dgsElementData[source].attachedBy
+	local eleData = dgsElementData[source]
+	local attachedBy = eleData.attachedBy
 	if attachedBy then
 		local absx,absy = dgsGetPosition(source,false,true)
-		local absw,absh = dgsElementData[source].absSize[1],dgsElementData[source].absSize[2]
+		local absw,absh = eleData.absSize[1],eleData.absSize[2]
 		for i=1,#attachedBy do
 			local attachSource = attachedBy[i]
 			local attachedTable = dgsElementData[attachSource].attachedTo
@@ -2238,30 +2301,34 @@ addEventHandler("onDgsPositionChange",root,function(oldx,oldy)
 			calculateGuiPositionSize(attachSource,offsetX,offsetY,relativePos)
 		end
 	end
-end)
+end
+dgsRegisterFastEvent("onDgsPositionChange","DGSPositionChange")
 
-addEventHandler("onDgsSizeChange",root,function(oldSizeAbsx,oldSizeAbsy)
-	local children = dgsElementData[source].children or {}
-	local childrenCnt = #children
+function DGSSizeChange(source,oldSizeAbsx,oldSizeAbsy)
+	local eleData = dgsElementData[source]
+	local children = eleData.children
+	local childrenCnt = 9
+	if children then childrenCnt = #children end
 	for k=1,childrenCnt do
 		local child = children[k]
+		local eleDataChild = dgsElementData[child]
 		if dgsElementType[child] ~= "dgs-dxtab" then
-			local relt = dgsElementData[child].relative
+			local relt = eleDataChild.relative
 			local relativePos,relativeSize = relt[1],relt[2]
 			if relativePos or relativeSize then
 				local x,y,sx,sy
 				if relativePos then
-					x,y = dgsElementData[child].rltPos[1],dgsElementData[child].rltPos[2]
+					x,y = eleDataChild.rltPos[1],eleDataChild.rltPos[2]
 				end
 				if relativeSize then
-					sx,sy = dgsElementData[child].rltSize[1],dgsElementData[child].rltSize[2]
+					sx,sy = eleDataChild.rltSize[1],eleDataChild.rltSize[2]
 				end
 				calculateGuiPositionSize(child,x,y,relativePos,sx,sy,relativeSize)
 			end
 		end
 	end
 	local typ = dgsGetType(source)
-	local absSize = dgsElementData[source].absSize
+	local absSize = eleData.absSize
 	if absSize[1] ~= oldSizeAbsx or absSize[2] ~= oldSizeAbsy then
 		if typ == "dgs-dxgridlist" then
 			configGridList(source)
@@ -2272,7 +2339,7 @@ addEventHandler("onDgsSizeChange",root,function(oldSizeAbsx,oldSizeAbsy)
 		elseif typ == "dgs-dxtabpanel" then
 			configTabPanel(source)
 		elseif typ == "dgs-dxcombobox-Box" then
-			configComboBox(dgsElementData[source].myCombo)
+			configComboBox(eleData.myCombo)
 		elseif typ == "dgs-dxmemo" then
 			dgsSetData(source,"configNextFrame",true)
 		end
@@ -2283,9 +2350,9 @@ addEventHandler("onDgsSizeChange",root,function(oldSizeAbsx,oldSizeAbsy)
 			end
 		end
 	end
-	local attachedBy = dgsElementData[source].attachedBy
+	local attachedBy = eleData.attachedBy
 	if attachedBy then
-		local absw,absh = dgsElementData[source].absSize[1],dgsElementData[source].absSize[2]
+		local absw,absh = eleData.absSize[1],eleData.absSize[2]
 		for i=1,#attachedBy do
 			local attachSource = attachedBy[i]
 			local attachedTable = dgsElementData[attachSource].attachedTo
@@ -2296,7 +2363,8 @@ addEventHandler("onDgsSizeChange",root,function(oldSizeAbsx,oldSizeAbsy)
 			calculateGuiPositionSize(attachSource,_,_,_,offsetW,offsetH,sizeRlt)
 		end
 	end
-end)
+end
+dgsRegisterFastEvent("onDgsSizeChange","DGSSizeChange")
 
 -------------------------onCreateHandler
 dgsRegisterProperties("dgsBasic",{
@@ -2320,9 +2388,6 @@ function DGSI_onDGSWindowBlur()
 	dgsElementData[this].isFocused = false
 end
 
-local insertResource = insertResource
-local dgsAddEventHandler = dgsAddEventHandler
-local triggerEvent = triggerEvent
 function onDGSElementCreate(source,theResource)
 	local style
 	local res = theResource or "global"

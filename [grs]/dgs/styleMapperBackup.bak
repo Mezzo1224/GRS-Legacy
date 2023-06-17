@@ -1,0 +1,19 @@
+<!--$Add Your Styles Here-->
+	<!--You can also add your custom plugins here -->
+	<!--Warning: if you add your styles outside of this area, dgs updater won't keep them-->
+	<!-- Discord Style -->
+	<file src="styleManager/Discord/Images/combobox/arrow.fx" />
+	<file src="styleManager/Discord/Images/checkbox/cb_t.png" />
+	<file src="styleManager/Discord/Images/checkbox/cb_f.png" />
+	<file src="styleManager/Discord/Images/checkbox/cb_i.png" />
+	<file src="styleManager/Discord/Images/radiobutton/rb_t.png" />
+	<file src="styleManager/Discord/Images/radiobutton/rb_f.png" />
+	<file src="styleManager/Discord/Images/scrollbar/scrollbar_arrow.png" />
+	<file src="styleManager/Discord/HelveticaNeueMed.ttf" />
+	<file src="styleManager/Discord/styleSettings.txt" />
+
+	<!--(Custom Style 1) -->
+
+	<!--(Custom Style 2) -->
+
+	<!--&Add Your Styles Here-->

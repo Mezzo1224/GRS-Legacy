@@ -38,7 +38,7 @@ local applyColorAlpha = applyColorAlpha
 local dgsTranslate = dgsTranslate
 local calculateGuiPositionSize = calculateGuiPositionSize
 --Utilities
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local createElement = createElement
 local assert = assert
 local tonumber = tonumber
@@ -181,7 +181,7 @@ function dgsSelectorSetSelectedItem(selector,i)
 	if not(type(i) == "number") then error(dgsGenAsrt(i,"dgsSelectorSetSelectedItem",2,"number")) end
 	local prev = dgsElementData[selector].select
 	dgsSetData(selector,"select",i)
-	triggerEvent("onDgsSelectorSelect",selector,i,prev)
+	dgsTriggerEvent("onDgsSelectorSelect",selector,i,prev)
 	return true
 end
 
@@ -471,7 +471,12 @@ dgsRenderer["dgs-dxselector"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 				selectorTextColors[preEnterData] = 2
 			end
 		else
-			if MouseData.clickl == source then
+			local mouseButtons = eleData.mouseButtons
+			local canLeftClick,canRightClick,canMiddleClick = true
+			if mouseButtons then
+				canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
+			end		
+			if (canLeftClick and MouseData.click.left == source) or (canRightClick and MouseData.click.right == source) or (canMiddleClick and MouseData.click.middle == source) then
 				selectorTextColors[MouseData.selectorClickData] = 3
 			else
 				selectorTextColors[MouseData.selectorClickData] = 2

@@ -9,6 +9,7 @@ float borderSoft = 0.02;
 bool colorOverwritten = true;
 float2 borderThickness = 0.2;
 float radiusMultipler = 0.95;
+float4 UV = float4(0,0,1,1);
 
 SamplerState tSampler{
 	Texture = sourceTexture;
@@ -17,24 +18,26 @@ SamplerState tSampler{
 float4 rndRect(float2 tex: TEXCOORD0, float4 _color : COLOR0):COLOR0{
 	float4 result = borderColor;
 	float alp = 1;
-	float2 tex_bk = tex;
-	float2 dx = ddx(tex);
-	float2 dy = ddy(tex);
+	float2 tempTex = (tex*UV.zw+UV.xy);
+	float2 tex_bk = tempTex;
+	float2 dx = ddx(tempTex);
+	float2 dy = ddy(tempTex);
 	float2 dd = float2(length(float2(dx.x,dy.x)),length(float2(dx.y,dy.y)));
 	float a = dd.x/dd.y;
 	float2 center = 0.5*float2(1/(a<=1?a:1),a<=1?1:a);
 	float4 nRadius;
 	float aA = borderSoft*100;
 	if(a<=1){
-		tex.x /= a;
+		tempTex.x /= a;
 		aA *= dd.y;
 		nRadius = float4(isRelative.x==1?radius.x/2:radius.x*dd.y,isRelative.y==1?radius.y/2:radius.y*dd.y,isRelative.z==1?radius.z/2:radius.z*dd.y,isRelative.w==1?radius.w/2:radius.w*dd.y);
 	}else{
-		tex.y *= a;
+		tempTex.y *= a;
 		aA *= dd.x;
 		nRadius = float4(isRelative.x==1?radius.x/2:radius.x*dd.x,isRelative.y==1?radius.y/2:radius.y*dd.x,isRelative.z==1?radius.z/2:radius.z*dd.x,isRelative.w==1?radius.w/2:radius.w*dd.x);
 	}
-	float2 fixedPos = tex-center;
+	float2 fixedPos = tempTex-center;
+	tempTex %= 1;
 	float2 corner[] = {center-nRadius.x,center-nRadius.y,center-nRadius.z,center-nRadius.w};
 	bool leftTopSideX = fixedPos.x <= -corner[0].x;
 	bool leftTopSideY = fixedPos.y <= -corner[0].y;
@@ -91,7 +94,6 @@ float4 rndRect(float2 tex: TEXCOORD0, float4 _color : COLOR0):COLOR0{
 	}
 	alp = saturate(alp);
 	float nAlp = 1;
-	float4 filledColor = (textureLoad?tex2D(tSampler,textureRotated?tex_bk.yx:tex_bk):1)*color;
 	if(borderThickness[0] > 0 && borderThickness[1] > 0){
 		float2 newborderThickness = borderThickness*dd*100;
 		tex_bk = tex_bk+tex_bk*newborderThickness;
@@ -131,7 +133,6 @@ float4 rndRect(float2 tex: TEXCOORD0, float4 _color : COLOR0):COLOR0{
 		
 		leftBottomSideX = fixedPos.x <= -corner[3].x;
 		leftBottomSideY = fixedPos.y >= corner[3].y;
-		
 
 		if(leftTopSideX && leftTopSideY){					//LTCorner
 			float dis = distance(-fixedPos,corner[0]);
@@ -176,9 +177,10 @@ float4 rndRect(float2 tex: TEXCOORD0, float4 _color : COLOR0):COLOR0{
 		}
 	}
 	nAlp = 1-saturate(nAlp);
-	result = result+(filledColor-result)*(1-clamp(nAlp,0,1));
+	result += (color-result)*(1-clamp(nAlp,0,1));
 	result.rgb = colorOverwritten?result.rgb:_color.rgb;
 	result.a *= _color.a*alp;
+	result *= textureLoad?tex2D(tSampler,textureRotated?tex_bk.yx:tex_bk):1;
 	return result;
 }
 

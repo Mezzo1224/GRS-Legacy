@@ -67,7 +67,7 @@ function dgsImportFunction(name,nameAs)
 			function DGSCallMT:__index(fncName)
 				if type(fncName) ~= 'string' then fncName = tostring(fncName) end
 				self[fncName] = function(...)
-					if not dgsImportHead then error("DGS import data is missing or DGS is not running, please reimport dgs functions("..getResourceName(getThisResource())..")") end
+					if not dgsImportHead then return outputDebugString("[DGS] "..getResourceName(getThisResource())..": DGS import data is missing or DGS is not running, please reimport dgs functions",4,255,0,0) end
 					if isElement(dgsRoot) then
 						local isCreateFunction = fncName:sub(1,9) == "dgsCreate"
 						if isTraceDebug then
@@ -230,6 +230,7 @@ function dgsG2DLoadHooker(isLocal)
 			if item and item ~= -1 then
 				item = isGUIComboBox[combobox] and item+1 or item
 			end
+			if item and dgsComboBoxGetItemCount(combobox) < item then return false end
 			return dgsComboBoxGetItemText(combobox,item,...)
 		end
 		guiComboBoxGetSelected = function(combobox,...)
@@ -246,12 +247,14 @@ function dgsG2DLoadHooker(isLocal)
 			if item and item ~= -1 then
 				item = isGUIComboBox[combobox] and item+1 or item
 			end
+			if item and dgsComboBoxGetItemCount(combobox) < item then return false end
 			return dgsComboBoxRemoveItem(combobox,item,...)
 		end
 		guiComboBoxSetItemText = function(combobox,item,...)
 			if item and item ~= -1 then
 				item = isGUIComboBox[combobox] and item+1 or item
 			end
+			if item and dgsComboBoxGetItemCount(combobox) < item then return false end
 			return dgsComboBoxSetItemText(combobox,item,...)
 		end
 		guiComboBoxSetOpen = dgsComboBoxSetState
@@ -259,6 +262,7 @@ function dgsG2DLoadHooker(isLocal)
 			if item and isGUIComboBox[combobox] and item ~= -1 then
 				item = item+1
 			end
+			if item and dgsComboBoxGetItemCount(combobox) < item then return false end
 			return dgsComboBoxSetSelectedItem(combobox,item,...)
 		end
 		guiCreateEdit = dgsCreateEdit
@@ -281,6 +285,7 @@ function dgsG2DLoadHooker(isLocal)
 		end
 		guiGridListAddColumn = dgsGridListAddColumn
 		guiGridListInsertRowAfter = function(gl,row,...)
+			if column and dgsGridListGetColumnCount(gl) == 0 then return false end
 			local rowData = dgsGetProperty(gl,"rowData")
 			if isGUIGridList[gl] then
 				row = tonumber(row) or #rowData
@@ -300,35 +305,44 @@ function dgsG2DLoadHooker(isLocal)
 				return dgsGridListAddRow(gl,row,...)
 			end
 		end
-		guiGridListGetItemColor = function(gl,row,...)
+		guiGridListGetItemColor = function(gl,row,column)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
 			if row and row ~= -1 then
 				row = isGUIGridList[gl] and row+1 or row
 			end
-			return dgsGridListGetItemColor(gl,row,...)
+			if row and dgsGridListGetRowCount(gl) < row then return false end
+			return dgsGridListGetItemColor(gl,row,column)
 		end
-		guiGridListGetItemData = function(gl,row,...)
+		guiGridListGetItemData = function(gl,row,column)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
 			if row and row ~= -1 then
 				row = isGUIGridList[gl] and row+1 or row
 			end
-			return dgsGridListGetItemData(gl,row,...)
+			if row and dgsGridListGetRowCount(gl) < row then return false end
+			return dgsGridListGetItemData(gl,row,column)
 		end
-		guiGridListSetItemData = function(gl,row,...)
+		guiGridListSetItemData = function(gl,row,column,...)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
 			if row and row ~= -1 then
 				row = isGUIGridList[gl] and row+1 or row
 			end
-			return dgsGridListSetItemData(gl,row,...)
+			if row and dgsGridListGetRowCount(gl) < row then return false end
+			return dgsGridListSetItemData(gl,row,column,...)
 		end
-		guiGridListGetItemText = function(gl,row,...)
+		guiGridListGetItemText = function(gl,row,column,...)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
 			if row and row ~= -1 then
 				row = isGUIGridList[gl] and row+1 or row
 			end
-			return dgsGridListGetItemText(gl,row,...)
+			if row and dgsGridListGetRowCount(gl) < row then return false end
+			return dgsGridListGetItemText(gl,row,column,...)
 		end
-		guiGridListSetItemText = function(gl,row,...)
+		guiGridListSetItemText = function(gl,row,column,...)
 			if row and row ~= -1 then
 				row = isGUIGridList[gl] and row+1 or row
 			end
-			return dgsGridListSetItemText(gl,row,...)
+			if row and dgsGridListGetRowCount(gl) < row then return false end
+			return dgsGridListSetItemText(gl,row,column,...)
 		end
 		guiGridListGetSelectedCount = dgsGridListGetSelectedCount
 		guiGridListGetSelectedItem = function(gl)
@@ -356,29 +370,66 @@ function dgsG2DLoadHooker(isLocal)
 			if row and row ~= -1 then
 				row = isGUIGridList[gl] and row+1 or row
 			end
+			if row and dgsGridListGetRowCount(gl) < row then return false end
 			return dgsGridListRemoveRow(gl,row,...)
 		end
-		guiGridListSetItemColor = function(gl,row,...)
+		guiGridListSetItemColor = function(gl,row,column,...)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
 			if row and row ~= -1 then
 				row = isGUIGridList[gl] and row+1 or row
 			end
-			return dgsGridListSetItemColor(gl,row,...)
+			if row and dgsGridListGetRowCount(gl) < row then return false end
+			return dgsGridListSetItemColor(gl,row,column,...)
 		end
-		guiGridListSetSelectedItem = function(gl,row,...)
-			if row and row ~= -1 then
-				row = isGUIGridList[gl] and row+1 or row
-			end
-			return dgsGridListSetSelectedItem(gl,row,...)
+		guiGridListSetSelectedItem = function(gl,row,column,...)
+    		if column then 
+        		if column <= 0 then 
+            		column = -1
+        		elseif dgsGridListGetColumnCount(gl) < column then 
+            		return false 
+        		end
+    		end
+    		if row then 
+        		if row <= -1 then 
+            		row = -1
+        		elseif isGUIGridList[gl] then 
+            		row = row+1
+            		if dgsGridListGetRowCount(gl) < row then 
+                		return false 
+            		end
+       			 end
+    		end
+    		return dgsGridListSetSelectedItem(gl,row,column,...)
 		end
-		guiGridListAutoSizeColumn = dgsGridListAutoSizeColumn
+		guiGridListAutoSizeColumn = function (gl,column)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
+			return dgsGridListAutoSizeColumn(gl,column)
+		end
 		guiGridListClear = dgsGridListClear
 		guiGridListGetColumnCount = dgsGridListGetColumnCount
-		guiGridListGetColumnTitle = dgsGridListGetColumnTitle
-		guiGridListGetColumnWidth = dgsGridListGetColumnWidth
+		guiGridListGetColumnTitle = function (gl,column)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
+			return dgsGridListGetColumnTitle(gl,column)
+		end
+		guiGridListGetColumnWidth = function (gl,column,...)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
+			return dgsGridListGetColumnWidth(gl,column,...)
+		end
 		guiGridListGetRowCount = dgsGridListGetRowCount
 		guiGridListGetSelectionMode = dgsGridListGetSelectionMode
 		guiGridListIsSortingEnabled = dgsGridListGetSortEnabled
-		guiGridListRemoveColumn = dgsGridListRemoveColumn
+		guiGridListRemoveColumn = function (gl,column)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
+			return dgsGridListRemoveColumn(gl,column)
+		end
+		guiGridListSetColumnTitle = function (gl,column,...)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
+			return dgsGridListSetColumnTitle(gl,column,...)
+		end
+		guiGridListSetColumnWidth = function (gl,column,...)
+			if column and dgsGridListGetColumnCount(gl) < column then return false end
+			return dgsGridListSetColumnWidth(gl,column,...)
+		end
 		guiGridListSetColumnTitle = dgsGridListSetColumnTitle
 		guiGridListSetColumnWidth = dgsGridListSetColumnWidth
 		guiGridListSetScrollBars = dgsGridListSetScrollBarState

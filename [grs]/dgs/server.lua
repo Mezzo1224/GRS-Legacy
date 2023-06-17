@@ -1,48 +1,98 @@
-﻿-----------Config Loader
-dgsConfig = {}
-dgsConfig.updateCheck					= true			-- Enable:true;Disable:false
-dgsConfig.updateCheckInterval			= 120			-- Minutes
-dgsConfig.updateCheckNoticeInterval		= 120			-- Minutes
-dgsConfig.updateSystemDisabled			= false			-- Disable update system
-dgsConfig.backupMeta					= true			-- Backup meta.xml
-dgsConfig.backupStyleMeta				= true			-- Backup style files meta index from meta.xml
-dgsConfig.g2d							= true			-- GUI To DGS command line
-dgsConfig.enableBuiltInCMD				= true			-- Enable DGS Built-in CMD /dgscmd
-dgsConfig.updateCommand					= "updatedgs"	-- Command of update dgs
-dgsConfig.enableTestFile				= true			-- Loads DGS Test File (If you want to save some bytes of memory, disable this by set to false)
-dgsConfig.disableCompatibilityCheck 	= false			-- Disable compatibility check warnings
+﻿function outputDGSMessage(message,title,level,visibleTo) -- level: 3 = info, 2 = warning, 1 = error, default is info
+	message = "[DGS"..(title and " "..title or "").."] "..message
+	if type(visibleTo) ~= "table" then
+		visibleTo = {visibleTo or "console"}
+	end
+	local r,g,b = 0,255,0 
+	if level == 2 then
+		r,g,b = 255, 147, 0
+	elseif level == 1 then
+		r,g,b = 255,0,0
+	end
+	for i=1,#visibleTo do
+		local to = visibleTo[i]
+		if to and (to ~= "console" and (not isElement(to) or getElementType(to) ~= "console")) then
+			outputChatBox(message,to,r,g,b)
+		else
+			outputDebugString(message,getVersion().sortable > "1.5.7-9.20477" and 4 or level,r,g,b)
+		end
+	end
+end
+
+-----------Config Loader
+DGSConfig = {
+	updateCheck						= true,			-- Enable:true;Disable:false
+	updateCheckInterval				= 120,			-- Minutes
+	updateCheckNoticeInterval		= 120,			-- Minutes
+	updateCommand					= "updatedgs",	-- Command of update dgs
+	enableUpdateSystem				= true	,		-- Enable update system
+	enableMetaBackup				= true,			-- Backup meta.xml
+	enableStyleMetaBackup			= true,			-- Backup style files meta index from meta.xml
+	enableG2DCMD					= true,			-- Enable GUI To DGS command line
+	enableBuiltInCMD				= true,			-- Enable DGS Built-in CMD /dgscmd
+	enableTestFile					= true,			-- Loads DGS Test File (If you want to save some bytes of memory, disable this by set to false)
+	enableCompatibilityCheck	 	= true,			-- Enable compatibility check warnings
+	enableDebug 					= true,			-- Enable /debugdgs
+}
+
 
 function loadConfig()
-	if fileExists("config.txt") then
-		local file = fileOpen("config.txt")
-		if file then
+	if fileExists("config.txt") then 
+		local file = fileOpen ("config.txt")
+		if file then 
+			local configUpdateRequired = false
 			local str = fileRead(file,fileGetSize(file))
 			fileClose(file)
 			local fnc = loadstring(str)
-			if fnc then
+			if fnc then 
+				local dgsConfig = {}
+				setfenv(fnc,{dgsConfig=dgsConfig})
 				fnc()
-				outputDebugString("[DGS]Config File Loaded!")
+				for name,value in pairs(DGSConfig) do
+					if dgsConfig[name] == nil then
+						configUpdateRequired = true
+					else
+						DGSConfig[name] = dgsConfig[name]
+					end
+				end
+				outputDGSMessage("The config file has been loaded.","Config")
 			else
-				outputDebugString("[DGS]Invaild Config File!",2)
+				configUpdateRequired = true
+				outputDGSMessage("Invalid config file.","Config",2)
+			end
+			if configUpdateRequired then
+				fileDelete("config.txt")
+				local file = fileCreate("config.txt")
+				local str = ""
+				for k,v in pairs(DGSConfig) do
+					local value = type(v) == "string" and '"'..v..'"' or tostring(v)
+					str = str.."\r\ndgsConfig."..k.." = "..value
+				end
+				fileWrite(file,str:sub(3))
+				fileClose(file)
+				outputDGSMessage("The config file has been updated.","Config")
 			end
 		else
-			outputDebugString("[DGS]Invaild Config File!",2)
+			outputDGSMessage("Failed to open the config file.","Config",2)
 		end
+	else
+		local file = fileCreate("config.txt")
+		local str = ""
+		for k,v in pairs(DGSConfig) do
+			local value = type(v) == "string" and '"'..v..'"' or tostring(v)
+			str = str.."\r\ndgsConfig."..k.." = "..value
+		end
+		fileWrite(file,str:sub(3))
+		fileClose(file)
+		outputDGSMessage("Config file was created.","Config")
 	end
-	setElementData(resourceRoot,"allowCMD",dgsConfig.enableBuiltInCMD)
-	setElementData(resourceRoot,"DGS-disableCompatibilityCheck",dgsConfig.disableCompatibilityCheck)
-	if dgsConfig.g2d then
-		outputDebugString("[DGS]G2D is enabled!")
+
+	setElementData(resourceRoot,"DGS-allowCMD",DGSConfig.enableBuiltInCMD)
+	setElementData(resourceRoot,"DGS-enableDebug",DGSConfig.enableDebug)
+	setElementData(resourceRoot,"DGS-enableCompatibilityCheck",DGSConfig.enableCompatibilityCheck)
+	if DGSConfig.enableG2DCMD then
+		outputDGSMessage("G2D command line is enabled.","Config")
 	end
-	--Regenerate config file
-	local file = fileCreate("config.txt")
-	local str = ""
-	for k,v in pairs(dgsConfig) do
-		local value = type(v) == "string" and '"'..v..'"' or tostring(v)
-		str = str.."\r\ndgsConfig."..k.." = "..value
-	end
-	fileWrite(file,str:sub(3))
-	fileClose(file)
 end
 loadConfig()
 
@@ -96,6 +146,14 @@ addEvent("DGSI_AbnormalDetected",true)
 addEventHandler("DGSI_AbnormalDetected",root,function(fData)
 	local pName = getPlayerName(client)
 	for fName,fData in pairs(fData) do
-		outputDebugString("[DGS-Security]Abnormal Detected at '"..fName.."' of player '"..pName.."'")
+		outputDGSMessage("Abnormal Detected at '"..fName.."' of player '"..pName.."'","Security")
 	end
 end)
+
+addEventHandler("onElementDataChange",resourceRoot,
+function (key,old)
+	if client and (string.sub(key,0,4) == "DGS-" or key == "DGSI_FileInfo") then 
+		setElementData(source,key,old)
+		outputDGSMessage("Illegal attempt to modify element data ("..key..") by "..getPlayerName(client),"Security",1)
+	end
+end,false)	

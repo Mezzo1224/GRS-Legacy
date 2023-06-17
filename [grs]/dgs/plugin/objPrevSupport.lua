@@ -50,7 +50,7 @@ function dgsCreateObjectPreviewHandle(objEle,rX,rY,rZ)
 	objPrevHandles[getElementID(objPrevEle)] = objPrevEle
 	dgsAddEventHandler("onClientElementDestroy",objEle,"destroyObjectPreviewWhenTargetElementDestroy",false)
 	dgsAddEventHandler("onClientElementDestroy",objPrevEle,"destroyObjectPreviewWhenOPElementDestroy",false)
-	triggerEvent("onDgsPluginCreate",objPrevEle,sourceResource)
+	dgsTriggerEvent("onDgsPluginCreate",objPrevEle,sourceResource)
 	return objPrevEle
 end
 
@@ -64,8 +64,14 @@ function destroyObjectPreviewWhenTargetElementDestroy()
 end
 
 function destroyObjectPreviewWhenOPElementDestroy()
-	local objEle = dgsElementData[source].renderElement
+	local objectPreview = getResourceFromName(objPrevResourceName)
+	if objectPreview and getResourceState(objectPreview) == "running" then
+		local OP = exports[objPrevResStatus.name]
+		OP:destroyObjectPreview(source)
+	end
 	objPrevHandles[getElementID(source)] = nil
+	local objEle = dgsElementData[source].renderElement
+	dgsRemoveEventHandler("onClientElementDestroy",objEle,"destroyObjectPreviewWhenTargetElementDestroy")
 	dgsElementData[objEle] = nil
 	dgsElementData[source] = nil
 end

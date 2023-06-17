@@ -12,6 +12,8 @@ dgsRegisterProperties("dgs-dx3dline",{
 })
 --Dx Functions
 local dxDrawLine3D = dxDrawLine3D
+local dxDrawImage = dxDrawImage
+local dxSetShaderValue = dxSetShaderValue
 --
 local getRotationMatrix = getRotationMatrix
 local getPositionFromOffsetByRotMat = getPositionFromOffsetByRotMat
@@ -52,10 +54,24 @@ function dgsCreate3DLine(...)
 		dimension = -1,
 		interior = -1,
 		lineWidth = lineWidth or 1,
+		lineType = "plane",
 		lineData = {},
 	}
 	onDGSElementCreate(line3d,sRes)
 	return line3d
+end
+
+function dgs3DLineSetLineType(line,mode)
+	if not(dgsGetType(line) == "dgs-dx3dline") then error(dgsGenAsrt(line,"dgs3DLineSetLineType",1,"dgs-dx3dline")) end
+	if mode == "plane" or mode == "cylinder" then
+		return dgsSetData(line,"lineType",mode)
+	end
+	return false
+end
+
+function dgs3DLineGetLineType(line)
+	if not(dgsGetType(line) == "dgs-dx3dline") then error(dgsGenAsrt(line,"dgs3DLineGetLineType",1,"dgs-dx3dline")) end
+	return dgsElementData[line].lineType
 end
 
 --[[
@@ -210,8 +226,113 @@ function dgs3DLineGetRotation(line)
 end
 
 ----------------------------------------------------------------
+----------------------Cylinder 3D Line--------------------------
+----------------------------------------------------------------
+local cylinderLineShaderRaw = [[
+float3x3 shapeConfig = {
+	float3(0, 0, 0),	//Start Pos
+	float3(0, 0, 0),	//End Pos
+	float3(0, 0, 0),	//Radius
+};
+float4x4 gProjectionMainScene : PROJECTION_MAIN_SCENE;
+float4x4 gViewMainScene : VIEW_MAIN_SCENE;
+#define PI 3.1415926535897932384626433832795
+#define PI2 6.283185307179586476925286766559
+
+struct VSInput{
+    float3 Position : POSITION0;
+    float2 TexCoord : TEXCOORD0;
+    float4 Diffuse : COLOR0;
+};
+
+struct PSInput{
+    float4 Position : POSITION0;
+    float2 TexCoord : TEXCOORD0;
+    float4 Diffuse : COLOR0;
+};
+
+float3 findRotation3D(float3 sPos, float3 ePos) {
+	float3 dPos = ePos-sPos;
+	float3 rot = float3(atan2(dPos.z,length(dPos.xy)),0,-atan2(dPos.x,dPos.y));
+	return rot;
+}
+
+float4x4 createWorldMatrix(float3 pos, float3 rot){
+    float3 cRot, sRot;
+    sincos(rot, sRot, cRot);
+	float4x4 eleMatrix = float4x4(
+        cRot.z * cRot.y - sRot.z * sRot.x * sRot.y, cRot.y * sRot.z + cRot.z * sRot.x * sRot.y, -cRot.x * sRot.y, 0,
+        -cRot.x * sRot.z, cRot.z * cRot.x, sRot.x, 0,
+        cRot.z * sRot.y + cRot.y * sRot.z * sRot.x, sRot.z * sRot.y - cRot.z * cRot.y * sRot.x, cRot.x * cRot.y, 0,
+		pos.x, pos.y, pos.z, 1
+	);
+    return eleMatrix;
+}
+
+float3 getCylinderPosition(float3 inPosition){
+    float3 outPosition = inPosition;
+    outPosition.z = cos(inPosition.y*PI2);
+    outPosition.y = sin(inPosition.y*PI2);
+    return outPosition;
+}
+
+PSInput VertexShaderFunction(VSInput VS){
+    PSInput PS = (PSInput)0;
+    VS.Position.xyz = float3(-0.5+VS.TexCoord.xy, 0);
+    float3 resultPos = getCylinderPosition(VS.Position.xyz);
+	float3 startPos = shapeConfig[0];
+	float3 endPos = shapeConfig[1];
+	float3 radius = shapeConfig[2];
+	resultPos.yz *= radius.x*0.00665;
+	resultPos.x *= length(endPos-startPos);
+    VS.Position.xyz = resultPos.zyx;
+	float3 rot = findRotation3D(startPos,endPos);
+	rot.x += PI/2;
+    float4x4 sWorld = createWorldMatrix((endPos+startPos)/2,rot);
+	PS.Position = mul(mul(mul(float4(VS.Position,1),sWorld),gViewMainScene),gProjectionMainScene);
+    PS.TexCoord = VS.TexCoord;
+    PS.Diffuse = VS.Diffuse;
+    return PS;
+}
+
+float4 PixelShaderFunction(PSInput PS) : COLOR0{
+    return PS.Diffuse;
+}
+
+technique dxDrawImage4D_cylinder_ap{
+  pass P0{
+    ZEnable = true;
+    ZFunc = LessEqual;
+    ZWriteEnable = true;
+    CullMode = 3;
+    ShadeMode = Gouraud;
+    AlphaBlendEnable = true;
+    SrcBlend = SrcAlpha;
+    DestBlend = 6;
+    AlphaTestEnable = true;
+    AlphaRef = 1;
+    AlphaFunc = GreaterEqual;
+    Lighting = false;
+    FogEnable = false;
+    VertexShader = compile vs_2_0 VertexShaderFunction();
+    PixelShader  = compile ps_2_0 PixelShaderFunction();
+  }
+}
+]]
+cylinderShader3DLine = dxCreateShader(cylinderLineShaderRaw)
+dxSetShaderTessellation(cylinderShader3DLine,1,16)
+cylinderLineShaderRaw = nil
+
+----------------------------------------------------------------
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
+local dgs3DLineDraw = {
+	plane = dxDrawLine3D,
+	cylinder = function(startX,startY,startZ,endX,endY,endZ,color,width)
+		dxSetShaderValue(cylinderShader3DLine,"shapeConfig",startX,startY,startZ,endX,endY,endZ,width,0,0)
+		dxDrawImage(0,0,sW,sH,cylinderShader3DLine,0,0,0,color)	
+	end,
+}
 
 dgs3DRenderer["dgs-dx3dline"] = function(source)
 	local eleData = dgsElementData[source]
@@ -222,6 +343,7 @@ dgs3DRenderer["dgs-dx3dline"] = function(source)
 	local wrx,wry,wrz = 0,0,0
 	local lineWidth = eleData.lineWidth
 	local color = eleData.color
+	local lineType = eleData.lineType
 	local isRender = true
 	if attachTable then
 		if isElement(attachTable[1]) then
@@ -244,7 +366,7 @@ dgs3DRenderer["dgs-dx3dline"] = function(source)
 	if isRender then
 		local maxDistance = eleData.maxDistance
 		local camX,camY,camZ = cameraPos[1],cameraPos[2],cameraPos[3]
-		local dx,dy,dz = camX-wx,camY-wy,camZ-mz
+		local dx,dy,dz = camX-wx,camY-wy,camZ-wz
 		local distance = (dx*dx+dy*dy+dz*dz)^0.5
 		if distance <= maxDistance and distance > 0 then
 			local fadeDistance = eleData.fadeDistance
@@ -256,6 +378,7 @@ dgs3DRenderer["dgs-dx3dline"] = function(source)
 			local lData = eleData.lineData
 			local m11,m12,m13,m21,m22,m23,m31,m32,m33 = getRotationMatrix(wrx,wry,wrz)
 			local lastex,lastey,lastez,lastRlt
+			local drawFunction = dgs3DLineDraw[lineType]
 			for i=1,#lData do
 				local lineItem = lData[i]
 				local startX,startY,startZ,endX,endY,endZ = 0,0,0,lineItem[4],lineItem[5],lineItem[6]
@@ -275,7 +398,7 @@ dgs3DRenderer["dgs-dx3dline"] = function(source)
 				if isRelative then
 					endX,endY,endZ = endX*m11+endY*m21+endZ*m31+wx,endX*m12+endY*m22+endZ*m32+wy,endX*m13+endY*m23+endZ*m33+wz
 				end
-				dxDrawLine3D(startX,startY,startZ,endX,endY,endZ,applyColorAlpha(lineItem[8] or color,fadeMulti),lineItem[7] or lineWidth)
+				drawFunction(startX,startY,startZ,endX,endY,endZ,applyColorAlpha(lineItem[8] or color,fadeMulti),lineItem[7] or lineWidth)
 			end
 			return true
 		end

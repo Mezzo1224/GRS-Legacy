@@ -49,7 +49,7 @@ local dxSetShaderValue = dxSetShaderValue
 local dxGetPixelsSize = dxGetPixelsSize
 local dxGetPixelColor = dxGetPixelColor
 local dxSetRenderTarget = dxSetRenderTarget
-local dxCreateRenderTarget = dxCreateRenderTarget
+local dgsCreateRenderTarget = dgsCreateRenderTarget
 local dxGetTextWidth = dxGetTextWidth
 local dxSetBlendMode = dxSetBlendMode
 local __dxDrawImageSection = __dxDrawImageSection
@@ -65,7 +65,7 @@ local dgsAttachToAutoDestroy = dgsAttachToAutoDestroy
 local calculateGuiPositionSize = calculateGuiPositionSize
 local dgsCreateTextureFromStyle = dgsCreateTextureFromStyle
 --Utilities
-local triggerEvent = triggerEvent
+local dgsTriggerEvent = dgsTriggerEvent
 local addEventHandler = addEventHandler
 local createElement = createElement
 local isElement = isElement
@@ -84,10 +84,48 @@ local utf8Gsub = utf8.gsub
 local utf8Len = utf8.len
 local utf8Insert = utf8.insert
 local utf8Byte = utf8.byte
-GlobalMemoParent = guiCreateLabel(-1,0,0,0,"",true)
-GlobalMemo = guiCreateMemo(-1,0,0,0,"",true,GlobalMemoParent)
-addEventHandler("onClientGUIBlur",GlobalMemo,GlobalEditMemoBlurCheck,false)
-dgsSetData(GlobalMemo,"linkedDxMemo",nil)
+
+----Initialize
+function dgsGlobalMemoDestroyDetector(oldGlobalEdit)
+	outputDebugString("DGS Global Memo has been destroyed by external resource ("..(sourceResource and getResourceName(sourceResource) or "Unknown").."), recreating",1)
+	local dgsMemo = dgsElementData[GlobalMemo].linkedDxMemo
+	dgsInitializeGlobalMemo()
+	dgsElementData[GlobalMemo].linkedDxMemo = dgsMemo
+end
+
+function dgsInitializeGlobalMemo()
+	if not isElement(GlobalMemoParent) then
+		GlobalMemoParent = guiCreateLabel(-1,0,0,0,"",true)
+	end
+	if not isElement(GlobalMemo) then
+		GlobalMemo = guiCreateMemo(-1,0,0,0,"",true,GlobalMemoParent)
+		dgsSetData(GlobalMemo,"linkedDxMemo",nil)
+		addEventHandler("onClientGUIBlur",GlobalMemo,GlobalEditMemoBlurCheck,false)
+		addEventHandler("onClientGUIChanged",GlobalMemo,function()
+			if not dgsElementData[GlobalMemo] then return end
+			if getElementType(GlobalMemo) == "gui-memo" then
+				local dxMemo = dgsElementData[GlobalMemo].linkedDxMemo
+				if isElement(dxMemo) then
+					local text = guiGetText(GlobalMemo)
+					local cool = dgsElementData[dxMemo].CoolTime
+					if text ~= "\n" then
+						if not cool and not dgsElementData[dxMemo].readOnly then
+							local caretPos = dgsElementData[dxMemo].caretPos
+							local selectFrom = dgsElementData[dxMemo].selectFrom
+							dgsMemoDeleteText(dxMemo,caretPos[1],caretPos[2],selectFrom[1],selectFrom[2])
+							handleDxMemoText(dxMemo,utf8Sub(text,1,utf8Len(text)-1),true)
+						end
+						dgsElementData[dxMemo].CoolTime = true
+						guiSetText(GlobalMemo,"")
+						dgsElementData[dxMemo].CoolTime = false
+					end
+				end
+			end
+		end,false)
+		addEventHandler("onClientElementDestroy",GlobalMemo,dgsGlobalMemoDestroyDetector,false)
+	end
+end
+dgsInitializeGlobalMemo()
 --[[
 ---------------In Normal Mode------------------
 Text Table Structure:
@@ -246,7 +284,7 @@ function dgsMemoRecreateRenderTarget(memo,lateAlloc)
 		local scbThick = eleData.scrollBarThick
 		local scrollbar = eleData.scrollbars
 		local scbThickV,scbThickH = dgsElementData[scrollbar[1]].visible and scbThick or 0,dgsElementData[scrollbar[2]].visible and scbThick or 0
-		local bgRT,err = dxCreateRenderTarget(sizex-scbThickV,sizey-scbThickH,true,memo)
+		local bgRT,err = dgsCreateRenderTarget(sizex-scbThickV,sizey-scbThickH,true,memo)
 		if bgRT ~= false then
 			dgsAttachToAutoDestroy(bgRT,memo,-1)
 		else
@@ -259,35 +297,43 @@ end
 
 function dgsMemoMultiClickCheck(button,state,x,y,times)
 	if state == "down" then
-		local pos,line,side = searchMemoMousePosition(source,x,y)
-		eleData = dgsElementData[source]
-		if button == "left" then
-			if not eleData.multiClickCounter[1] then
-				eleData.multiClickCounter = {pos,line,times-1}
-			elseif eleData.multiClickCounter[1] ~= pos or eleData.multiClickCounter[2] ~= line then
-				eleData.multiClickCounter = {pos,line,times-1}
+		local eleData = dgsElementData[source]
+		local mouseButtons = eleData.mouseButtons
+		local mouseClicked
+		if mouseButtons then
+			if button == "left" then
+				mouseClicked = mouseButtons[1]
+			elseif button == "middle" then
+				mouseClicked = mouseButtons[2]
+			elseif button == "right" then
+				mouseClicked = mouseButtons[3]
 			end
+		else
+			mouseClicked = button == "left"
 		end
+		if not mouseClicked then return end
+		
+		local pos,line,side = searchMemoMousePosition(source,x,y)
+		if not eleData.multiClickCounter[1] then
+			eleData.multiClickCounter = {pos,line,times-1}
+		elseif eleData.multiClickCounter[1] ~= pos or eleData.multiClickCounter[2] ~= line then
+			eleData.multiClickCounter = {pos,line,times-1}
+		end
+		
 		local t = times-eleData.multiClickCounter[3]
 		if t == 1 then
-			if button ~= "middle" then
-				local shift = getKeyState("lshift") or getKeyState("rshift")
-				dgsMemoSetCaretPosition(source,pos,line,shift)
-			end
+			local shift = getKeyState("lshift") or getKeyState("rshift")
+			dgsMemoSetCaretPosition(source,pos,line,shift)
 		elseif t == 2 then
-			if button == "left" then
-				local textTable = dgsElementData[source].text
-				local text = textTable[line][0]
-				local s,e = dgsSearchFullWordType(text,pos,side)
-				dgsMemoSetCaretPosition(source,s,line)
-				dgsMemoSetCaretPosition(source,e,line,true)
-			end
+			local textTable = dgsElementData[source].text
+			local text = textTable[line][0]
+			local s,e = dgsSearchFullWordType(text,pos,side)
+			dgsMemoSetCaretPosition(source,s,line)
+			dgsMemoSetCaretPosition(source,e,line,true)
 		elseif t == 3 then
-			if button == "left" then
-				dgsMemoSetCaretPosition(source,_,line)
-				dgsMemoMoveCaret(source,1,0)
-				dgsMemoSetCaretPosition(source,0,line,true)
-			end
+			dgsMemoSetCaretPosition(source,_,line)
+			dgsMemoMoveCaret(source,1,0)
+			dgsMemoSetCaretPosition(source,0,line,true)
 		end
 	end
 end
@@ -583,10 +629,18 @@ function dgsMemoGetReadOnly(memo)
 end
 
 function resetMemo(x,y)
-	if dgsGetType(MouseData.focused) == "dgs-dxmemo" then
-		if MouseData.focused == MouseData.clickl then
-			local pos,line = searchMemoMousePosition(MouseData.focused,MouseData.cursorPos[1] or x*sW, MouseData.cursorPos[2] or y*sH)
-			dgsMemoSetCaretPosition(MouseData.focused,pos,line,true)
+	local dgsMemo = MouseData.focused
+	if dgsGetType(dgsMemo) == "dgs-dxmemo" then
+		local mouseButtons = dgsElementData[dgsMemo].mouseButtons
+		local clickedEle 
+		if mouseButtons and not mouseButtons[1] then 
+			clickedEle = (mouseButtons[2] and MouseData.click.right) or (mouseButtons[3] and MouseData.click.middle)
+		else 
+			clickedEle = MouseData.click.left
+		end
+		if dgsMemo == clickedEle then
+			local pos,line = searchMemoMousePosition(dgsMemo,MouseData.cursorPos[1] or x*sW, MouseData.cursorPos[2] or y*sH)
+			dgsMemoSetCaretPosition(dgsMemo,pos,line,true)
 		end
 	end
 end
@@ -963,7 +1017,7 @@ function handleDxMemoText(memo,text,noclear,noAffectCaret,index,line)
 			end
 		end
 		eleData.updateRTNextFrame = true
-		triggerEvent("onDgsTextChange",memo)
+		dgsTriggerEvent("onDgsTextChange",memo)
 	end
 end
 
@@ -1089,7 +1143,7 @@ function dgsMemoDeleteText(memo,fromIndex,fromLine,toIndex,toLine,noAffectCaret)
 		end
 	end
 	eleData.updateRTNextFrame = true
-	triggerEvent("onDgsTextChange",memo)
+	dgsTriggerEvent("onDgsTextChange",memo)
 end
 
 function dgsMemoClearText(memo)
@@ -1106,7 +1160,7 @@ function dgsMemoClearText(memo)
 	end
 	configMemo(memo)
 	eleData.updateRTNextFrame = true
-	triggerEvent("onDgsTextChange",memo)
+	dgsTriggerEvent("onDgsTextChange",memo)
 	return true
 end
 
@@ -1442,28 +1496,6 @@ function dgsMemoSetVerticalScrollPosition(memo,vertical)
 	return dgsScrollBarSetScrollPosition(scb[1],vertical)
 end
 
-addEventHandler("onClientGUIChanged",GlobalMemo,function()
-	if not dgsElementData[source] then return end
-	if getElementType(source) == "gui-memo" then
-		local dxMemo = dgsElementData[source].linkedDxMemo
-		if isElement(dxMemo) then
-			local text = guiGetText(source)
-			local cool = dgsElementData[dxMemo].CoolTime
-			if text ~= "\n" then
-				if not cool and not dgsElementData[dxMemo].readOnly then
-					local caretPos = dgsElementData[dxMemo].caretPos
-					local selectFrom = dgsElementData[dxMemo].selectFrom
-					dgsMemoDeleteText(dxMemo,caretPos[1],caretPos[2],selectFrom[1],selectFrom[2])
-					handleDxMemoText(dxMemo,utf8Sub(text,1,utf8Len(text)-1),true)
-				end
-				dgsElementData[dxMemo].CoolTime = true
-				guiSetText(source,"")
-				dgsElementData[dxMemo].CoolTime = false
-			end
-		end
-	end
-end,false)
-
 function dgsMemoRebuildWordWrapMapTable(memo)
 	dgsSetData(memo,"rebuildMapTableNextFrame",nil)
 	local eleData = dgsElementData[memo]
@@ -1598,7 +1630,7 @@ dgsRenderer["dgs-dxmemo"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited
 	end
 	local bgColor = applyColorAlpha(eleData.bgColor,parentAlpha)
 	local caretColor = applyColorAlpha(eleData.caretColor,parentAlpha)
-	local isFocused = MouseData.focused == source
+	local isFocused = MouseData.focused
 	if isFocused then
 		if isConsoleActive() or isMainMenuActive() or isChatBoxInputActive() then
 			MouseData.focused = false

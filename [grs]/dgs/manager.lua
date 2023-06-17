@@ -29,6 +29,7 @@ dgsRenderSetting = {
 	renderPriority = "normal",
 }
 --Render Functions
+dgsPreRenderer = {}
 dgsRenderer = {}
 dgsChildRenderer = {}
 dgs3DRenderer = {}
@@ -76,8 +77,8 @@ dgsOnTranslationUpdate = {
 			if key then
 				text[key] = value
 			elseif translationListener then
-				for key,value in pairs(translationListener) do
-					text[key] = value
+				for propertyName in pairs(translationListener) do
+					text[propertyName] = dgsElementData[dgsEle][propertyName] or ""
 				end
 			end
 			dgsSetData(dgsEle,"text",text)
@@ -275,6 +276,16 @@ end
 function dgsBringToFront(dgsEle,mouse,dontMoveParent,dontFocus)
 	local eleType = dgsIsType(dgsEle)
 	if not(eleType) then error(dgsGenAsrt(dgsEle,"dgsBringToFront",1,"dgs-dxelement")) end
+	if mouse then 
+		local mouseButtons = dgsElementData[dgsEle].mouseButtons
+		if mouseButtons then 
+			if (mouse == "left" and not mouseButtons[1]) 
+			or (mouse == "right" and not mouseButtons[2]) 
+			or (mouse == "middle" and not mouseButtons[3]) then
+				return 
+			end
+		end
+	end
 	local parent = dgsElementData[dgsEle].parent	--Get Parent
 	if not dontFocus then dgsFocus(dgsEle) end
 	if dgsElementData[dgsEle].changeOrder then
@@ -313,8 +324,13 @@ function dgsBringToFront(dgsEle,mouse,dontMoveParent,dontFocus)
 						tableInsert(children,parents)
 						if dgsElementType[parents] == "dgs-dxscrollpane" then
 							local scrollbar = dgsElementData[parents].scrollbars
-							dgsBringToFront(scrollbar[1],"left",_,true,false)
-							dgsBringToFront(scrollbar[2],"left",_,true,false)
+							local clickedButton = "left"
+							local mouseButtons = dgsElementData[parents].mouseButtons
+							if mouseButtons and not mouseButtons[1] then 
+								clickedButton = (mouseButtons[2] and "right") or (mouseButtons[3] and "middle") or "left"
+							end
+							dgsBringToFront(scrollbar[1],clickedButton,_,true,false)
+							dgsBringToFront(scrollbar[2],clickedButton,_,true,false)
 						end
 					end
 					parents = uparents
@@ -342,8 +358,13 @@ function dgsBringToFront(dgsEle,mouse,dontMoveParent,dontFocus)
 							tableInsert(layerTable,parents)
 							if dgsElementType[parents] == "dgs-dxscrollpane" then
 								local scrollbar = dgsElementData[parents].scrollbars
-								dgsBringToFront(scrollbar[1],"left",_,true,false)
-								dgsBringToFront(scrollbar[2],"left",_,true,false)
+								local clickedButton = "left"
+								local mouseButtons = dgsElementData[parents].mouseButtons
+								if mouseButtons and not mouseButtons[1] then 
+									clickedButton = (mouseButtons[2] and "right") or (mouseButtons[3] and "middle") or "left"
+								end
+								dgsBringToFront(scrollbar[1],clickedButton,_,true,false)
+								dgsBringToFront(scrollbar[2],clickedButton,_,true,false)
 							end
 						end
 						break
@@ -356,13 +377,15 @@ function dgsBringToFront(dgsEle,mouse,dontMoveParent,dontFocus)
 		end
 	end
 	if mouse == "left" then
-		MouseData.clickl = dgsEle
+		MouseData.click.left = dgsEle
 		if not MouseData.hitData2D[0] and MouseData.hitData3D[0] and MouseData.hitData3D[5] then
 			MouseData.lock3DInterface = MouseData.hitData3D[5]
 		end
 		MouseData.clickData = nil
 	elseif mouse == "right" then
-		MouseData.clickr = dgsEle
+		MouseData.click.right = dgsEle
+	elseif mouse == "middle" then 
+		MouseData.click.middle = dgsEle
 	end
 	return true
 end
@@ -475,15 +498,15 @@ end
 
 function dgsRegisterDeprecatedFunction(fncNameOld,fncNameNew)
 	_G[fncNameOld] = function(...)
-		if not getElementData(resourceRoot,"DGS-disableCompatibilityCheck") then
+		if not getElementData(resourceRoot,"DGS-enableCompatibilityCheck") then
 			if not getElementData(localPlayer,"DGS-DEBUG-C") then
 				outputDebugString("Deprecated function @'"..fncNameOld.."', replace with '"..fncNameNew.."'. See information below, or run again with command /debugdgs c",2)
 				if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-					triggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"FunctionCompatibility",fncNameOld,fncNameNew)
+					dgsTriggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"FunctionCompatibility",fncNameOld,fncNameNew)
 				end
 			else
 				if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-					triggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"FunctionCompatibility",fncNameOld,fncNameNew)
+					dgsTriggerEvent("DGSI_onDebug",sourceResourceRoot or resourceRoot,"FunctionCompatibility",fncNameOld,fncNameNew)
 				end
 				error("Found deprecated function @'"..fncNameOld.."', replace with '"..fncNameNew.."'")
 			end
@@ -503,7 +526,7 @@ dgsOnPropertyChange = {
 				dgsElementData[dgsEle]._translation_text = nil
 			end
 			dgsElementData[dgsEle].text = tostring(value)
-			triggerEvent("onDgsTextChange",dgsEle)
+			dgsTriggerEvent("onDgsTextChange",dgsEle)
 		end,
 		font = function(dgsEle,key,value,oldValue)
 			--Multilingual
@@ -686,7 +709,7 @@ function dgsSetData(dgsEle,key,value,nocheck)
 		if dgsOnTranslationUpdate[dgsEle] then dgsOnTranslationUpdate[dgsType](dgsEle,key,value,translationListener[key]) else dgsOnTranslationUpdate.default(dgsEle,key,value,translationListener[key]) end
 	end
 	if dataHandler then dataHandler(dgsEle,key,value,oldValue) end
-	if eleData.propertyListener and eleData.propertyListener[key] then triggerEvent("onDgsPropertyChange",dgsEle,key,value,oldValue) end
+	if eleData.propertyListener and eleData.propertyListener[key] then dgsTriggerEvent("onDgsPropertyChange",dgsEle,key,value,oldValue) end
 	return true
 end
 
@@ -743,51 +766,20 @@ function dgsGetListenedProperties(dgsEle)
 	return listening
 end
 
-local compatibility = {
-	1,
-	["dgs-dxprogressbar"] = {
-		isReverse = "isClockWise",
-	},
-	["dgs-scrollbar"] = {
-		position = "scrollPosition",
-	},
-	["dgs-dx3dinterface"] = {
-		rotation = "roll",
-	},
-	["dgs-dxedit"] = {
-		placeHolderColorcoded = "placeHolderColorCoded",
-	},
-	["dgs-dxcheckbox"] = {
-		image_f = "imageUnchecked",
-		image_t = "imageChecked",
-		image_i = "imageIndeterminate",
-		color_f = "colorUnchecked",
-		color_t = "colorChecked",
-		color_i = "colorIndeterminate",
-	},
-	["dgs-dxradiobutton"] = {
-		image_f = "imageUnchecked",
-		image_t = "imageChecked",
-		color_f = "colorUnchecked",
-		color_t = "colorChecked",
-	},
-	hitoutofparent = "childOutsideHit",
-	wordbreak = "wordBreak",
-	colorcoded = "colorCoded",
-}
+local compatibility = {}
 function checkCompatibility(dgsEle,key,sResRoot)
 	local eleTyp = dgsGetType(dgsEle)
-	if getElementData(resourceRoot,"DGS-disableCompatibilityCheck") then return (compatibility[eleTyp] and compatibility[eleTyp][key]) or compatibility[key] or key end
+	if getElementData(resourceRoot,"DGS-enableCompatibilityCheck") then return (compatibility[eleTyp] and compatibility[eleTyp][key]) or compatibility[key] or key end
 	if compatibility[eleTyp] and compatibility[eleTyp][key] then
 		if not getElementData(localPlayer,"DGS-DEBUG-C") then
 			outputDebugString("[DGS]Deprecated property '"..key.."' @dgsSetProperty with "..eleTyp..", replace with '"..compatibility[eleTyp][key].."'. See information below, or run again with command /debugdgs c",4,254,128,0)
 			if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-				triggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[eleTyp][key])
+				dgsTriggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[eleTyp][key])
 			end
 			return compatibility[eleTyp][key]
 		else
 			if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-				triggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[eleTyp][key])
+				dgsTriggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[eleTyp][key])
 			end
 			outputDebugString("Found deprecated '"..key.."' @dgsSetProperty with "..eleTyp..", replace with "..compatibility[eleTyp][key],2)
 			return false
@@ -797,12 +789,12 @@ function checkCompatibility(dgsEle,key,sResRoot)
 		if not getElementData(localPlayer,"DGS-DEBUG-C") then
 			outputDebugString("[DGS]Deprecated property '"..key.."' @dgsSetProperty with all dgs elements, replace with '"..compatibility[key].."'. See information below, or run again with command /debugdgs c",4,254,128,0)
 			if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-				triggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[key])
+				dgsTriggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[key])
 			end
 			return compatibility[key]
 		else
 			if getElementData(localPlayer,"DGS-DEBUG") == 3 then
-				triggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[key])
+				dgsTriggerEvent("DGSI_onDebug",sResRoot,"PropertyCompatibility",key,compatibility[key])
 			end
 			outputDebugString("Found deprecated property '"..key.."' @dgsSetProperty with all dgs elements, replace with "..compatibility[key],2)
 			return false
@@ -885,10 +877,10 @@ function dgsGetProperties(dgsEle,properties)
 	return data
 end
 
-function dgsSetPropertyInherit(dxgui,key,value,...)
-	local isTable = type(dxgui) == "table"
+function dgsSetPropertyInherit(dgsEle,key,value,...)
+	local isTable = type(dgsEle) == "table"
 	if not(dgsIsType(dgsEle) or isTable) then error(dgsGenAsrt(dgsEle,"dgsSetPropertyInherit",1,"dgs-dxelement/table")) end
-	local dxElements = isTable and dxgui or {dxgui}
+	local dxElements = isTable and dgsEle or {dgsEle}
 	for i=1,#dxElements do
 		local dgsEle = dxElements[i]
 		dgsSetProperty(dgsEle,key,value)
@@ -1140,8 +1132,12 @@ end
 addEventHandler("onClientResourceStop",resourceRoot,function()
 	--Element Logger
 	setElementData(root,"DGSI_ElementLogger",dgsElementLogger,false)
-	destroyElement(GlobalEdit)
-	destroyElement(GlobalMemo)
+	if isElement(GlobalEdit) then
+		removeEventHandler("onClientElementDestroy",GlobalEdit,dgsGlobalEditDestroyDetector)	--shutdown global edit destroy detector 
+	end
+	if isElement(GlobalMemo) then
+		removeEventHandler("onClientElementDestroy",GlobalMemo,dgsGlobalMemoDestroyDetector)	--shutdown global memo destroy detector 
+	end
 	local terminator = createElement("dgs-dxterminator")
 	addEventHandler("onClientElementDestroy",terminator,function()
 		DGSI_SaveData()
@@ -1157,7 +1153,7 @@ addEventHandler("onClientResourceStop",root,function(res)
 	end
 	externalElementPool[res] = nil	--Clear external element pool
 	if dgsElementKeeper[res] then dgsElementKeeper[res] = nil end
-	if res == getThisResource() then	--Recover Cursor Alpha
+	if res == getThisResource() and CursorData.enabled then --Recover Cursor Alpha
 		setCursorAlpha(255)
 	end
 	if G2DHookerEvents[res] then -- G2D Hooker
@@ -1170,6 +1166,3 @@ addEventHandler("onClientResourceStop",root,function(res)
 		end
 	end
 end)
----
-dgsRegisterDeprecatedFunction("dgsGetDxGUINoParent","dgsGetElementsInLayer")
-dgsRegisterDeprecatedFunction("dgsGetDxGUIFromResource","dgsGetElementsFromResource")
