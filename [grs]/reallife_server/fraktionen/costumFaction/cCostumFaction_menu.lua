@@ -262,7 +262,7 @@ function addToCoopGridlist (liste, value1, value2, value3, value4)
             DGS:dgsGridListSetItemText (  coopMenu["members_list"], row, coopMenu["members_list_online"], "Online", false, false )
             DGS:dgsGridListSetItemColor ( coopMenu["members_list"], row, coopMenu["members_list_online"], 21, 189, 29 )
         else
-            DGS:dgsGridListSetItemText (  coopMenu["members_list"], row, coopMenu["members_list_online"], getData(value2), false, false )
+            DGS:dgsGridListSetItemText (  coopMenu["members_list"], row, coopMenu["members_list_online"], getDate(value2), false, false )
             DGS:dgsGridListSetItemColor ( coopMenu["members_list"], row, coopMenu["members_list_online"], 189, 38, 21 )
         end
     end

@@ -191,7 +191,9 @@ function privVeh_spawning ( )
 		if #result > 0 then
 			mySQLCarCreate ( result )
 		else
-			outputServerLog ( "Es wurden keine Autos gefunden" )
+			if ServerConfig["debugging"].debugSqlStats.cars == true then
+				outputServerLog ( "Es wurden keine Autos gefunden" )
+			end
 		end
 	else
 		outputDebugString ( "[privVeh_spawning] Error executing the query" )
@@ -276,7 +278,9 @@ function checkForOldMails ()
 		if result[1] then
 			mySQLMailCheck ( result )
 		else
-			outputServerLog("Es wurden keine Mails gefunden")
+			if ServerConfig["debugging"].debugSqlStats.mails == true then
+				outputServerLog("Es wurden keine Mails gefunden")
+			end
 		end
 	else
 		outputDebugString ( "[checkForOldMails] Error executing the query" )
@@ -360,7 +364,9 @@ function createSaveAblePlacedObjects ()
 				createNextPlaceableObject ( result[i] )
 			end
 		else
-			outputServerLog ( "Es wurden keine platzierbaren Objekte gefunden." )
+			if ServerConfig["debugging"].debugSqlStats.objects == true then
+				outputServerLog ( "Es wurden keine platzierbaren Objekte gefunden." )
+			end
 		end
 	else
 		outputDebugString ( "[createSaveAblePlacedObjects] Error executing the query" )

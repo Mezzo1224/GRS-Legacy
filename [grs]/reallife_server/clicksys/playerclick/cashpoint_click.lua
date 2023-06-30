@@ -164,7 +164,7 @@ function showPaydayUI ()
 		local row = DGS:dgsGridListAddRow (paydayList )
 	--	DGS:dgsGridListSetItemText (  paydayList , row, paydayListID, paydayData[var]["id"], false)
 		DGS:dgsGridListSetItemText (  paydayList , row, paydayListIncome, paydayData[var]["income"].."$", false)
-		DGS:dgsGridListSetItemText (  paydayList , row, paydayListDate, getData(paydayData[var]["date"]), false)
+		DGS:dgsGridListSetItemText (  paydayList , row, paydayListDate, getDate(paydayData[var]["date"]), false)
 		DGS:dgsGridListSetItemData ( paydayList , row, paydayListIncome, paydayData[var]["id"] )
 	end
 	addEventHandler ( "onDgsWindowClose",window, function()
@@ -194,7 +194,7 @@ addEvent ( "showPaydayUI", true )
 addEventHandler ( "showPaydayUI", getRootElement(), showPaydayUI )
 
 function showPaydayData (id)
-	paydayDataWindow  = DGS:dgsCreateWindow ( 0.57, 0.33, 0.15, 0.34, "Zahltag vom "..getData(paydayData[id]["date"]), true )
+	paydayDataWindow  = DGS:dgsCreateWindow ( 0.57, 0.33, 0.15, 0.34, "Zahltag vom "..getDate(paydayData[id]["date"]), true )
 	DGS:dgsCreateMemo(0.04, 0.03, 0.93, 0.91, "\n"..paydayData[id]["text"],true,paydayDataWindow )   
 end
 

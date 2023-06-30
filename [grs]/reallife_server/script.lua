@@ -96,7 +96,6 @@ end
 addEventHandler ( "onPlayerJoin", getRootElement(), joinHandler )
 
 function getServerSlotCount ()
-
 	triggerClientEvent ( client, "recieveServerSlotCount", client, getMaxPlayers () )
 end
 addEvent ( "getServerSlotCount", true )

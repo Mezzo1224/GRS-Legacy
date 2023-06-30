@@ -5,7 +5,6 @@ function intPlayerInventory (player)
     if not inventory[pname] then
         inventory[pname] = {}
     end
-    print("Inventar.")
 end
 
 function loadPlayerInventory (player)

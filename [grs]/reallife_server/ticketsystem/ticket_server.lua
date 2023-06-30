@@ -155,7 +155,7 @@ function newTicket (creatore, subject, text, type)
     ticketSupporter[newTicketID] = "none"
     ticketRating[newTicketID] = tonumber (0)
     ticketState[newTicketID] =  tonumber (1)
-    ticketDate[newTicketID] = getData ( getTimestamp () )
+    ticketDate[newTicketID] = getDate ( getTimestamp () )
     waitingTickets = waitingTickets + 1
     outputChatBox ( "Ticket erfolgreich erstellt." , client, 200, 200, 0,true )
     adminlist ( client )
@@ -238,7 +238,7 @@ function newTicketAnswer (ticketID, text)
             ticketaTicketID[allTicketAnswers] = ticketID
             ticketaText[allTicketAnswers] = text
             ticketaSUID[allTicketAnswers] = "0"
-            ticketaDate[allTicketAnswers] = getData ( getTimestamp () )
+            ticketaDate[allTicketAnswers] = getDate ( getTimestamp () )
 
             outputChatBox ( "Ticket Antwort erfolgreich abgesendet." , client, 200, 200, 0,true )
             local creatorName =  playerUIDName[ ticketUID[ticketID] ]

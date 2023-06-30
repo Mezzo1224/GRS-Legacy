@@ -266,7 +266,7 @@ function loadTickets ()
 				ticketSubject[ tonumber ( result[i]["ID"] )] =  result[i]["subject"]
 				ticketText[ tonumber ( result[i]["ID"] )] =  result[i]["text"]
 				ticketRating[ tonumber ( result[i]["ID"] )] = tonumber ( result[i]["rating"] )
-				ticketDate[ tonumber ( result[i]["ID"] )] =  getData ( result[i]["date"] ) 
+				ticketDate[ tonumber ( result[i]["ID"] )] =  getDate ( result[i]["date"] ) 
 				if  tonumber ( result[i]["state"]) == 1 or tonumber ( result[i]["state"]) == 4 then
 					print("Da waret ein Ticket")
 					waitingTickets = waitingTickets + 1
@@ -314,7 +314,7 @@ function loadTicketAnswers ()
 		ticketaTicketID[ tonumber ( result[i]["ID"] )] = tonumber ( result[i]["ticket_ID"])
 		ticketaSUID[ tonumber ( result[i]["ID"] )] = tonumber ( result[i]["sUID"]) -- TODO DELETE
 		ticketaText[ tonumber ( result[i]["ID"] )] =  result[i]["text"]
-		ticketaDate[ tonumber ( result[i]["ID"] ) ] = getData ( result[i]["date"] ) 
+		ticketaDate[ tonumber ( result[i]["ID"] ) ] = getDate ( result[i]["date"] ) 
 	end
 	printDebug(#result.." Ticket Antworten geladen.")
 end

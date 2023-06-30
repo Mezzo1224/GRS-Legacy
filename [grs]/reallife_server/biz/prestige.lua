@@ -20,7 +20,9 @@ function createPrestigeObjects ( i )
 				addEventHandler ( "onPickupHit", pickup, prestigePickupHit )	
 				totalPrestigeObjects = totalPrestigeObjects + 1
 			end
-			outputServerLog ( "Es wurden "..#result.." prestige Objekte gefunden." )
+			if ServerConfig["debugging"].debugSqlStats.prestige == true then
+				outputServerLog ( "Es wurden "..#result.." prestige Objekte gefunden." )
+			end
 		end
 	end
 end

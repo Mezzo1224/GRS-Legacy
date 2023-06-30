@@ -30,7 +30,7 @@ function banCheck ( nick, ip, uname, serial )
 			local cancome = true
 			if bool and bantime then
 				if ( bantime - getTBanSecTime ( 0 ) ) < 0 and tonumber(result[1]["Entbannt"]) == 0 then
-					dbExec ( handler, "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?", "ban", "Entbannt", getData ( getTimestamp () ), "UID", playerUID[nick] )
+					dbExec ( handler, "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?", "ban", "Entbannt", getDate ( getTimestamp () ), "UID", playerUID[nick] )
 				elseif bantime > 0 and tonumber(result[1]["Entbannt"]) == 0 then
 					local reason = result[1]["Grund"]
 					local admin = playerUIDName[tonumber ( result[1]["AdminUID"] )]
@@ -306,13 +306,8 @@ function register_func ( player, passwort, bday, bmon, byear, geschlecht, bcode,
             vioSetElementData ( player, "heaventime", 0 )
             vioSetElementData ( player, "housekey", 0 )
             vioSetElementData ( player, "bizkey", 0 )
-            if bonuscodes[bcode] then
-                vioSetElementData ( player, "bankmoney", 1000000 + bonuscodes[bcode])
-                outputDebugString ( "[Bonuscode] "..pname.." benutze den Bonus Code "..bcode )
-                outputLog ( "[Bonuscode] "..pname.." benutze den Bonus Code "..bcode, "registerbonus" )
-            else
-                vioSetElementData ( player, "bankmoney", 1000000 )
-            end
+			print("Bonuscode;", bcode)
+			giveCodeReward(player, bcode, true)
             vioSetElementData ( player, "drugs", 0 )
             local Skinid = getRandomRegisterSkin ( player, geschlecht )
             vioSetElementData ( player, "skinid", Skinid )

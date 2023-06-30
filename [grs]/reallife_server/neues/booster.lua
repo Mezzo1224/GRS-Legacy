@@ -7,12 +7,11 @@ function giveBooster ( player, tage, type)
 			local rt = getRealTime ()
 			local timesamp = rt.timestamp
 			dbExec (handler, "INSERT INTO ?? (??, ??, ??) VALUES (?,?,?)", "booster", "UID", "type", "date", playerUID[getPlayerName(player)], type, timesamp + tage*86400 )			
-			outputChatBox ("Du hast einen "..boosterType[type].." Booster erhalten. Haltbar bis: "..getData(timesamp + tage*86400),player, 0, 205, 0)
+			outputChatBox ("Du hast einen "..boosterType[type].." Booster erhalten. Haltbar bis: "..getDate(timesamp + tage*86400),player, 0, 205, 0)
 			
 		end
 	end
 end
-
 function showBooster ( player )
 
 	if vioGetElementData ( player, "loggedin" ) == 1 then
@@ -25,7 +24,7 @@ function showBooster ( player )
 			if count > 0 then
 				outputChatBox ( "Booster:", player, 0, 205, 0 ) 
 				for i = 1, count do
-					outputChatBox ( boosterType[result[i]["type"]].." Booster bis "..getData(result[i]["date"]), player, 0, 205, 0 ) 
+					outputChatBox ( boosterType[result[i]["type"]].." Booster bis "..getDate(result[i]["date"]), player, 0, 205, 0 ) 
 				end
 			else
 			end
@@ -43,11 +42,24 @@ function checkExpiredBooster ( player )
     if result and result[1] then
         local date = tonumber( result[1]["date"] )
         if date < timesamp then
-            outputChatBox ( "Der Booster "..boosterType[result[1]["type"]].." vom "..getData(result[1]["date"]).." ist abgelaufen. ID: "..result[1]["id"], player, 255, 0, 0 )
+            outputChatBox ( "Der Booster "..boosterType[result[1]["type"]].." vom "..getDate(result[1]["date"]).." ist abgelaufen. ID: "..result[1]["id"], player, 255, 0, 0 )
             outputDebugString("[BOOSTER] Der Booster "..boosterType[result[1]["type"]].." von "..pname.." ist abgelaufen.")
 			outputLog ( "Der Booster "..boosterType[result[1]["type"]].." von "..pname.." ist abgelaufen.", "booster" )
 			dbExec ( handler, "DELETE FROM ?? WHERE ??=?", "booster", "id", result[1]["id"] )
 			checkExpiredBooster ( player )
         end
 	end
+end
+
+function giveCodeReward (target, code, isRegistration)
+    if ServerConfig["bonuscodes"][code] then
+        if ServerConfig["bonuscodes"][code].onlyRegistration == true and isRegistration == true then
+            print ( code, "Code gibt es",  ServerConfig["bonuscodes"][code].onlyRegistration )
+            ServerConfig["bonuscodes"][code].redeemCode(target)
+        else
+            print ( "Code nur gültig für die Registration.")
+        end
+    else
+        print ( "Code gibt es nicht")
+    end
 end

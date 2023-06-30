@@ -7,6 +7,7 @@ local veh_frozen_vehs = {}
 local muted_players = {}
 local activeOOC = false
 local muted_players = {}
+local adminDuty = { } -- TODO
 local admindutyarray = {}
 local admindutyleben = {}
 local admindutyweste = {}

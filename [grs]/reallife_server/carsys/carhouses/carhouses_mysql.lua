@@ -126,7 +126,9 @@ function mySQLCarhouseCreate ( array )
 			end
 		end )
 	end
-	outputServerLog ( "Es wurden "..( #MySQLCarhouses ).." Autohäuser gefunden!")
+	if ServerConfig["debugging"].debugSqlStats.cars == true then
+		outputServerLog ( "Es wurden "..( #MySQLCarhouses ).." Autohäuser gefunden!")
+	end
 	createVehiclesForCarhouses ( )
 	privVeh_spawning ( )		
 end

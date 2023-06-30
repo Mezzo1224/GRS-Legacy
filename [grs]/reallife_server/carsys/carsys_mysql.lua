@@ -83,7 +83,9 @@ function mySQLCarCreate ( array )
 			end
 		end
 	end
-	outputServerLog("Es wurden "..#array.." Fahrzeuge gefunden.")
+	if ServerConfig["debugging"].debugSqlStats.prestige == true then
+		outputServerLog("Es wurden "..#array.." Fahrzeuge gefunden.")
+	end
 end
 
 

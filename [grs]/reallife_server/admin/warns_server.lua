@@ -6,7 +6,7 @@ function getTimestamp ()
 end
 
 
-function getData (timestamp)
+function getDate (timestamp)
 
 	local time = getRealTime(timestamp,true)
 	local year = tostring( time.year + 1900 )
@@ -73,9 +73,9 @@ function checkExpiredWarns ( player )
     if result and result[1] and tonumber(result[1]["Abgelaufen"]) == 0  then
         local warntime = tonumber( result[1]["time"] )
         if warntime < timesamp then
-            outputChatBox ( "Die Verwarnung vom "..getData(result[1]["date"]).." von "..playerUIDName[result[1]["adminUID"]].." ist abgelaufen. ID: "..result[1]["id"], player, 255, 0, 0 )
+            outputChatBox ( "Die Verwarnung vom "..getDate(result[1]["date"]).." von "..playerUIDName[result[1]["adminUID"]].." ist abgelaufen. ID: "..result[1]["id"], player, 255, 0, 0 )
             dbExec ( handler, "DELETE FROM ?? WHERE ??=?", "warns", "id", result[1]["id"] )
-			dbExec ( handler, "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?", "warns", "Abgelaufen", getData ( getTimestamp () ), "id", result[1]["id"] )
+			dbExec ( handler, "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?", "warns", "Abgelaufen", getDate ( getTimestamp () ), "id", result[1]["id"] )
             outputDebugString("[WARNSYSTEM] Der Warn von "..pname.." ist abgelaufen.")
 			outputLog ( "Der Warn von "..pname.." ist abgelaufen.", "warn" )
 			checkExpiredWarns ( player )
@@ -89,7 +89,7 @@ end
 function getLowestWarnExtensionTime ( name )
 	local result = dbPoll ( dbQuery ( handler, "SELECT ?? FROM ?? WHERE ??=? AND ?? NOT LIKE ? ORDER BY time ASC LIMIT 1", "time", "warns", "UID", playerUID[name], "Abgelaufen", 0 ), -1 )
 	if result and result[1] then
-		return getData(result[1]["time"])
+		return getDate(result[1]["time"])
 	end
 	return false
 end
@@ -101,8 +101,8 @@ function outputPlayerWarns ( name, reader )
 	if count > 0 then
 		for i = 1, count do
 			outputChatBox ( "Warn "..i..":", reader, 255, 0, 0 )
-			outputChatBox ( "Von: "..playerUIDName[array[i].adminUID].." ( "..getData(array[i].date).." ), Grund: "..array[i].reason, reader, 255, 0, 0 )
-			outputChatBox ( "Ablaufdatum: "..getData(array[i].time), reader, 255, 0, 0 )
+			outputChatBox ( "Von: "..playerUIDName[array[i].adminUID].." ( "..getDate(array[i].date).." ), Grund: "..array[i].reason, reader, 255, 0, 0 )
+			outputChatBox ( "Ablaufdatum: "..getDate(array[i].time), reader, 255, 0, 0 )
 		end
 	end
 end

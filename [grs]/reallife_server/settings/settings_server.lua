@@ -3,7 +3,26 @@
 
 
 -- Aktiviert den Inhalt von [maps] 
-mapsExtension = true
+-- Die Karten können auch in die Server Config eingefügt werden, Code:
+--[[
+	<resource src="bahnhof" startup="1" protected="0" />
+<resource src="Club-SF" startup="1" protected="0" />
+<resource src="garagedeko" startup="1" protected="0" />
+<resource src="Gelber-Punkt-by-wantedd" startup="1" protected="0" />
+<resource src="Hauser" startup="1" protected="0" />
+<resource src="kartbahn" startup="1" protected="0" />
+<resource src="kollecthaus" startup="1" protected="0" />
+<resource src="lossantosmap" startup="1" protected="0" />
+<resource src="ls-hosp-dec" startup="1" protected="0" />
+<resource src="ltr" startup="1" protected="0" />
+<resource src="map_flores2" startup="1" protected="0" />
+<resource src="Noobspawn" startup="1" protected="0" />
+<resource src="PoliceDepartment" startup="1" protected="0" />
+<resource src="SF_Garage" startup="1" protected="0" />
+<resource src="wangcars" startup="1" protected="0" />
+--]]
+
+mapsExtension = false
 mapsFromExtension = {
 	[1] = "bahnhof",
 	[2] = "Club-SF",

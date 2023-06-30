@@ -139,7 +139,7 @@ function hasFactionBan ( player )
 				if date == 0 then
 					outputChatBox("Du hast eine permanente Fraktionssperre. (Grund: "..reason..")", player, 125, 0, 0)
 				else
-					outputChatBox("Du hast eine Fraktionssperre. (Grund: "..reason.." , bis: "..getData(date)..")", player, 125, 0, 0)
+					outputChatBox("Du hast eine Fraktionssperre. (Grund: "..reason.." , bis: "..getDate(date)..")", player, 125, 0, 0)
 				end
             	return true
 			else

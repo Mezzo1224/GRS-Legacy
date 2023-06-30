@@ -569,7 +569,7 @@ function setPremiumClientData (coins, premTime, pack, premState)
 	if premState == false then
 		premState = "Nicht aktiv"
 	else
-		premState = "Aktiv bis zum "..getData(premTime)
+		premState = "Aktiv bis zum "..getDate(premTime)
 	end
 	DGS:dgsSetText(shopPremstate,"Premium-Status: "..tostring(premState))
 end

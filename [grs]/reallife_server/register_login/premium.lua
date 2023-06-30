@@ -83,7 +83,7 @@ function checkPremium ( player )
     if PremiumData ~= 0 then
         if PremiumData > timesamp then
             if paket > 0  then
-                outputChatBox ( "Premium: Aktiv. Bis zum "..getData (PremiumData), player, 0, 125, 0,true )
+                outputChatBox ( "Premium: Aktiv. Bis zum "..getDate (PremiumData), player, 0, 125, 0,true )
                 giveAchievement( player, 9 )
                 outputChatBox ( "Stufe: "..vipPackageName[paket], player, 0, 125, 0,true )
                 vioSetElementData ( player, "premium", true )
@@ -139,7 +139,8 @@ end
 addCommandHandler("phelp", showPremiumFunctions )
 
 
-function setPremiumData (player, tage,package)
+-- TO.DO: System verbessern.
+function setPremiumData (player, tage, package)
     local pname = getPlayerName(player)
     local PremiumData = tonumber(vioGetElementData ( player, "PremiumData" ))
     local rt = getRealTime ()
@@ -150,9 +151,138 @@ function setPremiumData (player, tage,package)
     checkPremium ( player )
 end
 
+function convertSuffixTime(input)
+    local suffix = string.sub(input, -1) -- Extrahiere den letzten Buchstaben (Suffix)
+    local zahl = tonumber(string.sub(input, 1, -2)) -- Extrahiere den numerischen Wert
+    if suffix == "h" then
+        return zahl -- Stunden bleiben unverändert
+    elseif suffix == "d" then
+        return zahl * 24 -- Tage in Stunden umrechnen
+    elseif suffix == "w" then
+        return (zahl * 24) * 7 -- Wochen in Stunden umrechnen
+    elseif suffix == "m" then
+        return (zahl * 24) * 30 -- Monate in Stunden umrechnen (30 Tage pro Monat angenommen)
+    else
+        return tonumber(input) -- Kein passender Suffix gefunden, interpretiere den Wert direkt als Zahl
+    end
+end
+
+function createPrefixFromTime(input)
+    local zahl = tonumber(input)
+    local monate = math.floor(zahl / (30 * 24))
+    local wochen = math.floor((zahl % (30 * 24)) / (7 * 24))
+    local tage = math.floor((zahl % (7 * 24)) / 24)
+    local reststunden = zahl % 24
+    local result = ""
+
+    if monate > 0 then
+        result = result .. monate .. " Monat"
+        if monate > 1 then
+            result = result .. "e"
+        end
+    end
+
+    if wochen > 0 then
+        if result ~= "" then
+            result = result .. " und "
+        end
+
+        result = result .. wochen .. " Woche"
+        if wochen > 1 then
+            result = result .. "n"
+        end
+    end
+
+    if tage > 0 then
+        if result ~= "" then
+            result = result .. " und "
+        end
+
+        result = result .. tage .. " Tag"
+        if tage > 1 then
+            result = result .. "e"
+        end
+    end
+
+    if reststunden > 0 then
+        if result ~= "" then
+            result = result .. " und "
+        end
+
+        if reststunden == 1 then
+            result = result .. "1 Stunde"
+        else
+            result = result .. reststunden .. " Stunden"
+        end
+    end
+
+    return result
+end
 
 
+function setPlayerPremiumCMD (player, cmd, target, time, package)
+    if isAdminLevel ( player, 8 ) then
+        local pName = getPlayerName(player)
+        local target = getPlayerFromName(target)
+        if target then
+            local tName = getPlayerName(player)
+            if time then
+                if tonumber(package) then
+                    if setPlayerPremium (target, time, package) then
+                        local time = convertSuffixTime(time)
+                        local prefix = createPrefixFromTime(time)
 
+                        for playeritem, index in pairs(adminsIngame) do 			
+							outputChatBox ( pName.." hat "..tName.." "..prefix.." den Premium-Rang "..ServerConfig["PremiumRanks"][tonumber(package)].name.."#63b9ff gegeben.", playeritem, 99, 184, 255, true )
+						end	
+                    end
+                else
+                    newInfobox (player, "Paket fehlt.", 3)
+                end
+            else
+                newInfobox (player, "Zeit Angabe fehlt.", 3)
+            end
+        else
+            newInfobox (player, "Diesen Spieler gibt es nicht.", 3)
+        end
+    else
+        newInfobox (player, "Du bist nicht befugt.", 3)
+    end
+end
+addCommandHandler("setp", setPlayerPremiumCMD )
+
+function setPlayerPremium (player, time, package, fromAdmin)
+    if getPlayerName(player) then
+        local time = convertSuffixTime(time)
+        if time > 0 then
+            if tonumber(package) > 0  then
+                -- // Premium setzen
+                local PremiumData = tonumber(vioGetElementData ( player, "PremiumData" ))
+                local rt = getRealTime ()
+                local timesamp = rt.timestamp
+                local premiumTime =  timesamp + (time*3600)
+                vioSetElementData ( player, "Paket", tonumber(package) )
+                vioSetElementData ( player, "PremiumData", premiumTime )
+                dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "userdata", "PremiumPaket", package, "PremiumData", premiumTime,  "UID", playerUID[pname] )
+                checkPremium ( player )
+
+
+                -- // Debug
+                outputDebugString ("[setPlayerPremium] "..getPlayerName(player).." hat das Paket "..package.." für "..time.." Stunden erhalten.")
+                return true
+            else
+                outputDebugString ("[setPlayerPremium] Paket ungültig oder nicht vorhanden.", 1)
+                return false
+            end
+        else
+            outputDebugString ("[setPlayerPremium] Zeit muss höher als 0 sein.", 1)
+            return false
+        end
+    else
+        outputDebugString ("[setPlayerPremium] Spieler existiert nicht, `Player` ist "..type(player), 1)
+        return false
+    end
+end
 
 function changeSocial ( player, cmd , ... )
     local paket = tonumber(vioGetElementData ( player, "Paket" ))
@@ -166,7 +296,7 @@ function changeSocial ( player, cmd , ... )
                     vioSetElementData ( player, "socialState", rt )
                     outputChatBox ( "Status zu "..rt.." geändert.", player, 0, 125, 0 )
                     vioSetElementData ( player, "lastSocialChange", timesamp + (vipPackageSocialTime[paket]) )
-                    outputChatBox ( "Du kannst deinen Status am "..getData(timesamp + (vipPackageSocialTime[paket])).." wieder ändern.", player, 0, 125, 0 )
+                    outputChatBox ( "Du kannst deinen Status am "..getDate(timesamp + (vipPackageSocialTime[paket])).." wieder ändern.", player, 0, 125, 0 )
                 else
                     outputChatBox("Zuviele Zeichen, es sind maximal 16 erlaubt. (Leerzeichen zählen mit)", player, 255, 155, 0 )
                 end
@@ -175,7 +305,7 @@ function changeSocial ( player, cmd , ... )
 
             end
         else
-            outputChatBox ( "Du kannst deinen Status am "..getData(timesamp + (vipPackageSocialTime[paket])).." wieder ändern.", player, 0, 125, 0 )
+            outputChatBox ( "Du kannst deinen Status am "..getDate(timesamp + (vipPackageSocialTime[paket])).." wieder ändern.", player, 0, 125, 0 )
         end
     else
         outputChatBox("Du bist kein Premium User." , player, 0, 200, 0 )
@@ -186,7 +316,6 @@ addCommandHandler("status", changeSocial )
 
 
 function changeNumber ( player, cmd, number )
-
     local paket = tonumber(vioGetElementData ( player, "Paket" ))
     if vioGetElementData ( player, "premium" ) == true then
         if vioGetElementData ( player, "lastNumberChange") < timesamp then
@@ -199,7 +328,7 @@ function changeNumber ( player, cmd, number )
                                 vioSetElementData ( player, "telenr", number )
                                 outputChatBox ( "Nummer zu "..number.." geändert.", player, 0, 125, 0 )
                                 vioSetElementData ( player, "lastNumberChange", timesamp + (vipPackageTeleTime[paket]) )
-                                outputChatBox ( "Du kannst deine Nummer am "..getData(timesamp + (vipPackageTeleTime[paket])).." wieder ändern.", player, 0, 125, 0 )
+                                outputChatBox ( "Du kannst deine Nummer am "..getDate(timesamp + (vipPackageTeleTime[paket])).." wieder ändern.", player, 0, 125, 0 )
                             else
                                 outputChatBox("Ungültige Nummer." , player, 255, 155, 0 )
                             end
@@ -217,7 +346,7 @@ function changeNumber ( player, cmd, number )
                 outputChatBox("/tele [deine gewünschte Nummer]" , player, 255, 155, 0 )
             end
         else
-            outputChatBox ( "Du kannst deine Nummer am "..getData(timesamp + (vipPackageTeleTime[paket])).." wieder ändern.", player, 255, 155, 0 )
+            outputChatBox ( "Du kannst deine Nummer am "..getDate(timesamp + (vipPackageTeleTime[paket])).." wieder ändern.", player, 255, 155, 0 )
         end
     else
         outputChatBox("Du bist kein Premium User." , player, 255, 155, 0 )
@@ -276,10 +405,10 @@ function giveFreePremiumCar ( player )
                 vioSetElementData ( player, "lastPremCarGive", timesamp + (vipPackagePremCarGiveTime[paket]) )
                 outputChatBox ( "Aufgrund deines Premium Paketes hast du ein gratis Premium Fahrzeug erhalten.", player, 0, 125, 0 )
                 outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
-                outputChatBox ( getData(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
+                outputChatBox ( getDate(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
             else
             --    outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
-            --	outputChatBox ( getData(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
+            --	outputChatBox ( getDate(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
             end
         end
     end

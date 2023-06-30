@@ -106,7 +106,7 @@ function faq_addLeader(count, dataString,online)
 		guiGridListSetItemText(SwegGui.gridlist[2], row_gui, lname, name, false, true)
 		guiGridListSetItemText(SwegGui.gridlist[2], row_gui, lfrac, fac, false, false)
 		if tonumber(login) == 0	 then
-		guiGridListSetItemText(SwegGui.gridlist[2], row_gui, llogin, getData(last), false, false)
+		guiGridListSetItemText(SwegGui.gridlist[2], row_gui, llogin, getDate(last), false, false)
 		guiGridListSetItemColor ( SwegGui.gridlist[2], row_gui, llogin, 250,19,19 )
 		else
 		guiGridListSetItemText(SwegGui.gridlist[2], row_gui, llogin, "Online", false, false)
@@ -135,7 +135,7 @@ function faq_addTeam(count, dataString,online)
 		guiGridListSetItemText(SwegGui.gridlist[1], row_gui, tteam, rang, false, false)
 		guiGridListSetItemText(SwegGui.gridlist[1], row_gui, tlogin, last, false, false)
 				if tonumber(login) == 0	 then
-		guiGridListSetItemText(SwegGui.gridlist[1], row_gui, tlogin, getData(last), false, false)
+		guiGridListSetItemText(SwegGui.gridlist[1], row_gui, tlogin, getDate(last), false, false)
 		guiGridListSetItemColor (SwegGui.gridlist[1], row_gui, tlogin, 250,19,19 )
 		else
 		guiGridListSetItemText(SwegGui.gridlist[1], row_gui, tlogin, "Online", false, false)

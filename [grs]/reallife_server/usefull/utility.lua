@@ -33,16 +33,11 @@ function string.cut (s, val) -- s for string, val for searched value
 	end
 end
 
-
-
-
-
 function getTimestamp ()
 
 	local time = getRealTime()
 	return time.timestamp
 end
-
 
 
 
@@ -65,7 +60,7 @@ function generateString ( len )
 end
 
 
-function getData (timestamp)
+function getDate (timestamp)
 
 	local time = getRealTime(timestamp,false)
 	local year = (time.year+1900)

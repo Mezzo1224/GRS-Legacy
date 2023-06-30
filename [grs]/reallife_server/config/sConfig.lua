@@ -6,7 +6,7 @@ ServerConfig["main"] = {
     enableChangeFactionCMD = true,
 
     -- // Sonstiges
-    debugServerConfig = true,
+    debugServerConfig = false,
     enableBetasystem = true,
     VIPXPBoost = 2, 
     globalXPBoost = 1, 
@@ -18,31 +18,85 @@ ServerConfig["main"] = {
     compatibleDgsVersion = "3.511",
 }
 
+ServerConfig["debugging"] = {
+    debugServerConfig = true,
+    debugSqlStats = {
+        sqlConnection = false,
+        carhouse =  false,
+        cars =  false,
+        mails = false,
+        prestige =  false,
+        highscores =    false,
+        objects =   false
+    }
+}
+ServerConfig["PremiumRanks"] = {
+    [1] = {
+        name = "#8A2908Bronze",
+        changeSocial = (604800*4),
+        changeNumber = (604800*4),
+        freePremiumCar = 0, -- Höher als 0 = Ja
+        civTimeReduction = 0,
+        increasedPayday = 2,
+        xpToMoneyRate = 4
+    },
+    [2] = {
+        name = "#A4A4A4Silber",
+        changeSocial = (604800*2),
+        changeNumber = (604800*2),
+        freePremiumCar = 0, -- Höher als 0 = Ja
+        civTimeReduction = 2,
+        increasedPayday = 5,
+        xpToMoneyRate = 6
+    },
+    [3] = {
+        name = "#AEB404Gold",
+        changeSocial = (604800*4),
+        changeNumber = (604800*4),
+        freePremiumCar = 0, -- Höher als 0 = Ja
+        civTimeReduction = 5,
+        increasedPayday = 10,
+        xpToMoneyRate = 4
+    },
+    [4] = {
+        name = "#D8D8D8Platin",
+        changeSocial = (604800*4),
+        changeNumber = (604800*4),
+        freePremiumCar = 604800, -- Höher als 0 = Ja
+        civTimeReduction = 7,
+        increasedPayday = 16,
+        xpToMoneyRate = 2
+    },
+    [5] = {
+        name = "#848484Titan",
+        changeSocial = (604800*4),
+        changeNumber = (604800*4),
+        freePremiumCar = 604800/2, -- Höher als 0 = Ja
+        civTimeReduction = 10,
+        increasedPayday = 20,
+        xpToMoneyRate = 1
+    }
+}
+
 
 ServerConfig["bonuscodes"] = {
     ["grsfb"] = {onlyRegistration = true, redeemCode = function (player)
-        -- // Geld
-          print("Code GRSFB")
+        local money = vioGetElementData ( player, "bankmoney" )
+        vioSetElementData ( player, "bankmoney", money + 100000 )
+        setPremiumData (player, 3,1)
     end},
     ["grsad"] =  {onlyRegistration = true, redeemCode = function (player)
-        -- // Premium
-        print("Code GRSAD")
+        local money = vioGetElementData ( player, "bankmoney" )
+        vioSetElementData ( player, "bankmoney", money + 100000 )
+        setPremiumData (player, 3,1)
+    end},
+    ["grsbeta"] =  {onlyRegistration = true, redeemCode = function (player)
+        local money = vioGetElementData ( player, "bankmoney" )
+        vioSetElementData ( player, "bankmoney", money + 500000 )
+        setPremiumData (player, 28, 4)
     end}
 }
 
--- // Testing
-function giveBonuscodeReward (target, code, isRegistration)
-    if ServerConfig["bonuscodes"][code] then
-        if ServerConfig["bonuscodes"][code].onlyRegistration == true and isRegistration == true then
-            print ( code, "Code gibt es",  ServerConfig["bonuscodes"][code].onlyRegistration )
-            ServerConfig["bonuscodes"][code].redeemCode(target)
-        else
-            print ( "Code nur gültig für die Registration.")
-        end
-    else
-        print ( "Code gibt es nicht")
-    end
-end
 
 
 ServerConfig["shop"] = {
@@ -124,7 +178,7 @@ ServerConfig["forum"] = {
 }
 
 
-if ServerConfig["main"].debugServerConfig == true then
+if ServerConfig["debugging"].debugServerConfig == true then
     setTimer ( function()
         for k, v in pairs(ServerConfig) do
             print("--- Server-Config-Tabelle "..k.." ---")

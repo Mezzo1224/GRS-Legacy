@@ -347,7 +347,7 @@ function loadFraktionMember (name, rang, status)
 		guiGridListSetItemText(FrakiGui.gridlist[1], memberlist[name], membersstatus, "Online", false, true)
 		guiGridListSetItemColor ( FrakiGui.gridlist[1], memberlist[name], membersstatus, 75,242,24 )
 	else
-		guiGridListSetItemText(FrakiGui.gridlist[1], memberlist[name], membersstatus, getData(status), false, true)
+		guiGridListSetItemText(FrakiGui.gridlist[1], memberlist[name], membersstatus, getDate(status), false, true)
 		guiGridListSetItemColor ( FrakiGui.gridlist[1], memberlist[name], membersstatus, 250,19,19 )
 	end
 
@@ -383,7 +383,7 @@ function loadWarns (id, name, reason, ExpirationDate, Expiration)
 	guiGridListSetItemText(FrakiGui.gridlist[3], warnlist[id], warnsname, name, false, false)
 	guiGridListSetItemText(FrakiGui.gridlist[3], warnlist[id], warnsreason, reason, false, true)
 	if tonumber(Expiration) == 0 then
-		guiGridListSetItemText(FrakiGui.gridlist[3], warnlist[id], warnsexpiration, getData (ExpirationDate), false, true)
+		guiGridListSetItemText(FrakiGui.gridlist[3], warnlist[id], warnsexpiration, getDate (ExpirationDate), false, true)
 	else
 		guiGridListSetItemText(FrakiGui.gridlist[3], warnlist[id], warnsexpiration, "Abgelaufen", false, true)
 		guiGridListSetItemColor ( FrakiGui.gridlist[3], warnlist[id], warnsexpiration, 250,19,19 )

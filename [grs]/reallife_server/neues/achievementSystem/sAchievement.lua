@@ -71,7 +71,7 @@ function loadAchievements (player)
                     else
                         socialID = "N.a"
                     end
-                    local achData = "|"..desc.."|"..xp.."|"..money.."|"..socialID.."|"..getData(date).."|"..pic.."|"
+                    local achData = "|"..desc.."|"..xp.."|"..money.."|"..socialID.."|"..getDate(date).."|"..pic.."|"
                     triggerClientEvent ( player, "fillAchievementList", getRootElement(), name, achData)
                     
                     
