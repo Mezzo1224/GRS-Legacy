@@ -72,5 +72,5 @@ local function intMySQL ()
         connectDatabase ()
     end
 end
-intMySQL ()
+--intMySQL () -- // War nur zum testen
 

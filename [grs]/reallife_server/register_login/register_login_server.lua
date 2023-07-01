@@ -270,7 +270,9 @@ function register_func ( player, passwort, bday, bmon, byear, geschlecht, bcode,
             end
 
 			
-            vioSetElementData ( player, "money", 150000000 ) -- 15.000 vorher
+            vioSetElementData ( player, "money", ServerConfig["main"].startMoney.money )
+			vioSetElementData ( player, "bankmoney",  ServerConfig["main"].startMoney.bank)
+
             vioSetElementData ( player, "points", 0 )
             vioSetElementData ( player, "packages", "90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" )
             local Spawnpos_X = -1969.730
@@ -306,8 +308,7 @@ function register_func ( player, passwort, bday, bmon, byear, geschlecht, bcode,
             vioSetElementData ( player, "heaventime", 0 )
             vioSetElementData ( player, "housekey", 0 )
             vioSetElementData ( player, "bizkey", 0 )
-			print("Bonuscode;", bcode)
-			giveCodeReward(player, bcode, true)
+
             vioSetElementData ( player, "drugs", 0 )
             local Skinid = getRandomRegisterSkin ( player, geschlecht )
             vioSetElementData ( player, "skinid", Skinid )
@@ -439,12 +440,13 @@ function register_func ( player, passwort, bday, bmon, byear, geschlecht, bcode,
             setPlayerHudComponentVisible ( player, "all", false )
             insertPlayerIntoLoggedIn ( pname, getPlayerIP(player), getPlayerSerial(player) )
             giveAchievement( player, 1 )
+			giveCodeReward(player, bcode, true)
+			-- // Foren-Register
 			if string.len(email) > 0 then
                 if allowedEmailEnding[string.cut(email,"@")] and string.find(email,"@") then
 						registerUserInForum (player, email)
 					else
 						email = ""
-						
 					end
 				end
             

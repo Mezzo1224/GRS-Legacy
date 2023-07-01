@@ -142,7 +142,7 @@ end
 
 function serverstart ()
 
-	setGameType ( "GRS-Reallife" )
+	setGameType ( SharedConfig["main"].serverName )
 	setMapName ( "San Andreas" )
 	enableEventsAutomatically ()
 	lastadtime = 0
@@ -153,7 +153,6 @@ function serverstart ()
 	deleteAllFromLoggedIn ()
 	setTimer (intGameType, 1000, 1)
 	setTimer (intMaps, 1000, 1)
-
 end
 addEventHandler ( "onResourceStart", resourceRoot, serverstart )
 
@@ -170,8 +169,9 @@ function intMaps ()
 end
 
 function intGameType ()
-    if tonumber(globalXPBoost) > 1 then
-        setGameType ( SharedConfig["main"].serverName.." | "..SharedConfig["main"].version.." |"..ServerConfig["main"].globalXPBoost.."x EP" )
+	local xpMultiplier = SharedConfig["levelsystem"].globalMultiplier
+    if tonumber(xpMultiplier) > 1 then
+        setGameType ( SharedConfig["main"].serverName.." | "..SharedConfig["main"].version.." |"..xpMultiplier.."x EP" )
     else
         setGameType ( SharedConfig["main"].serverName.." Reallife | "..SharedConfig["main"].version )
     end

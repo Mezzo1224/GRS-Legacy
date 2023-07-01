@@ -9,7 +9,6 @@ function loadCooperations()
         local id =  tonumber ( result[i]["ID"] )
         if result[i]["isDisabled"] == 0 then
             
-
             local leaderUID =  tonumber ( result[i]["leaderUID"] )
             dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "userdata", "coopID", id, "coopRang", 4, "UID", leaderUID ) 
             local name =   result[i]["name"]

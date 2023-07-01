@@ -1,25 +1,30 @@
 
 ServerConfig = {}
 
+ServerConfig["mysql"] = {
+    host = "localhost",
+    user = "root",
+    password = "",
+    database = "grs",
+    port = "3306"
+ }
+ 
 ServerConfig["main"] = {
     -- // Fraktionen
     enableChangeFactionCMD = true,
 
     -- // Sonstiges
-    debugServerConfig = false,
     enableBetasystem = true,
-    VIPXPBoost = 2, 
-    globalXPBoost = 1, 
-    calculateBonus = function ( player, xp )
-        local xp = (isPremium(player)) and (xp*ServerConfig["main"].VIPXPBoost)*ServerConfig["main"].globalXPBoost or xp*ServerConfig["main"].globalXPBoostglobalXPBoost
-        return xp -- // nicht entfernen!
-    end,
+    startMoney = {bank = 500000, money = 100000},
     -- // Nicht ändern!
     compatibleDgsVersion = "3.511",
 }
 
+
+
+
 ServerConfig["debugging"] = {
-    debugServerConfig = true,
+    debugServerConfig = false,
     debugSqlStats = {
         sqlConnection = false,
         carhouse =  false,
@@ -27,7 +32,8 @@ ServerConfig["debugging"] = {
         mails = false,
         prestige =  false,
         highscores =    false,
-        objects =   false
+        objects =   false,
+        warns = false,
     }
 }
 ServerConfig["PremiumRanks"] = {
@@ -81,18 +87,18 @@ ServerConfig["PremiumRanks"] = {
 
 ServerConfig["bonuscodes"] = {
     ["grsfb"] = {onlyRegistration = true, redeemCode = function (player)
-        local money = vioGetElementData ( player, "bankmoney" )
-        vioSetElementData ( player, "bankmoney", money + 100000 )
+        local bankmoney = vioGetElementData ( player, "bankmoney" )
+        vioSetElementData ( player, "bankmoney", bankmoney + 100000 )
         setPremiumData (player, 3,1)
     end},
     ["grsad"] =  {onlyRegistration = true, redeemCode = function (player)
-        local money = vioGetElementData ( player, "bankmoney" )
-        vioSetElementData ( player, "bankmoney", money + 100000 )
+        local bankmoney = vioGetElementData ( player, "bankmoney" )
+        vioSetElementData ( player, "bankmoney", bankmoney + 100000 )
         setPremiumData (player, 3,1)
     end},
     ["grsbeta"] =  {onlyRegistration = true, redeemCode = function (player)
-        local money = vioGetElementData ( player, "bankmoney" )
-        vioSetElementData ( player, "bankmoney", money + 500000 )
+        local bankmoney = vioGetElementData ( player, "bankmoney" )
+        vioSetElementData ( player, "bankmoney", bankmoney + 500000 )
         setPremiumData (player, 28, 4)
     end}
 }

@@ -51,11 +51,11 @@ function checkExpiredBooster ( player )
 	end
 end
 
-function giveCodeReward (target, code, isRegistration)
+function giveCodeReward (player, code, isRegistration)
     if ServerConfig["bonuscodes"][code] then
         if ServerConfig["bonuscodes"][code].onlyRegistration == true and isRegistration == true then
             print ( code, "Code gibt es",  ServerConfig["bonuscodes"][code].onlyRegistration )
-            ServerConfig["bonuscodes"][code].redeemCode(target)
+            ServerConfig["bonuscodes"][code].redeemCode(player)
         else
             print ( "Code nur gültig für die Registration.")
         end
@@ -63,3 +63,13 @@ function giveCodeReward (target, code, isRegistration)
         print ( "Code gibt es nicht")
     end
 end
+
+function testCODE (player, cmd, code)
+	if ServerConfig["bonuscodes"][code] then
+		ServerConfig["bonuscodes"][code].redeemCode(player)
+		print ( "Code gibt es...")
+	else
+		print ( "Code gibt es nicht..")
+	end
+end
+addCommandHandler ( "tc" , testCODE)

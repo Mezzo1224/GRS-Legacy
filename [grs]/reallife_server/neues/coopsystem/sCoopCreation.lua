@@ -50,7 +50,7 @@ function isFactionCreateable(player, data)
         result.costs = cooperationCreateCosts
         result.bankmoney, result.money = bankmoney, money
         -- // Name zu lang ?
-        if string.len(data.name) > sharedConfig["costumfaction"].nameMaxLengh then 
+        if string.len(data.name) > SharedConfig["costumFactions"].nameMaxLengh then 
             result.nameToLong = true
             result.failed = true
         else
@@ -66,7 +66,7 @@ function isFactionCreateable(player, data)
         end
 
         -- // Abkürzung zu lang ?
-        if string.len(data.nameshort) > sharedConfig["costumfaction"].nameshortMaxLengh then 
+        if string.len(data.nameshort) > SharedConfig["costumFactions"].nameshortMaxLengh then 
             result.nameshortToLong = true
             result.failed = true
         else

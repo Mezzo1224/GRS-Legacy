@@ -1,6 +1,6 @@
 <meta>
-     <!-- Version nicht ändern, wird in Zukunft von nem Auto-Update System abgefragt! -->
-    <info author="Zipper" type="gamemode" name="Testserver" description="German Reallife" version="4" />
+     <!-- Version nicht ändern, falls gesetzt, wird diese vom Update-Checker abgefragt! -->
+    <info author="Zipper" type="gamemode" name="GRS-Reallife" description="German Reallife" version="4" />
     <oop>true</oop>
     <min_mta_version client="1.5.7-9.20157" />
     <download_priority_group>1</download_priority_group>

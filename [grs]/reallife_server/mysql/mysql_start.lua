@@ -1,8 +1,8 @@
-local gMysqlHost = "localhost"
+local gMysqlHost = ServerConfig["mysql"].host
 
-local gMysqlUser = "root"
-local gMysqlPass = ""
-local gMysqlDatabase = "grs"
+local gMysqlUser = ServerConfig["mysql"].user
+local gMysqlPass = ServerConfig["mysql"].password
+local gMysqlDatabase = ServerConfig["mysql"].database
 
 local hasACLrights = false -- // NICHT ÄNDERN
 local hasDGSrunning = false -- // NICHT ÄNDERN
@@ -28,7 +28,7 @@ end
 
 
 function MySQL_Startup ( ) 
-		handler = dbConnect ( "mysql", "dbname=".. gMysqlDatabase .. ";host="..gMysqlHost..";port=3306", gMysqlUser, gMysqlPass )
+		handler = dbConnect ( "mysql", "dbname=".. gMysqlDatabase .. ";host="..gMysqlHost..";port="..ServerConfig["mysql"].port.."", gMysqlUser, gMysqlPass )
 		if not handler then
 			outputDebugString("[MySQL_Startup] Couldn't run query: Unable to connect to the MySQL server!")
 			outputDebugString("[MySQL_Startup] Please shutdown the server and start the MySQL server!")
@@ -55,6 +55,14 @@ MySQL_Startup()
 
 
 function gamemodeReadyCheck (res)
+	if not ServerConfig["mysql"] then
+		print("Server-Config konnte nicht geladen werden. Überprüfe alle Einstellungen, selbst die kleinsten Fehler zerstören die Config.")
+		cancelEvent()
+	end
+	if not SharedConfig then
+		print("Shared-Config konnte nicht geladen werden. Überprüfe alle Einstellungen, selbst die kleinsten Fehler zerstören die Config.")
+		cancelEvent()
+	end
 	if enableStartDebug == true then
 		if not fileExists ( ":reallife_server/ready.txt" )  then
 			outputDebugString("---- STARTUP CHECK ----")
@@ -63,7 +71,7 @@ function gamemodeReadyCheck (res)
 			else
 				outputDebugString("Der Gamemode ist nicht in der ACL Gruppe Admin, bearbeite bitte die 'ACL.xml'.")
 				if not isObjectInACLGroup("resource.grs_cache", aclGetGroup("Admin")) then
-					outputDebugString("Vergiss nicht ´grs_cache´ auch Rechte zu geben.")
+					outputDebugString("´grs_cache´ hat keine Rechte. Füge sie auch hinzu.")
 				end
 				outputDebugString("Start abgebrochen.")
 			end

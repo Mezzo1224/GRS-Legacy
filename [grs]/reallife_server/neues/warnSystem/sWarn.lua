@@ -1,7 +1,9 @@
 
 -- // Checkt beim Serverstart ob Warns Expired sind, kann unter both_settings.lua ausgeschaltet werden
 function checkForExpiredWarns ()
-    print("[Warnsystem] Warns werden gecheckt...")
+    if ServerConfig["debugging"].debugSqlStats.warns == true then
+        print("[Warnsystem] Warns werden gecheckt...")
+    end
     local result = dbPoll ( dbQuery ( handler, "SELECT * FROM ?? WHERE ??=?", "warns", "isExpired", 0  ), -1 )
     for i=1, #result do
         local id = tonumber ( result[i]["ID"])

@@ -11,10 +11,10 @@ SharedConfig["main"] = {
    -- // Event
     enableAutomaticEvents = true,
     events = {
-      testEvent = {startDate = {16, 6}, endDate = {1, 9}, state = false, eventName = "Test-Event" }, --// 16 steht für den Tag und 6 für den Monat (hier 16.6), zu aktivieren state = true
-      halloween = {startDate = {1, 10}, endDate = {1, 11}, state = false, eventName = "Halloween-Event" },
-      chrismas =  {startDate = {1, 12}, endDate = {1, 1}, state = false, eventName = "Weihnachts-Event" },
-      easter =  {startDate = {1, 3}, endDate = {1, 4}, state = false, eventName = "Oster-Event" },
+      testEvent = {startDate = {16, 6}, endDate = {1, 9}, isRunning = false, eventName = "Test-Event" }, --// 16 steht für den Tag und 6 für den Monat (hier 16.6), zu aktivieren: isRunning = true
+      halloween = {startDate = {1, 10}, endDate = {1, 11}, isRunning = false, eventName = "Halloween-Event" },
+      chrismas =  {startDate = {1, 12}, endDate = {1, 1}, isRunning = false, eventName = "Weihnachts-Event" },
+      easter =  {startDate = {1, 3}, endDate = {1, 4}, isRunning = false, eventName = "Oster-Event" },
     }
 }
 
@@ -33,9 +33,45 @@ SharedConfig["network"] = {
     facebookURL = "LINK",
     instagramURL = "LINK",
 }
-SharedConfig["factionSettings"] = {
 
+SharedConfig["costumFactions"] = {
+   nameshortMaxLengh = 10,
+   nameMaxLengh = 10,
 }
+
+SharedConfig["levelsystem"] = { 
+   vipMultiplier = 2,
+   globalMultiplier = 1,
+   calculateBonus = function ( player, xp )
+       local xp = (isPremium(player)) and (xp*SharedConfig["levelsystem"].vipMultiplier)*SharedConfig["levelsystem"].globalMultiplier or xp*SharedConfig["levelsystem"].globalMultiplier
+       return xp 
+   end,
+   levels = {
+      [0] = 100,
+      [1] = 150, 
+      [2] = 250,
+      [3] = 300,
+      [4] = 350,
+      [5] = 500,
+      [6] = 550,
+      [7] = 700,
+      [8] = 850,
+      [9] = 900,
+      [10] = 1000,
+      [11] = 1050,
+      [12] = 1100,
+      [13] = 1150,
+      [14] = 1200,
+      [15] = 1250,
+      [16] = 1300,
+      [17] = 1400,
+      [18] = 1450,
+      [19] = 1500,
+      [20] = 2000
+   },
+   maxLevel = 20
+}
+
 --[[
 SharedConfig["factions"] = {
     [1] = {
@@ -155,5 +191,4 @@ SharedConfig["factions"] = {
 end
 --]]
 
-print("SHARED CONFIG GELADEN")
 

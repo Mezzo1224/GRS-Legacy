@@ -221,7 +221,7 @@ end
 
 
 function setPlayerPremiumCMD (player, cmd, target, time, package)
-    if isAdminLevel ( player, 8 ) then
+    if isAdminLevel ( player, 8 ) or getElementType ( player ) == "console"then
         local pName = getPlayerName(player)
         local target = getPlayerFromName(target)
         if target then

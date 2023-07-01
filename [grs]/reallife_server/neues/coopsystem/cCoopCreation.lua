@@ -74,9 +74,9 @@ end
 
 function checkName (name, isShort)
     if isShort then
-        lengh = sharedConfig["costumfaction"].nameshortMaxLengh
+        lengh = SharedConfig["costumFactions"].nameshortMaxLengh
     else
-        lengh = sharedConfig["costumfaction"].nameMaxLengh
+        lengh = SharedConfig["costumFactions"].nameMaxLengh
     end
     print("Checke Namen", name, isShort)
     if string.len(name) > 0 and string.len(name) <= lengh then

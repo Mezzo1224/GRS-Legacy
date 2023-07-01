@@ -381,7 +381,9 @@ function initTetrisHighscores ()
 		if result[1] then
 			mySQLBlocksCreate ( result )
 		else
-			outputServerLog ( "Es wurden keine Highscores" )
+			if ServerConfig["debugging"].debugSqlStats.highscores == true then
+				outputServerLog ( "Es wurden keine Highscores" )
+			end
 		end
 	else
 		outputDebugString ( "[initTetrisHighscores] Error executing the query" )

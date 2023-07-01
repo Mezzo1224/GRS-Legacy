@@ -5,7 +5,7 @@ function newBetaKey (player, cmd, prefix, secondPrefix)
     if not secondPrefix or tonumber(secondPrefix) > 1 then
         secondPrefix = 3
     end
-    if isAdminLevel(player, 7) then
+    if isAdminLevel(player, 7) or getElementType ( player ) == "console" then
         if prefix == "add" then
             local key1 = generateString ( 5 )
             local key2 = generateString ( 5 )
