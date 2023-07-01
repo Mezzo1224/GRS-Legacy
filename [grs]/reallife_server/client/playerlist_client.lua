@@ -33,6 +33,7 @@ local dxfont1_BEBAS = dxCreateFont(":reallife_server/fonts/BEBAS.ttf", 14)
 bindKey("tab","down",function()
 		getPlayersScoreboard ()
 		addEventHandler("onClientRender", root, drawScoreboard)
+		showChat(false)
 		refreshScoreboard()
 		if isTimer(updateTimer) then killTimer(updateTimer) end
 		updateTimer = setTimer(refreshScoreboard,500,0)
@@ -52,6 +53,7 @@ bindKey("tab","up",function()
 	toggleControl("next_weapon",true)
 	toggleControl("previous_weapon",true)
 	toggleControl("fire",true)
+	showChat(true)
 	di = 0
 	i = 0
 	alpha = 0
