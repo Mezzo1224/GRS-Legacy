@@ -1,0 +1,22 @@
+<meta>
+    <info author="Mezzo" version="1" name="GRS-Tests" description="Verschiedene Scripts, vorallem UIs. Diese Ressource wird benutzt, um mehrfache restarts bei testen von UIs zu vermeiden." type="script" />
+    <oop>true</oop>
+
+    <include resource="dgs" />
+
+    <script src="intDGS.lua" type="client" />
+    <script src="login/cLoginWindow.lua" type="client" />
+    <file src="login/key.png" />
+    <file src="login/login.png" />
+
+    <script src="register/cRegisterWindow.lua" type="client" />
+
+    <file src="infobox/info.png" />
+    <file src="infobox/warning.png" />
+    <file src="infobox/error.png" />
+    <file src="infobox/success.png" />
+    <script src="infobox/cInfobox.lua" type="client" />
+
+    <script src="greenzone/cGreenzone.lua" type="client" />
+    <file src="greenzone/prohibited.png" />
+</meta>

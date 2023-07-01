@@ -1,0 +1,5 @@
+dxDrawRectangle(2132, 286, 418, 52, tocolor(1, 0, 0, 120), false)
+        dxDrawRectangle(2132, 286, 10, 52, tocolor(26, 30, 216, 255), false)
+        dxDrawImage(2152, 296, 32, 32, ":grs_tests/infobox/info.png", 0, 0, 0, tocolor(255, 255, 255, 255), false)
+        dxDrawText("HINWEIS", 2194, 292, 2346, 310, tocolor(255, 255, 255, 255), 1.10, "default-bold", "left", "top", false, false, false, false, false)
+        dxDrawText("Du bist nicht befugt, du hund", 2195, 311, 2489, 328, tocolor(255, 255, 255, 255), 1.00, "default", "left", "top", false, false, false, false, false)

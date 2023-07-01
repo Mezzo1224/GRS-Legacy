@@ -1,0 +1,20 @@
+
+GUIEditor = {
+    checkbox = {},
+    edit = {},
+    button = {},
+    window = {},
+    label = {}
+}
+addEventHandler("onClientResourceStart", resourceRoot,
+    function()
+        GUIEditor.window[1] = guiCreateWindow(1115, 443, 331, 180, "", false)
+        guiWindowSetSizable(GUIEditor.window[1], false)
+
+        GUIEditor.edit[1] = guiCreateEdit(32, 26, 267, 30, "", false, GUIEditor.window[1])
+        GUIEditor.checkbox[1] = guiCreateCheckBox(31, 62, 268, 29, "Passwort speichern ?", false, false, GUIEditor.window[1])
+        GUIEditor.checkbox[2] = guiCreateCheckBox(32, 91, 268, 29, "Automatisch einloggen ?", true, false, GUIEditor.window[1])
+        GUIEditor.button[1] = guiCreateButton(97, 124, 138, 29, "Einloggen", false, GUIEditor.window[1])
+        GUIEditor.label[1] = guiCreateLabel(32, 153, 116, 17, "Passwort vergessen ?", false, GUIEditor.window[1])    
+    end
+)
