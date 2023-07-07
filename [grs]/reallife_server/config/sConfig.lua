@@ -21,6 +21,61 @@ ServerConfig["main"] = {
 }
 
 
+ServerConfig["admin"] = {
+
+    -- Adminränge
+    ["ranks"] = {
+        [1] = {
+            name = "Clanmember",
+            hexColor = "#9A2EFE",
+            permissions = {},
+            hasVIP = false,
+        },
+        [2] = {
+            name = "Ticketbeauftragter",
+            hexColor = "#01DFD7",
+            permissions = {},
+            hasVIP = false,
+        },
+        [3] = {
+            name = "Supporter",
+            hexColor = "#04B404",
+            permissions = {},
+            hasVIP = false,
+        },
+        [4] = {
+            name = "Moderator",
+            hexColor = "#0000FF",
+            permissions = {},
+            hasVIP = false,
+        },
+        [5] = {
+            name = "Administrator",
+            hexColor = "#FF8000",
+            permissions = {},
+            hasVIP = true,
+        },
+        [6] = {
+            name = "Administrator m.V.",
+            hexColor = "#B40404",
+            permissions = {},
+            hasVIP = true,
+        },
+        [7] = {
+            name = "Stellv. Projektleiter",
+            hexColor = "#B40404",
+            permissions = { ["isOwner"] = true },
+            hasVIP = true,
+        },
+        [8] = {
+            name = "Projektleiter",
+            hexColor = "#B40404",
+            permissions = { ["isOwner"] = true },
+            hasVIP = true,
+        },
+    },
+}
+
 
 
 ServerConfig["debugging"] = {
@@ -36,6 +91,7 @@ ServerConfig["debugging"] = {
         warns = false,
     }
 }
+
 ServerConfig["PremiumRanks"] = {
     [1] = {
         name = "#8A2908Bronze",

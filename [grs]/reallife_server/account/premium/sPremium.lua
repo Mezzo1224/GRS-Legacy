@@ -411,7 +411,6 @@ function giveFreePremiumCar ( player )
             --    outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
             --	outputChatBox ( getDate(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
             end
-            triggerClientEvent ( player, "showVehicleTokenInfo", getRootElement(), getDate(timesamp + (vipPackagePremCarGiveTime[paket])), removeHex(ServerConfig["PremiumRanks"][paket].name) )
         end
     end
 end

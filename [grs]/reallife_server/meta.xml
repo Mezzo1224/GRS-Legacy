@@ -629,8 +629,13 @@
     <script src="addict\server\use_server.lua" />
     
     <script src="admin\admincmds.lua" />
-     <script src="admin\adminpanel\cAdminpanel.lua" type="client" />
-      <script src="admin\adminpanel\sAdminpanel.lua" type="server" />
+    
+    <script src="admin\sAdmin.lua" />
+    <script src="admin\sAdminMisc.lua" />
+    <script src="admin\sAdminPlayer.lua" />
+
+    <script src="admin\adminpanel\cAdminpanel.lua" type="client" />
+    <script src="admin\adminpanel\sAdminpanel.lua" type="server" />
     <script src="admin\allround_log.lua" type="server" />
 
     
@@ -1224,17 +1229,16 @@
     <script src="race\race_client.lua" type="client" />
     <script src="race\race_server.lua" type="server" />
     
-    <script src="register_login\account.lua" />
-    <script src="register_login\camflight_client.lua" type="client" />
-    <script src="register_login\loggedin_mysql.lua" type="server" />
-    <script src="register_login\login_window.lua" type="client" />
-    <script src="register_login\register_login_server.lua" />
-    <script src="register_login\register_window.lua" type="client" />
-    <script src="register_login\sPremium.lua" />
-    <script src="register_login\cPremium.lua" type="client" />
-    <script src="register_login\serial_validator.lua" />
-    <script src="register_login\tutorial_client.lua" type="client" cache="false" />
-
+    <script src="account\sAccount.lua" />
+    <script src="account\sSerialValidator.lua" />
+    <script src="account\sLoggedinMysql.lua" type="server" />
+    <script src="account\login\loginUI.lua" type="client" />
+    <script src="account\register\sRegister.lua" />
+    <script src="account\register\cRegisterUI.lua" type="client" />
+    <script src="account\premium\sPremium.lua" />
+    <script src="account\premium\cPremium.lua" type="client" />
+    <script src="account\utility\cTutorial.lua" type="client" cache="false" />
+    <script src="account\utility\cCamflight.lua" type="client" />
 
     
     <!--- Buchstabe "S" -->

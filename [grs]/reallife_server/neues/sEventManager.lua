@@ -20,6 +20,7 @@ function enableEventsAutomatically ()
             v.isRunning = true
             print("Das "..v.eventName.." ("..k..") wurde aktiviert.", v.isRunning)
             print("Es läuft vom "..v.startDate[1].."."..v.startDate[2].." bis zum  "..v.endDate[1].."."..v.endDate[2])
+            break;
         end
     end
  end

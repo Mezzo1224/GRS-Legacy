@@ -25,6 +25,7 @@ adminLevels = {
 	[7] = "#FF0000Stellv. Projektleiter",
 	[8] = "#FF0000Projektleiter",
 }
+
 donatorMute = {}
 local adminmarks = {}
 
@@ -231,17 +232,6 @@ function rebind_func ( player )
 	outputChatBox ( "Hotkeys wurden neu gelegt!", player, 0, 125, 0 )
 end
 
-
-function adminlist ( player )
-
-	outputChatBox ( "Momentan online:", player, 0, 100, 255 )
-	
-	for key, index in pairs(adminsIngame) do
-	
-
-			outputChatBox ( getPlayerName(key).." | "..adminLevels[index], player, 255, 255, 255,true )
-	end
-end
 
 
 function check_func ( admin, cmd, target )
@@ -1750,7 +1740,6 @@ addCommandHandler ( "move", move_func )
 addCommandHandler ( "pwchange", pwchange_func )
 addCommandHandler ( "shut", shut_func )
 addCommandHandler ( "rebind", rebind_func )
-addCommandHandler ( "admins", adminlist )
 addCommandHandler ( "rcheck", check_func )
 addCommandHandler ( "mark", mark_func )
 addCommandHandler ( "gotomark", gotomark_func )
@@ -2129,3 +2118,37 @@ function getPosition ( player )
 end
 addCommandHandler ( "getpos", getPosition )
 addCommandHandler ( "gp", getPosition )
+
+function admin_telenr_andern ( player, cmd, target, amount )
+	local target = findPlayerByName ( target )
+	if vioGetElementData ( player, "adminlvl" ) >= 6 then
+	    if target then
+		    if amount then
+			    vioSetElementData ( target, "telenr", amount )
+			    outputChatBox( "Du hast die Handynummer von "..getPlayerName(target).." zu "..amount.." geaendert.", player, 0, 155, 155 )
+			    outputChatBox( "Ein Admin hat deine Handynummer zu "..amount.." geaendert", target, 0, 155, 155 )
+		    end
+		else
+		    outputChatBox( "Der Spieler ist nicht Online", player, 255, 0, 0 )
+		end
+	end
+end
+
+function admin_socialState_andern ( player, cmd, target, ... )
+	local target = findPlayerByName ( target )
+	local socialState = {...}
+    socialState = table.concat( socialState, " " )
+	if vioGetElementData ( player, "adminlvl" ) >= 6 then
+	    if target then
+		    if socialState then
+			    vioSetElementData ( target, "socialState", socialState )
+				outputChatBox( "Du hast den Status von "..getPlayerName(target).." zu "..socialState.." geaendert.", player, 0, 155, 155 )
+				outputChatBox( "Ein Admin hat dir deinen Status zu "..socialState.." geaendert.", target, 0, 155, 155 )
+			end
+		else
+		    outputChatBox( "Der Spieler ist nicht Online!", player, 255, 0, 0 )
+		end
+	end
+end
+addCommandHandler( "telenr", admin_telenr_andern )
+addCommandHandler( "sstate", admin_socialState_andern )
