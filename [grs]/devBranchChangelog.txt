@@ -6,7 +6,7 @@ Alle Dinge die mit TODO markiert sind, müssen noch getan werden.
 - Die Nutzung von Administrationsfunktionen erfordert nun nicht mehr nur Level, sondern Rechte "Permissions", um
 bestimmte Befehle auszuführen
 - "/adminlevel" überarbeitet, um Adminlevel zu setzen
-- "/setpremium" überarbeitet, unterstützt nun Zeitpräfixe, Beispiel: "/setpremium Mezzo 30d 5" - gibt Mezzo Paket 5 oder "Titan" für 30 Tage
+- "/setpremium" überarbeitet, unterstützt nun Zeitpräfixe, Beispiel: "/setpremium Mezzo 30d 5" - gibt Mezzo Stufe 5 oder "Titan" für 30 Tage
 -- Dabei steht "d" für Tage, "w" für Wochen und "m" für Monate.
 - Die Datei "admincmds.lua" wurde entfernt und zur besseren Übersicht in mehrere Dateien aufgeteilt.
 
