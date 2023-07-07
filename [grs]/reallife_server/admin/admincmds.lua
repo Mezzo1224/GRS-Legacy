@@ -2023,8 +2023,8 @@ function setPlayerAdminLevelCMD (player, cmd, target, newLevel)
 					local tName = getPlayerName(target)
 					if getAdminLevel ( player ) >= getAdminLevel ( target ) or hasAdminGroup then
 						sendMsgToAdmins (pName.." hat den Teamrang von "..tName.." auf "..adminLevels[newLevel].."#63B8FF ("..newLevel..") gesetzt.")
-						newInfobox (player, "Du hast den Teamrang von "..tName.." auf "..newLevel.." gesetzt.", 4)
-						newInfobox (target, "Du hast den Teamrang "..newLevel.." von "..pName.." gesetzt bekommen.", 4)
+						infobox (player, "Du hast den Teamrang von "..tName.." auf "..newLevel.." gesetzt.", "success", 15)
+						infobox (target, "Du hast den Teamrang "..newLevel.." von "..pName.." gesetzt bekommen.", "info", 15)
 						vioSetElementData(target, "adminlvl", newLevel)
 						dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel", newLevel, "UID", playerUID[target] )
 						if newLevel == 0 then
@@ -2033,7 +2033,7 @@ function setPlayerAdminLevelCMD (player, cmd, target, newLevel)
 							adminsIngame[target] = newLevel
 						end
 					else
-						newInfobox (player, tName.." hat ein höheres Adminlevel als du.", 3)
+						infobox (player, tName.." hat ein höheres Adminlevel als du.", "error", 15)
 					end
 					
 				else -- // Offline
@@ -2043,22 +2043,22 @@ function setPlayerAdminLevelCMD (player, cmd, target, newLevel)
 						if tAdminlevel <=  getAdminLevel ( player ) or hasAdminGroup then
 							sendMsgToAdmins (pName.." hat den Teamrang von "..target.." auf "..adminLevels[newLevel].."#63B8FF ("..newLevel..") gesetzt.")
 							dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Adminlevel", newLevel, "UID", playerUID[target] )
-							newInfobox (player, "Du hast den Rang von "..target.." auf "..newLevel.." gesetzt.", 4)
+							infobox (player, "Du hast den Rang von "..target.." auf "..newLevel.." gesetzt.", "error", 15)
 						else
-							newInfobox (player, target.." hat ein höheres Adminlevel als du.", 3)
+							infobox (player, target.." hat ein höheres Adminlevel als du.", "error", 15)
 						end
 					else
-						newInfobox (player, "Dieser Spieler existiert nicht.", 3)
+						infobox (player, "Dieser Spieler existiert nicht.", "error", 15)
 					end
 				end
 			else
-				newInfobox (player, "Ungültiges Adminlevel.", 3)
+				infobox (player, "Ungültiges Adminlevel.", "error", 15)
 			end
 		else
-			newInfobox (player, "Du musst einen Spieler angeben.\n/adminlevel [NAME] [LEVEL]", 3)
+			infobox (player, "Du musst einen Spieler angeben.\n/adminlevel [NAME] [LEVEL]", "error", 15)
 		end
 	else
-		newInfobox (player, "Du bist nicht befugt.", 3)
+		infobox (player, "Du bist nicht befugt.", "error", 15)
 	end
 end
 addCommandHandler ( "adminlevel", setPlayerAdminLevelCMD )

@@ -112,11 +112,6 @@ function oneTabClose ()
 	DGS:dgsWindowSetCloseButtonEnabled(selfMenu, true)
 end
 
-function debugSelf()
-	DGS:dgsCloseWindow(self)
-end
-addCommandHandler("ds", debugSelf)
-
 function showInfoWindow ()
     if oneTabIsOpen == false then
 		infoWindow = DGS:dgsCreateWindow(0.38, 0.12, 0.24, 0.33, "", true)
@@ -300,7 +295,7 @@ function showSettingsWindow ()
 		local settingsList = DGS:dgsCreateGridList(0.02, 0.06, 0.30, 0.86, true, settingsWindow, 0.04)
 		DGS:dgsSetProperty(settingsList,"rowHeight",25)
 		local column = DGS:dgsGridListAddColumn( settingsList, "", 0.98 )
-		local settingsListTable = { [1] = "Einstellungen", [2] = "Kontoverwaltung", [3] = "Spawnauswahl", [4] = "Sozialer-Status"}
+		local settingsListTable = { [1] = "Einstellungen", [2] = "Kontoverwaltung", [3] = "Spawnauswahl", [4] = "Sozialer-Status", [5] = "VIP-Funktionen"}
 		for var, option in ipairs(settingsListTable) do
 			local row = DGS:dgsGridListAddRow ( settingsList )
             DGS:dgsGridListSetItemText ( settingsList, row, column, option , false )

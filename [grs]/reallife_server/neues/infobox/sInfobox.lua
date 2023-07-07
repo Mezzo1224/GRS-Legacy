@@ -1,13 +1,9 @@
-function newInfobox (player, msg, type, r, g, b, alpha, showTimeInSec, ownTypeText, tr, tg, tb)
-    if not r then
-        r = 255
-    end
-    if not g then
-        g = 255
-    end
-    if not b then
-        b = 255
-    end
-    triggerClientEvent ( player, "newInfobox", getRootElement(), msg, type, r, g, b, alpha, showTimeInSec, ownTypeText, tr, tg, tb )
+
+function newInfobox (player, text, ...)
+    triggerClientEvent ( player, "infobox", getRootElement(), text, "info", 15)
 end
 
+
+function infobox (player, text, type, time)
+    triggerClientEvent ( player, "infobox", getRootElement(), text, type, 15)
+end

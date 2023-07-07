@@ -5,7 +5,7 @@
 
 function infob ( player )
 
-    infobox ( player, "Tippe /tutorial um\ndas Tutorial zu starten.\nDies dauert bis zu 3 Minuten ! ", 5000, 200, 200, 0 )
+    infobox ( player, "Starte das 3 Minuten Tutorial mit /tutorial", 5000, 200, 200, 0 )
 end
 addEventHandler ( "onPickupHit", infobh , infob )
 

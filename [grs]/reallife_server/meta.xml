@@ -629,7 +629,6 @@
     <script src="addict\server\use_server.lua" />
     
     <script src="admin\admincmds.lua" />
-    <!-- <script src="admin\warns_server.lua" type="server" />-->
      <script src="admin\adminpanel\cAdminpanel.lua" type="client" />
       <script src="admin\adminpanel\sAdminpanel.lua" type="server" />
     <script src="admin\allround_log.lua" type="server" />
@@ -641,7 +640,6 @@
     <script src="anticheat\shield_server.lua" />
     <export function="banVioShieldPlayer" type="server" />
     <script src="anzeigen\hud.lua" type="client" />
-    <script src="anzeigen\infobox.lua" type="client" />
     <script src="anzeigen\newsbox.lua" />
     <script src="anzeigen\marker_client.lua" type="client" />
     <script src="anzeigen\marker_server.lua" type="server" />
@@ -1232,7 +1230,8 @@
     <script src="register_login\login_window.lua" type="client" />
     <script src="register_login\register_login_server.lua" />
     <script src="register_login\register_window.lua" type="client" />
-    <script src="register_login\premium.lua" />
+    <script src="register_login\sPremium.lua" />
+    <script src="register_login\cPremium.lua" type="client" />
     <script src="register_login\serial_validator.lua" />
     <script src="register_login\tutorial_client.lua" type="client" cache="false" />
 
@@ -1444,7 +1443,13 @@
     <file src="fonts/DSDIGI.ttf"   />
 
     <file src="htmlTest.html"/>
-
+     <file src="images/premium/vehicle.png"   />
+    <!-- Infobox-->
+    <file src="images/infobox/error.png"   />
+    <file src="images/infobox/info.png"   />
+    <file src="images/infobox/success.png"   />
+    <file src="images/infobox/warning.png"/>
+    <file src="images/infobox/prohibited.png"/>
     <!-- Hud-->
     <file src="fonts/arial.ttf"   />
     <file src="images/hud/weptest.png"   />

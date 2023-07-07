@@ -41,12 +41,40 @@ function createTutorialBubble ( x, y, z, text, maxTime, r, g, b, range )
 	)
 end
 
-createTutorialBubble ( -1980.5427246094, 145.16845703125, 27.32200050354, "An einem Automaten\nkannst du dein\nGeld von der Bank\nabheben. Druecke\ndazu ALT-GR ( neben\nder Leertaste )\nund klicke ihn an.", 5, 200, 200, 0 )
-createTutorialBubble ( -2765.4018554688, 372.29138183594, 5.9826860427856, "An einem Automaten\nkannst du dein\nGeld von der Bank\nabheben. Druecke\ndazu ALT-GR ( neben\nder Leertaste )\nund klicke ihn an.", 5, 200, 200, 0 )
-createTutorialBubble ( -2456.9841308594, 783.24542236328, 34.81477355957, "An einem Automaten\nkannst du dein\nGeld von der Bank\nabheben. Druecke\ndazu ALT-GR ( neben\nder Leertaste )\nund klicke ihn an.", 5, 200, 200, 0 )
+function createTutorialText (x, y, z, head, msg )
+	local titel = DGS:dgsCreate3DText(x, y, z+0.3, head)
+	DGS:dgsSetProperty(titel,"color",tocolor(66, 135, 245, 255))
+	DGS:dgsSetProperty(titel,"textSize",{0.6, 0.6})
+	DGS:dgsSetProperty(titel,"fadeDistance",3)
+	DGS:dgsSetProperty(titel,"canBeBlocked", true)
+	DGS:dgsSetProperty(titel,"maxDistance",13)
+	DGS:dgsSetProperty(titel,"alignment",{"center","center"})
 
-createTutorialBubble ( -2633.6958007813, 211.23025512695, 3.4143309593201, "\nIn diesen Kisten\nkannst du Waffen\nLagern, klicke sie\ndazu mittels ALT-GR\n( neben der Leertaste ) an.", 5, 200, 200, 0 )
-createTutorialBubble ( -2172.8569335938, 710.32220458984, 52.89062, "\nIn diesen Kisten\nkannst du Waffen\nLagern, klicke sie\ndazu mittels ALT-GR\n( neben der Leertaste ) an.", 5, 200, 200, 0 )
-createTutorialBubble ( -700.05700683594, 943.8525390625, 11.3368101, "\nIn diesen Kisten\nkannst du Waffen\nLagern, klicke sie\ndazu mittels ALT-GR\n( neben der Leertaste ) an.", 5, 200, 200, 0 )
-createTutorialBubble ( -1970.5015869141, -1585.2413330078, 86.7981414794, "\nIn diesen Kisten\nkannst du Waffen\nLagern, klicke sie\ndazu mittels ALT-GR\n( neben der Leertaste ) an.", 5, 200, 200, 0 )
-createTutorialBubble ( -767.6689453125, 2419.4206542969, 156.05166625977, "\nIn diesen Kisten\nkannst du Waffen\nLagern, klicke sie\ndazu mittels ALT-GR\n( neben der Leertaste ) an.", 5, 200, 200, 0 )
+	local text = DGS:dgsCreate3DText(x, y, z, msg)
+	DGS:dgsSetProperty(text,"textSize",{0.5, 0.5})
+	DGS:dgsSetProperty(text,"fadeDistance",3)
+	DGS:dgsSetProperty(text,"canBeBlocked", true)
+	DGS:dgsSetProperty(text,"maxDistance",13)
+	DGS:dgsSetProperty(text,"alignment",{"center","center"})
+end
+-- // Automatisieren für Bankautomaten 
+setTimer ( function()
+	if getElementData ( lp, "playingtime" ) <= 6000 then -- todo zu 60
+		local objects = getElementsByType("object")
+		for i, object in pairs(objects) do
+			local model = getElementModel(object)
+			if model == 2942 then
+				local x, y, z = getElementPosition(object)
+				createTutorialText (x, y, z+2, "Bankautomaten", "Drücke M und klicke auf den Geldautomaten, um mit ihm zu interagieren.\nEr erlaubt es dir Geld abzuheben, zu überweisen oder deine Zahlungen zu verfolgen." )
+			end
+		end
+	end
+end, 5000, 1 )
+
+createTutorialText (-1935.7763671875, 236.38671875, 35.3125, "Tuning","Nitro oder größerer Kofferraum Gefällig ?\nBei einem Tuningshop kannst du dein Fahrzeug modifizieren." )
+
+createTutorialBubble ( -2633.6958007813, 211.23025512695, 3.4143309593201, "In der Kisten kannst du Waffen lagern, drücke M und klicken auf sie.", 5, 200, 200, 0 )
+createTutorialBubble ( -2172.8569335938, 710.32220458984, 52.89062, "In der Kisten kannst du Waffen lagern, drücke M und klicken auf sie.", 5, 200, 200, 0 )
+createTutorialBubble ( -700.05700683594, 943.8525390625, 11.3368101, "In der Kisten kannst du Waffen lagern, drücke M und klicken auf sie.", 5, 200, 200, 0 )
+createTutorialBubble ( -1970.5015869141, -1585.2413330078, 86.7981414794, "In der Kisten kannst du Waffen lagern, drücke M und klicken auf sie.", 5, 200, 200, 0 )
+createTutorialBubble ( -767.6689453125, 2419.4206542969, 156.05166625977, "In der Kisten kannst du Waffen lagern, drücke M und klicken auf sie.", 5, 200, 200, 0 )

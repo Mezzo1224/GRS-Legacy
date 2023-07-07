@@ -67,28 +67,21 @@ addEventHandler ( "onClientPlayerVehicleExit", localPlayer, function ( )
 end )
 
 function drawWarn ()
-	if 	hud == "on" then
-		dxDrawLine(2129*sx, 377*sy, 2129*sx, 426*sy, tocolor(0, 0, 0, 255), 1, false)
-		dxDrawLine(2550*sx, 377*sy, 2129*sx, 377*sy, tocolor(0, 0, 0, 255), 1, false)
-		dxDrawLine(2129*sx, 426*sy, 2550*sx, 426*sy, tocolor(0, 0, 0, 255), 1, false)
-		dxDrawLine(2550*sx, 426*sy, 2550*sx, 377*sy, tocolor(0, 0, 0, 255), 1, false)
-		dxDrawRectangle(2130*sx, 378*sy, 420*sx, 48*sy, tocolor(255, 0, 0, 109), false)
-		dxDrawText("Du befindest dich in einer NO-DM Zone, jegliche Form von Deathmatch\n                                                     ist untersagt.", 2140*sx, 384*sy, 2488*sx, 416*sy, tocolor(255, 255, 255, 255), FrontSize, "default-bold", "left", "top", false, false, false, false, false)
-	else
-		dxDrawLine(2129*sx, 18*sy, 2129*sx, 67*sy, tocolor(0, 0, 0, 255), 1, false)
-        dxDrawLine(2550*sx, 18*sy, 2129*sx, 18*sy, tocolor(0, 0, 0, 255), 1, false)
-        dxDrawLine(2129*sx, 67*sy, 2550*sx, 67*sy, tocolor(0, 0, 0, 255), 1, false)
-        dxDrawLine(2550*sx, 67*sy, 2550*sx, 18*sy, tocolor(0, 0, 0, 255), 1, false)
-        dxDrawRectangle(2130*sx, 19, 420*sx, 48*sy, tocolor(255, 0, 0, 109), false)
-        dxDrawText("Du befindest dich in einer NO-DM Zonem, jegliche Form von Deathmatch\n                                                     ist untersagt.", 2140*sx, 25*sy, 2488*sx, 57*sy, tocolor(255, 255, 255, 255), FrontSize, "default-bold", "left", "top", false, false, false, false, false)
-	end
+	if hud == "off" then
+        paddingY = -280
+    else
+        paddingY = 0
+    end
+    dxDrawRectangle(2131, 283 + paddingY, 419, 61, tocolor(123, 0, 0, 228), false)
+    dxDrawText("Du befindest dich in einer Greenzone.\nDeathmatch ist absolut untersagt.", 2224, 293 + paddingY, 2494, 328, tocolor(255, 255, 255, 255), 1.20, "default-bold", "left", "top", false, false, false, false, false)
+    dxDrawImage(2141, 283 + paddingY, 73, 59, "images/infobox/prohibited.png", 0, 0, 0, tocolor(255, 255, 255, 255), false)
 end
 
 function renderWarn(value)
 	if value == true then
-		if getSetting (23) == 1 then
+	--	if getSetting (23) == 1 then
 			addEventHandler ( "onClientRender", root, drawWarn )
-		end
+	--	end
 		inNoDMZone = true
 	else
 		removeEventHandler ( "onClientRender", root, drawWarn )

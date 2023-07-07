@@ -249,7 +249,7 @@ function setPlayerPremiumCMD (player, cmd, target, time, package)
         newInfobox (player, "Du bist nicht befugt.", 3)
     end
 end
-addCommandHandler("setp", setPlayerPremiumCMD )
+addCommandHandler("setpremium", setPlayerPremiumCMD )
 
 function setPlayerPremium (player, time, package, fromAdmin)
     if getPlayerName(player) then
@@ -403,13 +403,15 @@ function giveFreePremiumCar ( player )
             if vioGetElementData ( player, "lastPremCarGive" ) < timesamp then
                 vioSetElementData ( player, "PremiumCars", vioGetElementData ( player, "PremiumCars" ) + 1 )
                 vioSetElementData ( player, "lastPremCarGive", timesamp + (vipPackagePremCarGiveTime[paket]) )
-                outputChatBox ( "Aufgrund deines Premium Paketes hast du ein gratis Premium Fahrzeug erhalten.", player, 0, 125, 0 )
-                outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
+          --      outputChatBox ( "Aufgrund deines Premium Paketes hast du ein gratis Premium Fahrzeug erhalten.", player, 0, 125, 0 )
+           --     outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
                 outputChatBox ( getDate(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
+                triggerClientEvent ( player, "showVehicleTokenInfo", getRootElement(), getDate(timesamp + (vipPackagePremCarGiveTime[paket])), "Titan" )
             else
             --    outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
             --	outputChatBox ( getDate(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
             end
+            triggerClientEvent ( player, "showVehicleTokenInfo", getRootElement(), getDate(timesamp + (vipPackagePremCarGiveTime[paket])), removeHex(ServerConfig["PremiumRanks"][paket].name) )
         end
     end
 end
