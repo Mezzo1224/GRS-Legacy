@@ -29,8 +29,19 @@ addCommandHandler("bpa",buyBetaPackage)
 
 -- // Ende des testens
 
+
+function showMyPermissions (player)
+    local pLevel = vioGetElementData ( player, "adminlvl" ) 
+    outputChatBox("Du hast folgende Rechte:" )
+    for index, v in pairs(ServerConfig["admin"]["ranks"][pLevel].permissions) do
+        print(index, v)
+        local hasPerm = (v == true) and "Erlaubt." or "Nicht erlaubt."
+        outputChatBox(index.." : "..hasPerm )
+    end
+end
+addCommandHandler("smp",showMyPermissions )
 function hasPermission ( player, permission )
-    local pLevel = vioGetElementData ( player, "adminlvl" )
+    local pLevel = vioGetElementData ( player, "adminlvl" )   
     if pLevel > 0 and permission then
         local permissionTable = ServerConfig["admin"]["ranks"][pLevel].permissions
         local isOwner = permissionTable["isOwner"]
@@ -48,9 +59,19 @@ function hasPermission ( player, permission )
     end
 end
 
-
-function tPermission (player)
-    print ( hasPermission(player, "isOwner") )
-
+local function copyPermissionTable(source, rank)
+    print(source, rank, "Transfer started")
+    for key, value in pairs(source) do
+        print(key, value, "Erfolgreich kopiert zum rang", rank)
+        ServerConfig["admin"]["ranks"][rank].permissions[key] = value
+    end
+    return destination
 end
-addCommandHandler("tpp",tPermission )
+
+if ServerConfig["admin"].hasPermissionsFromPrevRanks == true then
+    for index, v in ipairs(ServerConfig["admin"]["ranks"]) do
+        if index < 6 then
+            copyPermissionTable(ServerConfig["admin"]["ranks"][index].permissions, index+1)
+        end
+    end
+end

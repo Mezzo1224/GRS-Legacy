@@ -1,4 +1,6 @@
-﻿vipPackageName= {
+﻿-- // TODO Auf neue Config anpassen
+
+vipPackageName= {
     [1] = "#8A2908Bronze",
     [2] = "#A4A4A4Silber",
     [3] = "#AEB404Gold",
@@ -76,6 +78,7 @@ local timesamp = rt.timestamp
 function isPremium ( player )
     return  vioGetElementData ( player, "premium" )
 end
+
 function checkPremium ( player )
     local PremiumData = vioGetElementData ( player, "PremiumData" )
     local paket = vioGetElementData ( player, "Paket" )
@@ -100,11 +103,18 @@ function checkPremium ( player )
             vioSetElementData ( player, "premium", false )
         end
     else
-        outputChatBox("Premium-Status: Nicht Aktiv.", player, 125, 0, 0)
-        dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "userdata", "PremiumPaket", 0, "PremiumData", 0,  "UID", playerUID[pname] )
-        vioSetElementData ( player, "PremiumData", 0 )
-        vioSetElementData ( player, "Paket", 0 )
-        vioSetElementData ( player, "premium", false )
+        local pLevel = vioGetElementData ( player, "adminlvl" ) 
+        if ServerConfig["admin"]["ranks"][pLevel].hasVIP == true then
+            outputChatBox("Premium-Status: Durch deinen Rang als "..getAdminlvlName (pLevel, false).." aktiv.", player, 0, 125, 0)
+            vioSetElementData ( player, "Paket", 5 )
+            vioSetElementData ( player, "premium", true )
+        else
+            outputChatBox("Premium-Status: Nicht Aktiv.", player, 125, 0, 0)
+            dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "userdata", "PremiumPaket", 0, "PremiumData", 0,  "UID", playerUID[pname] )
+            vioSetElementData ( player, "PremiumData", 0 )
+            vioSetElementData ( player, "Paket", 0 )
+            vioSetElementData ( player, "premium", false )
+        end
     end
 end
 
@@ -116,7 +126,7 @@ function showPremiumFunctions (player, cmd, specLevel)
         end
         if tonumber ( specLevel ) > 0 then
             paket = tonumber ( specLevel )
-        end
+        end 
         outputChatBox ( "Features von Stufe: "..vipPackageName[paket], player, 0, 125, 0,true )
         outputChatBox("/status [STATUS] - Ändert deinen Status - Alle "..math.floor(vipPackageSocialTime[paket]/86400).." Tag(e) möglich.", player, 0, 125, 0)
         outputChatBox("/tele [NUMMER] - Ändert deine Nummer - Alle "..math.floor(vipPackageTeleTime[paket]/86400).." Tag(e) möglich.", player, 0, 125, 0)
@@ -139,7 +149,6 @@ end
 addCommandHandler("phelp", showPremiumFunctions )
 
 
--- TO.DO: System verbessern.
 function setPremiumData (player, tage, package)
     local pname = getPlayerName(player)
     local PremiumData = tonumber(vioGetElementData ( player, "PremiumData" ))
@@ -389,7 +398,7 @@ function changeCar ( player, cmd, slot, id)
             outputChatBox("Du darfst dir kein "..getVehicleNameFromModel(id).." geben." , player, 255, 155, 0 )
         end
     else
-        outputChatBox("Du kannst momentan keine Premium Fahrzeuge setzen." , player, 255, 155, 0 )
+        outputChatBox("Du hast keinen Fahrzeug-Token." , player, 255, 155, 0 )
     end
 end
 addCommandHandler("pcar", changeCar )
@@ -403,13 +412,9 @@ function giveFreePremiumCar ( player )
             if vioGetElementData ( player, "lastPremCarGive" ) < timesamp then
                 vioSetElementData ( player, "PremiumCars", vioGetElementData ( player, "PremiumCars" ) + 1 )
                 vioSetElementData ( player, "lastPremCarGive", timesamp + (vipPackagePremCarGiveTime[paket]) )
-          --      outputChatBox ( "Aufgrund deines Premium Paketes hast du ein gratis Premium Fahrzeug erhalten.", player, 0, 125, 0 )
-           --     outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
+
                 outputChatBox ( getDate(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
                 triggerClientEvent ( player, "showVehicleTokenInfo", getRootElement(), getDate(timesamp + (vipPackagePremCarGiveTime[paket])), "Titan" )
-            else
-            --    outputChatBox ( "Das nächste Premium Fahrzeug bekommst du, wenn dein Premium aktiv ist, am ", player, 0, 125, 0 )
-            --	outputChatBox ( getDate(timesamp + (vipPackagePremCarGiveTime[paket])), player, 0, 125, 0 )
             end
         end
     end

@@ -120,7 +120,7 @@ end
 
 function nickchange_func ( player, cmd, alterName, neuerName )
 	if alterName and neuerName then
-		if isAdminLevel ( player, 6 ) then
+		if hasPermission ( player, "canChangeNickname" ) then
 			if not getPlayerName ( alterName ) then	
 				if playerUID[alterName] then
 					local UID = playerUID[alterName]
@@ -153,7 +153,7 @@ end
 function move_func ( player, cmd, direction )
 	if direction then
 		if ( not client or client == player ) then
-			if isAdminLevel ( player, 2 ) then
+			if hasPermission ( player, "canTeleport" ) then
 				local veh = getPedOccupiedVehicle ( player )
 				local element = player		
 				if isElement ( veh ) then			
@@ -187,7 +187,7 @@ end
 
 function moveVehicleAway_func ( veh )
 	if veh and getElementType (veh) == "vehicle" then 
-		if isAdminLevel ( client, 2 ) then
+		if hasPermission ( player, "canTeleport" ) then
 			setElementPosition ( veh, 999999, 999999, 999999 )
 			setElementInterior ( veh, 999999 )
 			setElementDimension ( veh, 999999 )	
@@ -197,7 +197,7 @@ end
 
 
 function pwchange_func ( player, cmd, target, newPW )
-	if getElementType ( player ) == "console" or isAdminLevel ( player, 4 ) then 
+	if getElementType ( player ) == "console" or hasPermission ( player, "canChangePassword" ) then
 		if newPW and target then	
 			dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "players", "Passwort", hash("sha512", hash( "sha512", newPW)), "UID", playerUID[target] )
 			outputChatBox ( "Passwort geändert!", player, 0, 125, 0 )		
@@ -212,7 +212,7 @@ end
 
 
 function shut_func ( player )
-	if isAdminLevel ( player, 6 ) then
+	if isAdminLevel ( player, 2 ) then
 		outputAdminLog ( getPlayerName ( player ).." hat die Notabschaltung benutzt." )
 		shutdown ( "Abgeschaltet von: "..getPlayerName ( player ) )	
 		setServerPassword ( "sdfsadgsdahsa" )
@@ -235,7 +235,7 @@ end
 
 
 function check_func ( admin, cmd, target )
-	if isAdminLevel ( admin, 2 ) then
+	if hasPermission ( player, "checkUser" ) then
 		if target then
 			local player = findPlayerByName( target )
 			if player then
@@ -282,7 +282,7 @@ end
 
 
 function mark_func ( player, cmd, count )
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "canTeleport" ) then
 		if not count or tonumber(count) == nil then
 			count = 1		
 		end
@@ -304,7 +304,7 @@ end
 
 
 function gotomark_func ( player, cmd, count )
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "canTeleport" ) then
 		if not count or tonumber(count) == nil then	
 			count = 1			
 		end	
@@ -347,7 +347,7 @@ function respawn_func ( player, cmd, respawn )
 	local bool = false
 	local boole = false
 	if respawn then
-		if player == "none" or ( isElement ( player ) ) and isAdminLevel ( player, 2 ) then
+		if player == "none" or ( isElement ( player ) ) and hasPermission ( player, "respawnVehicles" ) then
 			if respawn == "fishing" then
 				for i = 1, 9 do
 					if not getVehicleOccupant ( fishReefer[i] ) then
@@ -415,7 +415,7 @@ end
 
 
 function tunecar_func ( player, cmd, part )
-	if isAdminLevel ( player, 6 ) then
+	if hasPermission ( player, "tuneCar" ) then
 		if part and tonumber ( part ) then
 			succes = addVehicleUpgrade ( getPedOccupiedVehicle(player), tonumber ( part ) )	
 			outputAdminLog ( getPlayerName ( player ).." hat ein Auto upgegradet!" )
@@ -444,7 +444,7 @@ end
 
 function freeze_func ( player, cmd, target )
 	local fix
-	if gisAdminLevel ( player, 6 ) then
+	if hasPermission ( player, "canFreeze" ) then
 		if target then
 			target = findPlayerByName( target )
 			if target then
@@ -505,7 +505,7 @@ end
 
 
 function intdim ( player, cmd, target, int, dim )
-	if isAdminLevel ( player, 4 ) then
+	if hasPermission ( player, "canTeleport" ) then
 		if target then
 			local target = findPlayerByName( target )	
 			if not isElement(target) then
@@ -576,7 +576,7 @@ end
 
 
 function gmx_func ( player, cmd, minutes )	
-	if getElementType(player) == "console" or isAdminLevel ( player, 6 ) then
+	if getElementType(player) == "console" or hasPermission ( player, "canRestartServer" ) then
 		outputAdminLog ( getPlayerName ( player ).." hat den Server neu gestartet." )
 		if not minutes or not tonumber(minutes) then minutes = 1 end	
 		setTimer ( restartServer, minutes*60000, 1 )
@@ -628,7 +628,7 @@ end
 function achat_func ( player, cmd, ... )		
 	local parametersTable = {...}
 	local stringWithAllParameters = table.concat( parametersTable, " " )
-	if isAdminLevel ( player, 1 ) then
+	if isAdminLevel ( player, 2 ) then
 		if stringWithAllParameters == nil then		
 			triggerClientEvent ( player, "infobox_start", getRootElement(), "\nBitte einen\nText eingeben!", 5000, 125, 0, 0 )		
 		else					
@@ -636,7 +636,7 @@ function achat_func ( player, cmd, ... )
 			local rank = adminLevels[rang]
 			
 			for playeritem, index in pairs(adminsIngame) do 			
-				if index >= 1 then
+				if index >= 2 then
 					outputChatBox ( "[ "..rank.." #FFFF00"..getPlayerName(player)..": "..stringWithAllParameters.." ]", playeritem,255, 255, 0,true )
 				end				
 			end		
@@ -664,7 +664,7 @@ function setrank_func ( player, cmd, target, rank )
 		if rank then
 			local targetpl = findPlayerByName( target )
 			local rank = math.floor ( math.abs ( tonumber ( rank ) ) )		
-			if isAdminLevel ( player, 6 ) then		
+			if hasPermission ( player, "canSetRank" ) then
 				if isElement ( targetpl ) then			
 					if rank <= 5 then				
 						vioSetElementData ( targetpl, "rang", rank )
@@ -713,7 +713,7 @@ function makeleader_func ( player, cmd, target, fraktion )
 		local targetpl = findPlayerByName( target )
 		if fraktion then
 			fraktion = math.floor ( math.abs ( tonumber ( fraktion ) ) )
-			if isAdminLevel ( player, 4 ) then	
+			if  hasPermission ( player, "canSetLeader" ) then	
 				if not isElement ( targetpl ) then
 					if playerUID[target] then
 						local oldfrac = tonumber ( dbPoll ( dbQuery ( handler, "SELECT ?? FROM ?? WHERE ??=?", "Fraktion", "userdata", "UID", playerUID[target] ), -1 )[1]["Fraktion"] )
@@ -870,7 +870,7 @@ end
 
 local oldspecpos = {}
 function spec_func ( player, command, spec )
-	if isAdminLevel ( player, 2 ) then
+	if  hasPermission ( player, "checkUser" ) then	
 		local spec = spec and findPlayerByName ( spec ) or nil
 		if spec == nil then
 			if oldspecpos[player] then
@@ -902,7 +902,7 @@ end
 
 
 function rkick_func ( player, command, kplayer, ... )
-	if getElementType(player) == "console" or isAdminLevel ( player, 2 ) and ( not client or client == player ) then
+	if getElementType(player) == "console" or hasPermission ( player, "canKick" ) and ( not client or client == player ) then
 		if kplayer then
 			local reason = {...}
 			reason = table.concat( reason, " " )
@@ -934,7 +934,7 @@ end
 
 
 function rban_func ( player, command, kplayer, ... )
-	if getElementType(player) == "console" or isAdminLevel ( player, 4 ) and ( not client or client == player ) then
+	if getElementType(player) == "console" or hasPermission ( player, "canBan" ) and ( not client or client == player ) then
 		if kplayer then
 			local reason = table.concat( {...}, " " )
 			local target = getPlayerFromName ( kplayer )
@@ -970,7 +970,7 @@ end
 
 function getip ( player, cmd, name )
 	if not client or player == client then
-		if isAdminLevel ( player, 4 ) then
+		if hasPermission ( player, "isOwner" ) then
 			if name then
 				local target = findPlayerByName ( name )	
 				if isElement ( target ) then	
@@ -989,7 +989,7 @@ function getip ( player, cmd, name )
 end
 
 function tban_func ( player, command, kplayer, btime,... )
-	if getElementType(player) == "console" or isAdminLevel ( player, 4 ) and ( not client or client == player ) then
+	if getElementType(player) == "console" or hasPermission ( player, "canTimeban" ) and ( not client or client == player ) then
 		if kplayer and btime and tonumber(btime) ~= nil then
 			local reason = {...}
 			reason = table.concat( reason, " " )
@@ -1022,44 +1022,9 @@ function tban_func ( player, command, kplayer, btime,... )
 end
 
 
--- Deaktiviert, da unnötig --
---[[function slap_func ( player, command, splayer, bslap )
-	if getElementType(player) == "console" then
-		vioSetElementData(player, "adminlvl", 3 )
-	end	
-	if isAdminLevel ( player, adminLevels["Administrator"] ) and ( not client or client == player ) then
-		local target = findPlayerByName ( splayer )	
-		if not isElement(target) then
-			outputChatBox ( "Der Spieler ist offline!", player, 125, 0, 0 )
-			return
-		end	
-		if not bslap then
-			bslap = "nein"
-		end	
-		if bslap == "nein" or bslap == "Nein" then		
-			local x,y,z = getElementPosition(target)
-			setElementPosition ( target, x, y, z + 5, true )			
-			for playeritem, index in pairs(adminsIngame) do 
-				outputChatBox ( getPlayerName(player).." hat "..getPlayerName(target).." geslapt!", playeritem, 255, 255, 0 )
-			end	
-		elseif bslap == "ja" or bslap == "Ja" then		
-			local x, y, z = getElementPosition( target )
-			setElementPosition ( target, x, y, z + 5, false )
-			setPedOnFire ( target, true )			
-			for playeritem, key in pairs(adminsIngame) do
-				outputChatBox ( getPlayerName(player).." hat "..getPlayerName(target).." geslapt und angezuendet!", playeritem, 255, 255, 0 )
-			end		
-		else		
-			triggerClientEvent ( player, "infobox_start", getRootElement(), "Gebrauch:\n/slap [Player] \n[Anzuenden]\nJa/Nein", 5000, 0, 125, 125 )		
-		end			
-	else	
-		triggerClientEvent ( player, "infobox_start", getRootElement(), "\nDu bist nicht authorisiert,\ndiesen Befehl zu nutzen.", 5000, 255, 0, 0 )		
-	end	
-end]]
-
 
 function goto_func(player,command,tplayer)
-	if isAdminLevel ( player, 2 ) and ( not client or client == player ) then
+	if hasPermission ( player, "canTeleport" ) and ( not client or client == player ) then
 		if tplayer then
 			local target = findPlayerByName ( tplayer )	
 			if not isElement(target) then
@@ -1094,7 +1059,7 @@ end
 
 
 function gethere_func(player,command,tplayer)
-	if isAdminLevel ( player, 2 ) and ( not client or client == player ) then
+	if hasPermission ( player, "canTeleport" ) and ( not client or client == player ) then
 		if tplayer then
 			local target = findPlayerByName ( tplayer )
 			local x, y, z = getElementPosition ( player )
@@ -1132,7 +1097,7 @@ end
 function skydive_func(player,command,tplayer)
  local ne = true
  if ne == true then
-	if getElementType(player) == "console" or isAdminLevel ( player, 6 ) and ( not client or client == player ) then
+	if getElementType(player) == "console" or hasPermission ( player, "canSkydrive" ) and ( not client or client == player ) then
 		if tplayer then
 			local target = findPlayerByName ( tplayer )
 			
@@ -1187,7 +1152,7 @@ end
 
 
 function mute_func(player,command,tplayer)
-	if getElementType(player) == "console" or isAdminLevel ( player, 3 ) and ( not client or client == player ) then
+	if getElementType(player) == "console" or hasPermission ( player, "canMute" ) and ( not client or client == player ) then
 		if tplayer then
 			local target = findPlayerByName ( tplayer )
 			if not isElement(target) then
@@ -1225,7 +1190,7 @@ function unban_func ( player, cmd, nick )
 	if playerUID[nick] then
 		local adminname = dbPoll ( dbQuery ( handler, "SELECT ?? FROM ?? WHERE ??=?", "AdminUID", "ban", "UID", playerUID[nick] ), -1 )	
 		if adminname and adminname[1] then	
-			if getElementType(player) == "console" or isAdminLevel ( player, 5 ) then	
+			if getElementType(player) == "console" or hasPermission ( player, "canUnban" ) then	
 				dbExec ( handler, "DELETE FROM ?? WHERE ??=?", "ban", "UID", playerUID[nick] )
 				outputChatBox ( getPlayerName(player).." hat "..nick.." entbannt!", getRootElement(), 125, 0, 0 )
 				outputAdminLog ( getPlayerName(player).." hat "..nick.." entbannt." )			
@@ -1247,7 +1212,7 @@ end
 
 
 function crespawn_func ( player, cmd, radius )
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "respawnVehicles" ) then
 		if radius then	
 			radius = tonumber(radius)
 			if radius <= 50 and radius > 0 then
@@ -1280,7 +1245,7 @@ end
 
 
 function gotocar_func ( player, cmd, targetname, slot )	
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "canTeleport" ) then
 		if targetname and slot then
 			slot = tonumber(slot)
 			local target = findPlayerByName ( targetname )
@@ -1327,7 +1292,7 @@ end
 
 
 function getcar_func ( player, cmd, targetname, slot )	
-	if isAdminLevel ( player, 2 ) then	
+	if hasPermission ( player, "respawnVehicles" ) then	
 		if targetname and slot then
 			slot = tonumber(slot)
 			local target = findPlayerByName ( targetname )
@@ -1375,7 +1340,7 @@ end
 
 function astart_func ( player, cmd )
 	
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "canStartEngine" ) then	
 		local veh = getPedOccupiedVehicle ( player )	
 		if not isElement ( veh ) then
 			outputChatBox ( "Du musst in einem Wagen sitzen!", player, 125, 0, 0 )
@@ -1408,7 +1373,7 @@ end
 
 
 function aenter_func ( player, cmd )
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "canTPinVehicle" ) then
 		vioSetElementData ( player, "adminEnterVehicle", true )
 		outputChatBox ( "Klicke auf einen Wagen!", player, 125, 0, 0 )
 	else
@@ -1418,7 +1383,7 @@ end
 
 
 function makeVehFFT ( player )
-	if isAdminLevel ( player, 7 ) then
+	if hasPermission ( player, "canTuneVehToMax" ) then
 		if isPedInVehicle ( player ) then
 			local veh = getPedOccupiedVehicle ( player )
 			local pname = vioGetElementData ( veh, "owner" )
@@ -1545,7 +1510,7 @@ function fillAdminVeh ( player )
 end
 
 function giveFactionBanAdmin (player, cmd, target, time, ... )
-    if isAdminLevel ( player, 4) then
+    if hasPermission ( player, "canFactionBan" ) then
         local parametersTable = {...}
         local stringWithAllParameters = table.concat( parametersTable, " " )
         local target = getPlayerFromName ( target )
@@ -1580,7 +1545,7 @@ function giveFactionBanAdmin (player, cmd, target, time, ... )
 end
 
 function deleteFactionBanAdmin (player, cmd, target)
-    if isAdminLevel ( player, 6) then
+    if hasPermission ( player, "canDeleteFactionBan" ) then
         local target = getPlayerFromName ( target )
         if target then
             if vioGetElementData(target, "loggedin") == 1 then
@@ -1598,7 +1563,7 @@ end
 
 
 function prison_func ( player, cmd, target, time, ... )
-	if isAdminLevel ( player, 3) then
+	if hasPermission ( player, "canArrest" ) then
 		if target then
 			if time then
 				if tonumber(time) ~= nil then
@@ -1673,7 +1638,7 @@ end
 
 	
 function setteTestGeld ( player, cmd, geld )
-	if isAdminLevel ( player, 8 ) and geld and tonumber (geld) ~= nil then
+	if hasPermission ( player, "isOwner" ) and geld and tonumber (geld) ~= nil then
 		vioSetElementData ( player, "money", tonumber(geld) )
 	else
 		triggerClientEvent ( player, "infobox_start", getRootElement(), "\nDu bist nicht authorisiert,\ndiesen Befehl zu nutzen.", 5000, 255, 0, 0 )
@@ -1682,7 +1647,7 @@ end
 addCommandHandler ("settestgeld", setteTestGeld)
 
 function kickAll ( player, cmd, ... )
-	if isAdminLevel ( player, 7 ) then
+	if hasPermission ( player, "isOwner" ) then
 		local parametersTable = {...}
 		local stringWithAllParameters = table.concat( parametersTable, " " )
 		local players = getElementsByType("player")
@@ -1782,7 +1747,7 @@ addCommandHandler ( "co",  changeOOC)
 
 
 addCommandHandler ( "delacc", function ( player, cmd, target )
-	if isAdminLevel ( player, 9 ) then
+	if hasPermission ( player, "isOwner" ) then
 		if playerUID[target] then
 			local id = playerUID[target]
 			playerUID[target] = nil
@@ -1807,7 +1772,7 @@ end )
 
 
 addCommandHandler ( "restartresource", function ( player )
-	if isAdminLevel ( player, 8 ) then
+	if hasPermission ( player, "isOwner" ) then
 		for index, playeritem in pairs ( getElementsByType ( "player" ) ) do
 			if vioGetElementData ( playeritem, "loggedin" ) == 1 then
 				local pname = getPlayerName ( playeritem )
@@ -1863,11 +1828,11 @@ addEventHandler ( "testsocial", root, function ( bool )
 end )
 
 
-
+-- // Überarbeiten
 function suppmode_func (player)
     local pl = getPlayerName(player)
     local x, y, z = getElementPosition ( player )
-    if isAdminLevel ( player, 2 ) then
+    if hasPermission ( player, "canUseSuppmode" ) then
         if vioGetElementData (player, "suppmode") == true then
             destroyElement ( admindutyarray[player] )
             vioSetElementData (player, "suppmode", false)
@@ -1937,7 +1902,7 @@ function adminveh ( player, cmd, vehicle )
 	if getTheVehicle (vehicle) then
 		local id = getTheVehicle(vehicle)
 		local x,y,z = getElementPosition ( player )
-		if isAdminLevel ( player, 5 ) then
+		if hasPermission ( player, "canSpawnAdminVeh" ) then
 			if adminVeh[player] then
 				destroyElement(adminVeh[player])
 				adminVeh[player] = nil
@@ -1983,7 +1948,7 @@ end
 
 function enterVehicle ( thePlayer, seat  ) 
 	local veh = source
-    if adminVehData[veh] == true and not isAdminLevel ( thePlayer, 5 ) and seat == 0  then
+    if adminVehData[veh] == true and not hasPermission ( thePlayer, "canSpawnAdminVeh" ) and seat == 0  then
         opticExitVehicle ( thePlayer)
     end
 end
@@ -2002,7 +1967,7 @@ function setPlayerAdminLevelCMD (player, cmd, target, newLevel)
 		hasAdminGroup =  false
 	end
 
-	if isAdminLevel ( player, 7 ) or getElementType ( player ) == "console" or hasAdminGroup == true then
+	if hasPermission ( player, "isOwner" ) or getElementType ( player ) == "console" or hasAdminGroup == true then
 		if target then 
 			local pName = getPlayerName(player)
 			local newLevel = tonumber ( newLevel )
@@ -2053,7 +2018,7 @@ end
 addCommandHandler ( "adminlevel", setPlayerAdminLevelCMD )
 
 function offuninvite (player, cmd, target )
-    if isAdminLevel ( player, 4 ) then
+    if hasPermission ( player, "canSetLeader" ) then
         if dbExist ( "userdata", "Name LIKE '"..target.."'") and dbExist ( "players", "Name LIKE '"..target.."'") then
             if target and not getPlayerFromName(target)  then
                 dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "userdata", "Fraktion", 0,"FraktionsRang", 0, "UID", playerUID[target] )
@@ -2073,7 +2038,7 @@ addCommandHandler ( "on", offuninvite )
 addCommandHandler ( "offuninvite", offuninvite )
 
 function getToken (player, cmd, target)
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "checkUser" ) then
 		if target then
 			if playerUID[target] then
 				outputChatBox ( "Daten von "..target.." (ID: "..playerUID[target]..")", player, 200, 200, 0 )
@@ -2097,7 +2062,7 @@ addCommandHandler ( "gettoken", getToken )
 addCommandHandler ( "gt", getToken )
 
 function getPosition ( player )
-	if isAdminLevel ( player, 2 ) then
+	if hasPermission ( player, "canTeleport" ) then
 		local veh = getPedOccupiedVehicle ( player )
 		if veh then
 			local x,y,z = getElementPosition(veh)
@@ -2121,7 +2086,7 @@ addCommandHandler ( "gp", getPosition )
 
 function admin_telenr_andern ( player, cmd, target, amount )
 	local target = findPlayerByName ( target )
-	if vioGetElementData ( player, "adminlvl" ) >= 6 then
+	if hasPermission ( player, "canChangeNumber" ) then
 	    if target then
 		    if amount then
 			    vioSetElementData ( target, "telenr", amount )
@@ -2138,7 +2103,7 @@ function admin_socialState_andern ( player, cmd, target, ... )
 	local target = findPlayerByName ( target )
 	local socialState = {...}
     socialState = table.concat( socialState, " " )
-	if vioGetElementData ( player, "adminlvl" ) >= 6 then
+	if hasPermission ( player, "canChangeSocialState" ) then
 	    if target then
 		    if socialState then
 			    vioSetElementData ( target, "socialState", socialState )

@@ -35,8 +35,11 @@ SharedConfig["network"] = {
 }
 
 SharedConfig["costumFactions"] = {
-   nameshortMaxLengh = 10,
+   creationCost = 1000,
+   nameshortMaxLengh = 5,
+   nameshortMinLengh = 2,
    nameMaxLengh = 10,
+   nameMinLengh = 4
 }
 
 SharedConfig["levelsystem"] = { 

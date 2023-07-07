@@ -1,10 +1,11 @@
-Changelog nicht fertig
+Changelog nicht fertig.
+Alle Dinge die mit TODO markiert sind, müssen noch getan werden.
 
 [Administration]
 
 - Die Nutzung von Administrationsfunktionen erfordert nun nicht mehr nur Level, sondern Rechte "Permissions", um
 bestimmte Befehle auszuführen
-- /adminlevel" überarbeitet, um Adminlevel zu setzen
+- "/adminlevel" überarbeitet, um Adminlevel zu setzen
 - "/setpremium" überarbeitet, unterstützt nun Zeitpräfixe, Beispiel: "/setpremium Mezzo 30d 5" - gibt Mezzo Paket 5 oder "Titan" für 30 Tage
 -- Dabei steht "d" für Tage, "w" für Wochen und "m" für Monate.
 - Die Datei "admincmds.lua" wurde entfernt und zur besseren Übersicht in mehrere Dateien aufgeteilt.
@@ -13,11 +14,14 @@ bestimmte Befehle auszuführen
 [Server-Konfiguration]
 - Viele Server-Konfigurationen wurden zur besseren Übersicht in Tabellen aufgeteilt, diese sind im Ordner "config" zu finden.
 - Viele weitere Konfigurationsmöglichkeiten wurden hinzugefügt oder entfernt.
--- Diese Änderung betrifft die Datenbankeinstellungen.
+-- Diese Änderung betrifft auch die Datenbankeinstellungen.
 
+[Premium]
+- Rebranding: VIP/Premium-Pakete --> VIP-Stufe, Premium an sich bezeichnet nur, OB man eine VIP-Stufe besitzt
+- Teammitglieder können nun, sofern eingestellt, automatisch Premium aktiv haben. Dabei wird nicht die ggf. vorhandene Stufe überschrieben.
 
-[BENUTZEROBERFLÄCHE]
+[UI]
 - Neue Infobox hinzugefügt ( https://imgur.com/80f873u )
 - Neuer Hinweis für das Befinden in einer NO-DM Zone hinzugefügt ( https://imgur.com/vF2f7lj )
 - Neuer Hinweis bei Erhalt eines Fahrzeug-Tokens (früher "Premium-Fahrzeugsetzung" genannt - https://imgur.com/qNwUIfy )
-- Neues Fenster zum Erstellen von Firmen und/oder Gangs ( https://imgur.com/a/xI2DR4f - UI auf den Bildern kann nicht final sein)
+- Neue UI zum Erstellen von Firmen und/oder Gangs ( https://imgur.com/a/xI2DR4f - UI auf den Bildern kann nicht final sein)

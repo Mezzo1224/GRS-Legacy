@@ -2,7 +2,7 @@
 
 
 function showVehicleTokenInfo (nextDate, currentRank)
-    if not getElementClicked() then
+if not getElementClicked() then
         vehTokenUI["window"] = DGS:dgsCreateWindow(1154, -40, 299, 355, "Fahrzeug-Token", false)
         DGS:dgsCenterElement(vehTokenUI["window"], false, true) 
         local windowX, windowY = DGS:dgsGetPosition( vehTokenUI["window"] )

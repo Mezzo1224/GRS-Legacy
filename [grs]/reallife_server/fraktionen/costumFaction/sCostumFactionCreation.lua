@@ -39,7 +39,7 @@ function isFactionCreateable(player, data)
         for i,line in pairs(data) do
             print(i, line)
         end
-        local canPay =  checkSolvency (player, cooperationCreateCosts)
+        local canPay =  checkSolvency (player, SharedConfig["costumFactions"].creationCost)
         if canPay ~= false then
             result.paymentMethode = canPay
         else
@@ -47,10 +47,10 @@ function isFactionCreateable(player, data)
         end
         local money = vioGetElementData ( player, "money" )
         local bankmoney = vioGetElementData ( player, "bankmoney" )
-        result.costs = cooperationCreateCosts
+        result.costs = SharedConfig["costumFactions"].creationCost
         result.bankmoney, result.money = bankmoney, money
         -- // Name zu lang ?
-        if string.len(data.name) > sharedConfig["costumfaction"].nameMaxLengh then 
+        if string.len(data.name) > SharedConfig["costumFactions"].nameMaxLengh then 
             result.nameToLong = true
             result.failed = true
         else
@@ -66,7 +66,7 @@ function isFactionCreateable(player, data)
         end
 
         -- // Abkürzung zu lang ?
-        if string.len(data.nameshort) > sharedConfig["costumfaction"].nameshortMaxLengh then 
+        if string.len(data.nameshort) > SharedConfig["costumFactions"].nameshortMaxLengh then 
             result.nameshortToLong = true
             result.failed = true
         else

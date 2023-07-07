@@ -22,9 +22,15 @@ ServerConfig["main"] = {
 
 
 ServerConfig["admin"] = {
-
+    hasPermissionsFromPrevRanks = true, -- // Sollte dieses Einstellung auf false sein, werden Vorherige Rechte nicht übernommen!
     -- Adminränge
     ["ranks"] = {
+        [0] = {
+            name = "User",
+            hexColor = "",
+            permissions = {},
+            hasVIP = false,
+        },
         [1] = {
             name = "Clanmember",
             hexColor = "#9A2EFE",
@@ -34,31 +40,63 @@ ServerConfig["admin"] = {
         [2] = {
             name = "Ticketbeauftragter",
             hexColor = "#01DFD7",
-            permissions = {},
+            permissions = { 
+                ["canKick"] = true,
+                ["canTeleport"] = true,
+                ["checkUser"] = true,
+                ["respawnVehicles"] = true,
+                ["canStartEngine"] = true,
+                ["canTPinVehicle"] = true,
+                ["canMute"] = true,
+                ["canArrest"] = true,
+                ["canUseSuppmode"] = true
+            },
             hasVIP = false,
         },
         [3] = {
             name = "Supporter",
             hexColor = "#04B404",
-            permissions = {},
+            permissions = {
+                ["canWarn"] = true,
+                ["canTimeban"] = true,
+            },
             hasVIP = false,
         },
         [4] = {
             name = "Moderator",
             hexColor = "#0000FF",
-            permissions = {},
+            permissions = {
+                ["canChangePassword"] = true,
+                ["canBan"] = true,
+                ["canFactionBan"] = true,
+                ["canFreeze"] = true,
+                ["canSetLeader"] = true,
+                ["canSkydrive"] = true,
+            },
             hasVIP = false,
         },
         [5] = {
             name = "Administrator",
             hexColor = "#FF8000",
-            permissions = {},
+            permissions = {
+                ["canSpawnAdminVeh"] = true,
+                ["tuneCar"] = true,
+                ["canUnban"] = true,
+                ["canDeleteFactionBan"] = true,
+            },
             hasVIP = true,
         },
         [6] = {
             name = "Administrator m.V.",
             hexColor = "#B40404",
-            permissions = {},
+            permissions = {
+                ["canChangeNickname"] = true,
+                ["canRestartServer"] = true,
+                ["canSetRank"] = true,
+                ["canTuneVehToMax"] = true,
+                ["canChangeNumber"] = true,
+                ["canChangeSocialState"] = true,
+            },
             hasVIP = true,
         },
         [7] = {
@@ -75,6 +113,7 @@ ServerConfig["admin"] = {
         },
     },
 }
+
 
 
 

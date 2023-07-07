@@ -2,6 +2,7 @@
 local x, y = guiGetScreenSize()
 local sx, sy = x/2560, y/1440
 
+
 function showCoopCreateMenu (price)
 
     setElementClicked ( true )

@@ -75,16 +75,18 @@ end
 function checkName (name, isShort)
     if isShort then
         lengh = SharedConfig["costumFactions"].nameshortMaxLengh
+        minLengh = SharedConfig["costumFactions"].nameshortMinLengh
     else
         lengh = SharedConfig["costumFactions"].nameMaxLengh
+        minLengh = SharedConfig["costumFactions"].nameMinLengh
     end
     print("Checke Namen", name, isShort)
     if string.len(name) > 0 and string.len(name) <= lengh then
-        if string.len(name) >= (lengh/2) then
+        if string.len(name) >= minLengh then
                 print("Perfekt")
                 return true
             else
-                print("Du musst mindestens ", (lengh/2), "Zeichen haben.")
+                print("Du musst mindestens ", minLengh, "Zeichen haben.")
                 return false
         end
     else
@@ -117,6 +119,10 @@ function createNavigationButtons ()
         if button == "left" and state == "down" then
             if source == createFactionUI.navButtons["cancel"] then
                 --- TODO: SICHER ?
+                createFactionData = nil
+                createFactionData = {}
+                createFactionSteps["prevstep"] = nil
+                createFactionSteps["nextstep"] = createSelectFactionName 
                 deleteCreateFactionUI ( true )
             end
         end
@@ -177,7 +183,9 @@ function createSelectFactionType ()
         DGS:dgsSetFont( createFactionUI.selectFaction["title"], titleFont ) 
         DGS:dgsSetFont( createFactionUI.selectFaction["coop_label"], factionTypeFont ) 
         DGS:dgsSetFont( createFactionUI.selectFaction["gang_label"], factionTypeFont ) 
-
+        -- // Farben setzen
+        DGS:dgsSetProperty( createFactionUI.selectFaction["coop_label"], "textColor", tocolor(255, 255, 255) ) 
+        DGS:dgsSetProperty( createFactionUI.selectFaction["gang_label"], "textColor", tocolor(255, 255, 255) ) 
         -- // Buttons
         DGS:dgsSetEnabled(createFactionUI.navButtons["back"], false)
         if not createFactionData["type"] then
@@ -193,12 +201,14 @@ function createSelectFactionType ()
                     DGS:dgsSetProperty(source,"outline",{"out",3,tocolor(57, 214, 9)})
                     createFactionData["type"] = "gang"
                     DGS:dgsSetEnabled(createFactionUI.navButtons["continue"], true)
+                    DGS:dgsSetProperty( createFactionUI.selectFaction["gang_label"], "textColor", tocolor(18, 128, 23) ) 
                 end
                 if source == createFactionUI.selectFaction["coop_image"] then
                     DGS:dgsSetProperty( createFactionUI.selectFaction["gang_image"],"outline",nil)
                     DGS:dgsSetProperty(source,"outline",{"out",3,tocolor(57, 214, 9)})
                     createFactionData["type"] = "firma"
                     DGS:dgsSetEnabled(createFactionUI.navButtons["continue"], true)
+                    DGS:dgsSetProperty( createFactionUI.selectFaction["coop_label"], "textColor", tocolor(18, 128, 23) ) 
                 end
             end
         end)
@@ -277,8 +287,8 @@ function createSelectFactionName ()
      -- // Länge von der Abkürzung checken
      addEventHandler("onDgsTextChange", createFactionUI.selectName["nameshort"], function() 
         createFactionData["nameshort"] =  DGS:dgsGetText(source)
-        local isValid = checkName (createFactionData["nameshort"] , false)
-        print("Text der ABK:", createFactionData["nameshort"])
+        local isValid = checkName (createFactionData["nameshort"] , true)
+        print("Text der Abkürzung:", createFactionData["nameshort"])
 
         if isValid == true then
             DGS:dgsSetEnabled(createFactionUI.navButtons["continue"], true)
@@ -303,11 +313,11 @@ function createSelectFactionName ()
     DGS:dgsSetProperty(createFactionUI.selectName["window"],"ignoreTitle",true)
     DGS:dgsSetProperty(createFactionUI.selectName["window"],"titleHeight",0)
     DGS:dgsSetProperty(createFactionUI.selectName["window"],"movable",false)
-    DGS:dgsSetProperty(createFactionUI.selectName["window"],"sizable",false)
-    DGS:dgsSetProperty(createFactionUI.selectName["name"],"maxLength",10)
-    DGS:dgsSetProperty(createFactionUI.selectName["nameshort"],"maxLength",3)
-    DGS:dgsSetProperty(createFactionUI.selectName["name"],"placeHolder","Name")
-    DGS:dgsSetProperty(createFactionUI.selectName["nameshort"],"placeHolder","Abkürzung")
+    DGS:dgsSetProperty(createFactionUI.selectName["window"],"sizable",false) 
+    DGS:dgsSetProperty(createFactionUI.selectName["name"],"maxLength",SharedConfig["costumFactions"].nameMaxLengh)
+    DGS:dgsSetProperty(createFactionUI.selectName["nameshort"],"maxLength",SharedConfig["costumFactions"].nameshortMaxLengh)
+    DGS:dgsSetProperty(createFactionUI.selectName["name"],"placeHolder","Name ("..SharedConfig["costumFactions"].nameMinLengh.." bis "..SharedConfig["costumFactions"].nameMaxLengh.." Zeichen)")
+    DGS:dgsSetProperty(createFactionUI.selectName["nameshort"],"placeHolder","Abkürzung ("..SharedConfig["costumFactions"].nameshortMinLengh.." bis "..SharedConfig["costumFactions"].nameshortMaxLengh.." Zeichen)")
     DGS:dgsSetEnabled(createFactionUI.navButtons["back"], true)
     -- // Fonts setzen
     DGS:dgsSetFont( createFactionUI.selectName["title"], titleFont ) 
@@ -329,7 +339,7 @@ function createSelectFactionColor()
     createFactionUI.selectColor["preview"] = DGS:dgsCreateLabel(1152, 679, 254, 16, "["..nameshort.."] "..name.."", false)    
 
     -- // Einstellungen
-    DGS:dgsSetEnabled(createFactionUI.navButtons["continue"], true)
+    DGS:dgsSetEnabled(   createFactionUI.navButtons["continue"], true)
     DGS:dgsSetProperty(  createFactionUI.selectColor["title"],"alignment",{"center","center"})
     DGS:dgsSetProperty(  createFactionUI.selectColor["preview"],"alignment",{"center","center"})
     if not  createFactionData["RGB"] then
@@ -407,8 +417,9 @@ function createFinalizeFaction (result)
          moneyText = "Du brauchst auf der "..formNumberToMoneyString ( costs )
          DGS:dgsLabelSetColor ( createFactionUI.finalizeFaction["money"],  notValidColor[1], notValidColor[2],notValidColor[3], 255 )
      end
+     DGS:dgsSetProperty( createFactionUI.finalizeFaction["money"],"wordBreak",true)
      DGS:dgsSetText ( createFactionUI.finalizeFaction["money"], moneyText )
-
+     
      -- // Farbe
      if result.validRGB == true then
         DGS:dgsSetText ( createFactionUI.finalizeFaction["color"], "Deine Farbe ist gültig." )
