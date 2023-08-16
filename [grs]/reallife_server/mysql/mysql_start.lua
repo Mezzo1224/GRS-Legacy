@@ -68,22 +68,26 @@ function gamemodeReadyCheck (res)
 				end
 				outputDebugString("Start abgebrochen.")
 			end
-			if getResourceFromName ( "dgs" ) == false then
+			local dgsRessource = getResourceFromName ( "dgs" )
+			if dgsRessource == false then
 				outputDebugString("Du brauchst die dxLib `dgs` zum korrekten funktionieren des Gamemodes.")
 				outputDebugString("https://github.com/thisdp/dgs")
 				outputDebugString("Start abgebrochen.")
 			else
-				if getResourceState (getResourceFromName("dgs"))  == "loaded" then
-					if startResource ( getResourceFromName ( "dgs" ) ) then
+				if getResourceState (dgsRessource)  == "loaded" then
+					if startResource (dgsRessource) then
 						outputDebugString("DGS wurde gestartet.")
 						hasDGSrunning = true
 					else
 						outputDebugString("DGS konnte nicht gestartet werden. Überprüfe ob DGS installiert ist oder der Gamemode Rechte hat.")
 						hasDGSrunning = false
 					end
+				elseif getResourceState (dgsRessource)  == "running" then
+					outputDebugString("DGS ist bereits gestartet.")
+					hasDGSrunning = true
 				end
 				
-				if not hasObjectPermissionTo ( getResourceFromName ( "dgs" ), "function.fetchRemote", true )  then
+				if not hasObjectPermissionTo ( dgsRessource, "function.fetchRemote", true )  then
 					outputDebugString("DGS hat keine ACL Rechte. Gebe in der Konsole folgendes ein:")
 					outputDebugString("aclrequest allow dgs all")
 					hasDGSACLrights = false
@@ -97,7 +101,7 @@ function gamemodeReadyCheck (res)
 			local gamemodeACLCheck
 			local sqlCheck2
 			if handler then sqlCheck = "Verbunden"  else sqlCheck =  "Nicht Verbunden" end
-			if hasDGSrunning  then dgsCheck = "Gestartet." elseif getResourceFromName ( "dgs" )  then dgsCheck = "Nicht verfügbar." else dgsCheck = "Nicht gestartet" end
+			if hasDGSrunning  then dgsCheck = "Gestartet." elseif dgsRessource  then dgsCheck = "Nicht verfügbar." else dgsCheck = "Nicht gestartet" end
 			if hasDGSACLrights then dgsACLCheck = "Hat Rechte" else  dgsACLCheck = "Keine Rechte" end
 			if hasACLrights then gamemodeACLCheck = "Hat Rechte" else gamemodeACLCheck = "Keine Rechte" end
 			if handler then
