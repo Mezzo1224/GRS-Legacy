@@ -5,6 +5,9 @@ function showRegisterUI ()
         DGS:dgsCenterElement(registerUI["window"], false, true) 
         DGS:dgsWindowSetSizable(registerUI["window"], false)
         DGS:dgsWindowSetMovable(registerUI["window"], false)
+        showChat(false)
+        showCursor(true)
+        DGS:dgsSetInputEnabled ( true )
         DGS:dgsWindowSetCloseButtonEnabled(registerUI["window"], false)
     --    DGS:dgsMoveTo( registerUI["window"],1115, 443,false,"OutQuad",5000)
 
@@ -15,13 +18,11 @@ function showRegisterUI ()
         registerUI["tabpanel_account_scrollpanel"] = DGS:dgsCreateScrollPane(0.03, 0.04, 0.93, 0.91, true, registerUI["tabpanel_account"])
         -- // Benutzername
         registerUI["usernameTitle"] = DGS:dgsCreateLabel(0.02, 0.02, 0.94, 0.10, "Benutzername", true, registerUI["tabpanel_account_scrollpanel"])
-       -- DGS:dgsSetFont(registerUI["usernameTitle"], "default-bold-small") 39
         DGS:dgsLabelSetVerticalAlign(registerUI["usernameTitle"], "center")
         registerUI["username"] = DGS:dgsCreateEdit(0.02, 0.17, 0.64, 0.11, "Benutzname", true, registerUI["tabpanel_account_scrollpanel"])
         DGS:dgsSetText(registerUI["username"], getPlayerName(getLocalPlayer()))
         -- // Passwort
         registerUI["passwordTitle"] = DGS:dgsCreateLabel(0.02, 0.34, 0.21, 0.10, "Passwort", true, registerUI["tabpanel_account_scrollpanel"])
-      --  DGS:dgsSetFont(registerUI["passwordTitle"], "default-bold-small")
         DGS:dgsLabelSetVerticalAlign(registerUI["passwordTitle"], "center")
         registerUI["password"] = DGS:dgsCreateEdit(0.02, 0.48, 0.41, 0.11, "", true, registerUI["tabpanel_account_scrollpanel"])
         DGS:dgsSetProperty(registerUI["password"],"allowCopy", false)
@@ -32,14 +33,18 @@ function showRegisterUI ()
         DGS:dgsSetProperty(registerUI["passwordRepeat"],"masked", true)
         DGS:dgsSetProperty(registerUI["passwordRepeat"],"placeHolder","Passwort Wdh.")
 
-        registerUI["passwordToggleMask"] = DGS:dgsCreateImage(0.26, 0.34, 0.07, 0.10, "register/eye-off.png", true, registerUI["tabpanel_account_scrollpanel"])
+        registerUI["passwordToggleMask"] = DGS:dgsCreateImage(0.27, 0.34, 0.07, 0.10, "register/eye.png", true, registerUI["tabpanel_account_scrollpanel"])
         registerUI["passwordToggleMaskTooltip"] = DGS:dgsCreateToolTip()
         DGS:dgsTooltipApplyTo(registerUI["passwordToggleMaskTooltip"], registerUI["passwordToggleMask"],"Zum Anzeigen/Verbergen des Passworts hier klicken")
         
         registerUI["passwordSafety"] = DGS:dgsCreateProgressBar(0.02, 0.80, 0.97, 0.14, true, registerUI["tabpanel_account_scrollpanel"])
+
+        registerUI["passwordSafetyText"] = DGS:dgsCreateLabel(0.39, 0.23, 0.22, 0.54, "0 / 100", true, registerUI["passwordSafety"])
+        DGS:dgsSetProperty(registerUI["passwordSafetyText"], "textColor",tocolor(0, 0, 0))
+
         registerUI["passwordInfo"] = DGS:dgsCreateLabel(0.48, 0.48, 0.52, 0.27, "- 8 Zeichen\n- Zwei Nummern\n- Ein Sonderzeichen\n- Ein Großbuchtabe\n", true, registerUI["tabpanel_account_scrollpanel"])
-        DGS:dgsSetSize(registerUI["passwordInfo"], 0.5)
-        DGS:dgsSetProperty(registerUI["passwordInfo"],"textSize",{0.8,0.8})
+        DGS:dgsSetSize(registerUI["passwordInfo"], 0.6)
+        DGS:dgsSetProperty(registerUI["passwordInfo"],"textSize",{0.85,0.85})
 
         addEventHandler("onDgsMouseClick", registerUI["passwordToggleMask"] ,function(button, state)
             if button == "left" and state == "down" then
@@ -63,15 +68,15 @@ function showRegisterUI ()
             local text = DGS:dgsGetText(source)
             local safety, reasons = calculateSafety(text)
             local r, g, b = getColorCode(safety)
-            outputChatBox("The box now reads: " .. DGS:dgsGetText(source))
-            
-            for _, reason in ipairs(reasons) do
-                print("-", reason)
-            end
+         --   for _, reason in ipairs(reasons) do
+          --      print("-", reason)
+          --  end
 
             print(r, g, b)
             DGS:dgsSetProperty(registerUI["passwordSafety"],"indicatorColor",tocolor(r, g, b))
             DGS:dgsSetProperty(registerUI["passwordSafety"],"progress",safety)
+            DGS:dgsSetText(registerUI["passwordSafetyText"], safety.." / 100")
+           
         end)
 
         -- // Daten
@@ -81,7 +86,6 @@ function showRegisterUI ()
 
         -- // E-Mail
         registerUI["emailTitle"] = DGS:dgsCreateLabel(0.02, 0.02, 0.94, 0.10, "E-Mail-Adresse", true, registerUI["tabpanel_data_scrollpanel"])
-    --    DGS:dgsSetFont(registerUI["emailTitle"], "default-bold-small")
         DGS:dgsLabelSetHorizontalAlign(registerUI["emailTitle"], "center", false)
         DGS:dgsLabelSetVerticalAlign(registerUI["emailTitle"], "center")
         registerUI["email"] = DGS:dgsCreateEdit(0.02, 0.17, 0.61, 0.11, "", true, registerUI["tabpanel_data_scrollpanel"])
@@ -91,7 +95,6 @@ function showRegisterUI ()
         DGS:dgsSetProperty(registerUI["emailRepeat"],"allowCopy", false)
         DGS:dgsSetProperty(registerUI["emailRepeat"],"placeHolder","E-Mail-Adresse Wdh.")
         registerUI["birthdayTitle"] = DGS:dgsCreateLabel(0.02, 0.49, 0.94, 0.10, "Geburtsdatum (tt/mm/jjjj)", true, registerUI["tabpanel_data_scrollpanel"])
-    --    DGS:dgsSetFont(registerUI["birthdayTitle"], "default-bold-small")
         DGS:dgsLabelSetHorizontalAlign(registerUI["birthdayTitle"], "center", false)
         DGS:dgsLabelSetVerticalAlign(registerUI["birthdayTitle"], "center")
         registerUI["birthdayDay"] = DGS:dgsCreateEdit(0.02, 0.62, 0.23, 0.14, "", true, registerUI["tabpanel_data_scrollpanel"])
@@ -194,7 +197,7 @@ function getGender()
 end
 
 function registerPlayer (button, state)
-    if button == "left" and state == "down" and source == registerUI["registerButton"] then
+    if button == "left" and state == "up" and source == registerUI["registerButton"] then
         local pName = getPlayerName(getLocalPlayer())
         local name = DGS:dgsGetText(registerUI["username"])
         local newPlayerName = (name == pName) and false or name
@@ -212,10 +215,20 @@ function registerPlayer (button, state)
                     local email, emailRepeat = DGS:dgsGetText( registerUI["email"] ), DGS:dgsGetText( registerUI["emailRepeat"] )
                     if email == emailRepeat then
                         if isValidEmail(email) then
-                            local bcode =  DGS:dgsGetText( registerUI["bonuscode"] )
-                            local advertiser = DGS:dgsGetText( registerUI["advertiser"] )
-                            local gender = getGender()
-                            triggerServerEvent ( "register", getLocalPlayer(),  getLocalPlayer(), hash ( "sha512", password ), bDay, bMonth, bYear, gender, bonuscode,email, advertiser)
+                            local acceptRules = DGS:dgsCheckBoxGetSelected(registerUI["acceptServerrules"])
+                            if acceptRules == true then
+                                local dataCorrect = DGS:dgsCheckBoxGetSelected(registerUI["dataCorrect"])
+                                if dataCorrect == true then
+                                    local bcode =  DGS:dgsGetText( registerUI["bonuscode"] )
+                                    local advertiser = DGS:dgsGetText( registerUI["advertiser"] )
+                                    local gender = getGender()
+                                    triggerServerEvent ( "register", getLocalPlayer(),  getLocalPlayer(), hash ( "sha512", password ), bDay, bMonth, bYear, gender, bonuscode,email, advertiser)
+                                else
+                                    DGS:dgsSetText(registerUI["error"], "Gebe an ob die\nDaten richtig sind.")
+                                end
+                            else
+                                DGS:dgsSetText(registerUI["error"], "Gebe an ob du die Regeln\ngelesen hast.")
+                            end
                         else
                             DGS:dgsSetText(registerUI["error"], "Ungültige E-Mail")
                         end
@@ -232,10 +245,23 @@ function registerPlayer (button, state)
                     print(pwError)
                 end
                 DGS:dgsSetText(registerUI["error"], tostring(pwError))
-
             end
         else
             DGS:dgsSetText(registerUI["error"], "Passwörter sind nicht gleich.")
         end
     end
 end
+
+function finishRegister ()
+    local close = DGS:dgsCloseWindow( registerUI["window"])
+
+	if close then
+		outputChatBox("DGS window closed!")
+		showCursor(false)
+	end
+
+    -- // Tutorial
+
+end
+addEvent ( "finishRegister", true )
+addEventHandler ( "finishRegister", getRootElement(), finishRegister )
