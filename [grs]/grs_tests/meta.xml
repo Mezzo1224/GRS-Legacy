@@ -1,15 +1,23 @@
 <meta>
     <info author="Mezzo" version="1" name="GRS-Tests" description="Verschiedene Scripts, vorallem UIs. Diese Ressource wird benutzt, um mehrfache restarts bei testen von UIs zu vermeiden." type="script" />
     <oop>true</oop>
-
+    <min_mta_version client="1.5.9" />
+    <file src="placeholder.png" />
     <include resource="dgs" />
 
     <script src="intDGS.lua" type="client" />
     <script src="login/cLoginWindow.lua" type="client" />
     <file src="login/key.png" />
     <file src="login/login.png" />
+    
+    <script src="register/cRegisterUI.lua" type="client" />
+    <script src="register/cRegister.lua" type="client" />
 
-    <script src="register/cRegisterWindow.lua" type="client" />
+
+    <file src="register/eye-off.png" />
+    <file src="register/eye.png" />
+    <file src="register/enter.png" />
+    <file src="register/book.png" />
 
     <file src="infobox/info.png" />
     <file src="infobox/warning.png" />
@@ -19,4 +27,16 @@
 
     <script src="greenzone/cGreenzone.lua" type="client" />
     <file src="greenzone/prohibited.png" />
+
+    <script src="gotPremiumVehToken/cUI.lua" type="client" />
+    <file src="gotPremiumVehToken/vehicle.png" />
+
+     <script src="shop/cShop.lua" type="client" />
+     <script src="shop/sShop.lua" type="server" />
+
+     <script src="beta/cBetaUI.lua" type="client" />
+
+    <script src="tuning/cTuningUI.lua" type="client" />
+    <script src="tuning/cTuning.lua" type="client" />
+    <script src="tuning/sTuning.lua" type="server" />
 </meta>

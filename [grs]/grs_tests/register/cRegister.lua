@@ -1,0 +1,105 @@
+function intRegister ()
+
+    showRegisterUI ()
+    showCursor(true)
+    -- // Kamera setzen
+    fadeCamera( true, 5)
+    setCameraMatrix( 1468.8785400391, -919.25317382813, 100.153465271, 1468.388671875, -918.42474365234, 99.881813049316)
+
+end
+addEvent ( "intRegister", true )
+addEventHandler ( "intRegister", getRootElement(), intRegister )
+
+intRegister ()
+
+-- Überprüft ob der Geburtstag gültig ist.
+function isBirthdayValid(tag, monat, jahr)
+    tag = tonumber(tag)
+    monat = tonumber(monat)
+    jahr = tonumber(jahr)
+
+    if not (tag and monat and jahr) then
+        return false
+    end
+
+    if monat < 1 or monat > 12 then
+        return false
+    end
+
+    local schaltjahr = false
+    if (jahr % 4 == 0 and jahr % 100 ~= 0) or (jahr % 400 == 0) then
+        schaltjahr = true
+    end
+
+    local tageImMonat = {
+        31, (schaltjahr and 29 or 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+    }
+
+    if tag < 1 or tag > tageImMonat[monat] then
+        return false
+    end
+
+    return true
+end
+
+-- // Sicherheit des Passwords berechnen.
+function calculateSafety(password)
+    local reasons = {}
+    local safety = 0
+
+    local function checkCondition(condition, reason)
+        if not condition then
+            table.insert(reasons, reason)
+        else
+            safety = safety + 25
+        end
+    end
+
+    local hasNumber = password:match('%d')
+    local hasUppercase = password:match('%u')
+    local hasSpecialChar = password:match('[!@#$%^&*()]')
+    local numCount = select(2, password:gsub('%d', ''))
+    local length = #password
+
+    checkCondition(hasNumber and numCount >= 2, "Passwort enthält nicht mindestens zwei Nummern.")
+    checkCondition(hasUppercase, "Passwort enthält keinen Großbuchstaben.")
+    checkCondition(hasSpecialChar, "Passwort enthält kein Sonderzeichen.")
+    checkCondition(length >= 8 and length <= 12, "Passwort hat nicht die richtige Länge (8-12 Zeichen).")
+
+    return safety, reasons
+end
+
+-- // Gibt gewisse Farbcodes wieder, falls man so und so viel "Sicherheit" (siehe oben) hat
+function getColorCode(safety)
+    if safety >= 100 then
+        return 60, 181, 13 -- Grün
+    elseif safety >= 75 then
+        return 214, 214, 21 -- Gelb
+    elseif safety >= 50 then
+        return 181, 93, 16 -- Orange
+    elseif safety >= 25 then
+        return 181, 27, 16 -- Rot
+    else
+        return 0, 0, 255 -- Blau
+    end
+end
+
+-- // Überprüft ob es eine richtige E-Mail ist
+function isValidEmail(email)
+    -- Überprüfen, ob die E-Mail-Adresse das @-Zeichen enthält
+    if not email:match("@") then
+        return false
+    end
+
+    local localPart, domainPart = email:match("([^@]+)@(.+)")
+
+    if not localPart or not domainPart then
+        return false
+    end
+
+    if not domainPart:match("%.") then
+        return false
+    end
+
+    return true
+end

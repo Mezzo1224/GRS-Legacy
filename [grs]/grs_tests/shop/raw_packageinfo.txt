@@ -1,0 +1,30 @@
+--[[-------------------------------------------------
+Notes:
+
+> This code is using a relative image filepath. This will only work as long as the location it is from always exists, and the resource it is part of is running.
+    To ensure it does not break, it is highly encouraged to move images into your local resource and reference them there.
+--]]-------------------------------------------------
+
+
+GUIEditor = {
+    staticimage = {},
+    label = {},
+    button = {},
+    window = {},
+    scrollpane = {}
+}
+addEventHandler("onClientResourceStart", resourceRoot,
+    function()
+        GUIEditor.window[1] = guiCreateWindow(0.45, 0.18, 0.10, 0.32, "", true)
+
+        GUIEditor.staticimage[1] = guiCreateStaticImage(0.26, 0.07, 0.48, 0.37, ":grs_tests/gotPremiumVehToken/vehicle.png", true, GUIEditor.window[1])
+        GUIEditor.label[1] = guiCreateLabel(0.06, 0.47, 0.88, 0.06, "Paketinhalt", true, GUIEditor.window[1])
+        guiLabelSetHorizontalAlign(GUIEditor.label[1], "center", false)
+        guiLabelSetVerticalAlign(GUIEditor.label[1], "center")
+        GUIEditor.scrollpane[1] = guiCreateScrollPane(0.06, 0.54, 0.88, 0.32, true, GUIEditor.window[1])
+
+        GUIEditor.label[2] = guiCreateLabel(0.03, 0.02, 0.93, 0.89, "- DAS\n- DAS\n- UND DAS\n", true, GUIEditor.scrollpane[1])
+
+        GUIEditor.button[1] = guiCreateButton(0.26, 0.88, 0.49, 0.09, "Kaufen", true, GUIEditor.window[1])    
+    end
+)

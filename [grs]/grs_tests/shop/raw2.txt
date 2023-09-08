@@ -1,0 +1,73 @@
+--[[-------------------------------------------------
+Notes:
+
+> This code is using a relative image filepath. This will only work as long as the location it is from always exists, and the resource it is part of is running.
+    To ensure it does not break, it is highly encouraged to move images into your local resource and reference them there.
+--]]-------------------------------------------------
+
+
+GUIEditor = {
+    tab = {},
+    staticimage = {},
+    edit = {},
+    window = {},
+    tabpanel = {},
+    button = {},
+    label = {},
+    gridlist = {},
+    memo = {}
+}
+addEventHandler("onClientResourceStart", resourceRoot,
+    function()
+        GUIEditor.window[1] = guiCreateWindow(0.38, 0.11, 0.25, 0.34, "", true)
+        guiWindowSetSizable(GUIEditor.window[1], false)
+
+        GUIEditor.tabpanel[1] = guiCreateTabPanel(0.02, 0.14, 0.97, 0.83, true, GUIEditor.window[1])
+
+        GUIEditor.tab[1] = guiCreateTab("Information", GUIEditor.tabpanel[1])
+
+        GUIEditor.staticimage[1] = guiCreateStaticImage(0.03, 0.04, 0.40, 0.93, ":grs_tests/placeholder.png", true, GUIEditor.tab[1])
+
+        GUIEditor.tab[2] = guiCreateTab("VIP-Stufen", GUIEditor.tabpanel[1])
+
+        GUIEditor.gridlist[1] = guiCreateGridList(0.02, 0.03, 0.38, 0.94, true, GUIEditor.tab[2])
+        guiGridListAddColumn(GUIEditor.gridlist[1], "Stufe", 0.3)
+        guiGridListAddColumn(GUIEditor.gridlist[1], "Preis", 0.3)
+        guiGridListAddColumn(GUIEditor.gridlist[1], "Credits", 0.3)
+        GUIEditor.memo[1] = guiCreateMemo(0.42, 0.23, 0.56, 0.54, "", true, GUIEditor.tab[2])
+        GUIEditor.button[1] = guiCreateButton(0.60, 0.82, 0.20, 0.11, "Kaufen", true, GUIEditor.tab[2])
+        GUIEditor.label[1] = guiCreateLabel(0.50, 0.05, 0.40, 0.14, "VIP-STUFE NAME", true, GUIEditor.tab[2])
+        guiSetFont(GUIEditor.label[1], "default-bold-small")
+        guiLabelSetHorizontalAlign(GUIEditor.label[1], "center", false)
+        guiLabelSetVerticalAlign(GUIEditor.label[1], "center")
+
+        GUIEditor.tab[3] = guiCreateTab("Pakete", GUIEditor.tabpanel[1])
+            paket = guiCreateStaticImage(0.02, 0.05, 0.21, 0.46, ":grs_tests/placeholder.png", true, GUIEditor.tab[3])
+        GUIEditor.staticimage[2] = guiCreateStaticImage(0.78, 0.04, 0.21, 0.46, ":grs_tests/placeholder.png", true, GUIEditor.tab[3])
+        paket2_abstand = guiCreateStaticImage(0.39, 0.05, 0.21, 0.46, ":grs_tests/placeholder.png", true, GUIEditor.tab[3])
+        GUIEditor.label[2] = guiCreateLabel(0.02, 0.52, 0.21, 0.09, "PAKET-NAME", true, GUIEditor.tab[3])
+        guiLabelSetHorizontalAlign(GUIEditor.label[2], "center", false)
+        guiLabelSetVerticalAlign(GUIEditor.label[2], "center")
+        GUIEditor.label[3] = guiCreateLabel(0.02, 0.64, 0.21, 0.09, "\"Perfekter Start\"", true, GUIEditor.tab[3])
+        guiLabelSetHorizontalAlign(GUIEditor.label[3], "center", false)
+        guiLabelSetVerticalAlign(GUIEditor.label[3], "center")
+        GUIEditor.button[3] = guiCreateButton(0.03, 0.76, 0.17, 0.13, "Paket ansehen", true, GUIEditor.tab[3])
+        GUIEditor.tab[4] = guiCreateTab("Paysafecard einschicken", GUIEditor.tabpanel[1])
+
+        GUIEditor.edit[1] = guiCreateEdit(0.51, 0.40, 0.12, 0.10, "1234", true, GUIEditor.tab[4])
+        GUIEditor.edit[2] = guiCreateEdit(0.24, 0.40, 0.12, 0.10, "1234", true, GUIEditor.tab[4])
+        GUIEditor.edit[3] = guiCreateEdit(0.65, 0.40, 0.12, 0.10, "1234", true, GUIEditor.tab[4])
+        GUIEditor.edit[4] = guiCreateEdit(0.38, 0.40, 0.12, 0.10, "1234", true, GUIEditor.tab[4])
+        GUIEditor.button[2] = guiCreateButton(0.38, 0.65, 0.25, 0.12, "PIN einsenden", true, GUIEditor.tab[4])
+        GUIEditor.label[2] = guiCreateLabel(0.25, 0.81, 0.51, 0.07, "Das Gutschreiben des Guthabens dauert bis zu 72 Stunden", true, GUIEditor.tab[4])
+        guiLabelSetHorizontalAlign(GUIEditor.label[2], "center", false)
+        guiLabelSetVerticalAlign(GUIEditor.label[2], "center")
+        GUIEditor.edit[5] = guiCreateEdit(0.45, 0.54, 0.11, 0.08, "GUTHABEN", true, GUIEditor.tab[4])
+
+        GUIEditor.tab[5] = guiCreateTab("Verlauf", GUIEditor.tabpanel[1])
+
+        GUIEditor.label[3] = guiCreateLabel(0.02, 0.07, 0.27, 0.05, "Coins: ZAHL", true, GUIEditor.window[1])
+        GUIEditor.label[4] = guiCreateLabel(0.67, 0.07, 0.31, 0.05, "VIP-Stufe: Aktiv bis zum 01.01.2940", true, GUIEditor.window[1])
+        guiLabelSetHorizontalAlign(GUIEditor.label[4], "right", false)    
+    end
+)

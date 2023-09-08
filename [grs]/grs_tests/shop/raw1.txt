@@ -1,0 +1,21 @@
+
+GUIEditor = {
+    tab = {},
+    window = {},
+    tabpanel = {},
+    label = {}
+}
+addEventHandler("onClientResourceStart", resourceRoot,
+    function()
+        GUIEditor.window[1] = guiCreateWindow(0.38, 0.11, 0.25, 0.34, "", true)
+        guiWindowSetSizable(GUIEditor.window[1], false)
+
+        GUIEditor.tabpanel[1] = guiCreateTabPanel(0.02, 0.14, 0.97, 0.83, true, GUIEditor.window[1])
+
+        GUIEditor.tab[1] = guiCreateTab("Tab", GUIEditor.tabpanel[1])
+
+        GUIEditor.label[1] = guiCreateLabel(0.02, 0.07, 0.27, 0.05, "Coins: ZAHL", true, GUIEditor.window[1])
+        GUIEditor.label[2] = guiCreateLabel(0.67, 0.07, 0.31, 0.05, "VIP-Stufe: Aktiv bis zum 01.01.2940", true, GUIEditor.window[1])
+        guiLabelSetHorizontalAlign(GUIEditor.label[2], "right", false)    
+    end
+)

@@ -1,0 +1,24 @@
+
+GUIEditor = {
+    button = {},
+    window = {},
+    edit = {},
+    label = {}
+}
+addEventHandler("onClientResourceStart", resourceRoot,
+    function()
+        GUIEditor.window[1] = guiCreateWindow(0.43, 0.41, 0.14, 0.18, "", true)
+        guiWindowSetMovable(GUIEditor.window[1], false)
+        guiWindowSetSizable(GUIEditor.window[1], false)
+
+        GUIEditor.label[1] = guiCreateLabel(0.02, 0.11, 0.95, 0.21, "Um auf diesem Server zu spielen, brauchst du einen gültigen Betakey. \n", true, GUIEditor.window[1])
+        guiLabelSetHorizontalAlign(GUIEditor.label[1], "center", true)
+        guiLabelSetVerticalAlign(GUIEditor.label[1], "center")
+        GUIEditor.label[2] = guiCreateLabel(0.03, 0.33, 0.94, 0.19, "Ein Key besteht aus 4 verschiedenen zufallsgenerierten Zeichen. \nDu erhältst einen Key auf Discord", true, GUIEditor.window[1])
+        GUIEditor.edit[1] = guiCreateEdit(0.22, 0.55, 0.17, 0.13, "", true, GUIEditor.window[1])
+        GUIEditor.edit[2] = guiCreateEdit(0.42, 0.55, 0.17, 0.13, "", true, GUIEditor.window[1])
+        GUIEditor.edit[3] = guiCreateEdit(0.61, 0.55, 0.17, 0.13, "", true, GUIEditor.window[1])
+        GUIEditor.button[1] = guiCreateButton(0.25, 0.75, 0.25, 0.15, "Key benutzen", true, GUIEditor.window[1])
+        GUIEditor.button[2] = guiCreateButton(0.52, 0.75, 0.25, 0.15, "Key anfragen", true, GUIEditor.window[1])    
+    end
+)
