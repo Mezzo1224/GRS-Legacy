@@ -36,6 +36,7 @@ for v, table in ipairs(factionColors) do
     end
 end
 
+-- TODO REWORK
 SFPD = createColCircle(-1603.8896484375, 675.7958984375, 100 )
 SFPD1 = createColCircle(2272.560546875,2440.080078125, 100 )
 Mafia = createColCircle(-688.0791015625,939.6416015625, 100 )

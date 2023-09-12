@@ -54,13 +54,8 @@ end
 function giveCodeReward (player, code, isRegistration)
     if ServerConfig["bonuscodes"][code] then
         if ServerConfig["bonuscodes"][code].onlyRegistration == true and isRegistration == true then
-            print ( code, "Code gibt es",  ServerConfig["bonuscodes"][code].onlyRegistration )
             ServerConfig["bonuscodes"][code].redeemCode(player)
-        else
-            print ( "Code nur gültig für die Registration.")
         end
-    else
-        print ( "Code gibt es nicht")
     end
 end
 

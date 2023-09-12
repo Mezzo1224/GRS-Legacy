@@ -1,6 +1,10 @@
 registerUI = {}
+local loginMusicURL = "https://vgmsite.com/soundtracks/sim-city/vifjdqfbbz/01%20-%20SimCity%20Theme.mp3"
+
 
 function showRegisterUI ()
+        registerMusic = playSound(loginMusicURL, true, false) 
+        setSoundVolume(registerMusic, 0.5)
         registerUI["window"]  = DGS:dgsCreateWindow(0.44, 0.37, 0.12, 0.27, "", true)
         DGS:dgsCenterElement(registerUI["window"], false, true) 
         DGS:dgsWindowSetSizable(registerUI["window"], false)
@@ -8,9 +12,11 @@ function showRegisterUI ()
         showChat(false)
         showCursor(true)
         DGS:dgsSetInputEnabled ( true )
+        DGS:dgsSetInputMode( "no_binds_when_editing" )
         DGS:dgsWindowSetCloseButtonEnabled(registerUI["window"], false)
-    --    DGS:dgsMoveTo( registerUI["window"],1115, 443,false,"OutQuad",5000)
-
+        registerUI["musicNotice"] = DGS:dgsCreateLabel(0.46, 0.64, 0.08, 0.01, "\"M\" zum ein-/ausschalten der Musik", true)   
+        DGS:dgsAttachToAutoDestroy(registerUI["window"], registerUI["musicNotice"])
+        DGS:dgsSetProperty(registerUI["musicNotice"],"textColor",tocolor(36, 166, 10))
         registerUI["tabpanel"] = DGS:dgsCreateTabPanel(0.03, 0.04, 0.94, 0.85, true, registerUI["window"])
 
         registerUI["tabpanel_account"] = DGS:dgsCreateTab("Account", registerUI["tabpanel"])
@@ -21,6 +27,20 @@ function showRegisterUI ()
         DGS:dgsLabelSetVerticalAlign(registerUI["usernameTitle"], "center")
         registerUI["username"] = DGS:dgsCreateEdit(0.02, 0.17, 0.64, 0.11, "Benutzname", true, registerUI["tabpanel_account_scrollpanel"])
         DGS:dgsSetText(registerUI["username"], getPlayerName(getLocalPlayer()))
+        DGS:dgsSetProperty(registerUI["username"],"readOnly",true)
+
+        addEventHandler("onDgsMouseDoubleClick", registerUI["username"] ,function(button, state)
+            if button == "left" and state == "down" then
+              local isReadOnly =  DGS:dgsGetProperty(registerUI["username"],"readOnly")
+              if isReadOnly == true then
+                DGS:dgsSetProperty(registerUI["username"],"readOnly",false)
+              else
+                DGS:dgsSetProperty(registerUI["username"],"readOnly", true)
+                DGS:dgsSetText(registerUI["username"], getPlayerName(getLocalPlayer()))
+              end
+            end
+        end)
+
         -- // Passwort
         registerUI["passwordTitle"] = DGS:dgsCreateLabel(0.02, 0.34, 0.21, 0.10, "Passwort", true, registerUI["tabpanel_account_scrollpanel"])
         DGS:dgsLabelSetVerticalAlign(registerUI["passwordTitle"], "center")
@@ -64,17 +84,36 @@ function showRegisterUI ()
             end
         end)
 
+        local function progressAnimation (targetProgress)
+            local currentProgress =  DGS:dgsGetProperty(registerUI["passwordSafety"],"progress")
+            print("Current:",currentProgress, "Target:", targetProgress)
+            local currentProgress =  DGS:dgsGetProperty(registerUI["passwordSafety"],"progress")
+            addEventHandler ( "onClientRender", root, function()
+                if currentProgress < targetProgress then 
+                    currentProgress = currentProgress + 1
+                    DGS:dgsSetProperty(registerUI["passwordSafety"],"progress",currentProgress)
+                elseif currentProgress > targetProgress then
+                    currentProgress = currentProgress - 1
+                    DGS:dgsSetProperty(registerUI["passwordSafety"],"progress",currentProgress)
+                else
+                    cancelEvent()
+                end
+            end)
+        end
+
         addEventHandler("onDgsTextChange", registerUI["password"], function() 
             local text = DGS:dgsGetText(source)
             local safety, reasons = calculateSafety(text)
             local r, g, b = getColorCode(safety)
          --   for _, reason in ipairs(reasons) do
-          --      print("-", reason)
+          --      print("-", reason)    
           --  end
-
+            progressAnimation (safety)
             print(r, g, b)
             DGS:dgsSetProperty(registerUI["passwordSafety"],"indicatorColor",tocolor(r, g, b))
-            DGS:dgsSetProperty(registerUI["passwordSafety"],"progress",safety)
+           
+
+
             DGS:dgsSetText(registerUI["passwordSafetyText"], safety.." / 100")
            
         end)
@@ -125,7 +164,6 @@ function showRegisterUI ()
 
         -- // Bonuscode
         registerUI["bonuscodeTitle"] = DGS:dgsCreateLabel(0.02, 0.02, 0.94, 0.10, "Bonuscode", true, registerUI["tabpanel_optional_scrollpanel"])
-     --   DGS:dgsSetFont(registerUI["bonuscodeTitle"], "default-bold-small")
         DGS:dgsLabelSetHorizontalAlign(registerUI["bonuscodeTitle"], "center", false)
         DGS:dgsLabelSetVerticalAlign(registerUI["bonuscodeTitle"], "center")
         registerUI["bonuscode"] = DGS:dgsCreateEdit(0.02, 0.17, 0.46, 0.10, "", true, registerUI["tabpanel_optional_scrollpanel"])
@@ -148,18 +186,14 @@ function showRegisterUI ()
         -- // Account erstellen
         registerUI["tabpanel_create"] = DGS:dgsCreateTab("Erstellen", registerUI["tabpanel"])
 
-        registerUI["tabpanel_create_scrollpanel"] = DGS:dgsCreateScrollPane(0.03, 0.22, 0.93, 0.27, true,  registerUI["tabpanel_create"])
-
         registerUI["infoCreation"] = DGS:dgsCreateLabel(0.03, 0.03, 0.93, 0.17, "Vergewissere dich, dass alle Daten korrekt ausgefüllt sind.", true, registerUI["tabpanel_create"])
         DGS:dgsLabelSetHorizontalAlign(registerUI["infoCreation"], "center", true)
-        
-
-
         registerUI["acceptServerrules"] = DGS:dgsCreateCheckBox(0.03, 0.66, 0.90, 0.12, " Regeln gelesen & akzeptiert ?", false, true, registerUI["tabpanel_create"])    
         registerUI["dataCorrect"] = DGS:dgsCreateCheckBox(0.03, 0.53, 0.90, 0.12, " Alle Daten Korrekt?", false, true, registerUI["tabpanel_create"])    
-        registerUI["error"] = DGS:dgsCreateLabel(0.04, 0.12, 2.2, 0.76, "", true,  registerUI["tabpanel_create_scrollpanel"] )
-        DGS:dgsSetProperty(registerUI["error"],"textSize",{0.9,0.9})
-        DGS:dgsSetProperty(registerUI["error"], "textColor",tocolor(171, 12, 12))
+        registerUI["error"] = DGS:dgsCreateMemo(0.03, 0.21, 0.93, 0.27, "", true, registerUI["tabpanel_create"] )
+        DGS:dgsSetProperty(registerUI["error"],"readOnly",true)
+        DGS:dgsSetProperty(registerUI["error"],"bgColor",tocolor(0, 0, 0, 0))
+        DGS:dgsSetProperty(registerUI["error"],"textColor",tocolor(171, 12, 12))
         local registerIcon, rulesIcon = dxCreateTexture(":grs_tests/register/enter.png"), dxCreateTexture(":grs_tests/register/book.png")
         registerUI["registerButton"] = DGS:dgsCreateButton(0.03, 0.80, 0.44, 0.17, "Registrieren", true, registerUI["tabpanel_create"])
         
@@ -181,9 +215,11 @@ function showRegisterUI ()
         DGS:dgsSetProperty(registerUI["seeRules"],"textOffset",{0.1,0,true})
         DGS:dgsSetProperty(registerUI["seeRules"],"colorTransitionPeriod",500)
         DGS:dgsSetProperty(registerUI["seeRules"],"color",{tocolor(171, 123, 12),tocolor(214, 154, 15),tocolor(161, 116, 11)})
-
         addEventHandler ( "onDgsMouseClick", registerUI["registerButton"], registerPlayer  )
-
+        bindKey ("enter","down", function()
+            DGS:dgsSimulateClick( registerUI["registerButton"], "left")
+        end, registerUI["registerButton"], "left" )
+        bindKey ("m","down", toggleMusic)
 end
 
 function getGender()
@@ -252,16 +288,23 @@ function registerPlayer (button, state)
     end
 end
 
-function finishRegister ()
+function disableRegisterUI ()
     local close = DGS:dgsCloseWindow( registerUI["window"])
-
 	if close then
-		outputChatBox("DGS window closed!")
+        unbindKey ("enter","down", registerPlayer)
 		showCursor(false)
 	end
-
-    -- // Tutorial
-
 end
-addEvent ( "finishRegister", true )
-addEventHandler ( "finishRegister", getRootElement(), finishRegister )
+addEvent ( "disableRegisterUI", true )
+addEventHandler ( "disableRegisterUI", getRootElement(), disableRegisterUI )
+
+
+function toggleMusic ()
+    if isSoundPaused(registerMusic) then
+        setSoundPaused(registerMusic, false)
+        DGS:dgsSetProperty( registerUI["musicNotice"],"textColor",tocolor(36, 166, 10))
+    else
+        setSoundPaused(registerMusic, true)
+        DGS:dgsSetProperty( registerUI["musicNotice"],"textColor",tocolor(171, 12, 12))
+    end
+end

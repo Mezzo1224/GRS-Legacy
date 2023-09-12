@@ -23,6 +23,7 @@ function isRegistered ( pname )
 		local result = dbPoll ( dbQuery ( handler, "SELECT ?? FROM ?? WHERE ?? LIKE ?", "Erlaubnis", "players", "Serial", getPlayerSerial ( getPlayerFromName ( pname ) ) ), -1 )
 		if result and result[1] then
 			local erlaubnis = tonumber ( result[1]["Erlaubnis"] )
+			print("Erlaubnis", erlaubnis)
 			if erlaubnis == 0 then
 				return true
 			end

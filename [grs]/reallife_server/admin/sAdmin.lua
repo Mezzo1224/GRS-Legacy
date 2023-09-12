@@ -40,6 +40,7 @@ function showMyPermissions (player)
     end
 end
 addCommandHandler("smp",showMyPermissions )
+
 function hasPermission ( player, permission )
     local pLevel = vioGetElementData ( player, "adminlvl" )   
     if pLevel > 0 and permission then
@@ -60,9 +61,7 @@ function hasPermission ( player, permission )
 end
 
 local function copyPermissionTable(source, rank)
-    print(source, rank, "Transfer started")
     for key, value in pairs(source) do
-        print(key, value, "Erfolgreich kopiert zum rang", rank)
         ServerConfig["admin"]["ranks"][rank].permissions[key] = value
     end
     return destination

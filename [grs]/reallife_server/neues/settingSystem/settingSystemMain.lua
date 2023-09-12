@@ -76,7 +76,6 @@ function applySettings ()
 	-- // Keybinding
 	bindKey( userSettings.keybinds.Helpmenu , "down", createHelpmenu  )
 	bindKey ( userSettings.keybinds.Ticketmenu, "down", function(key,state)
-    	print(key, state)
 		triggerServerEvent ( "startReport", lp, lp )
     end)
 
@@ -116,14 +115,13 @@ end
 -- // Get
 function getKeybind ( func )
 	local returnKeybind = userSettings.keybinds[func]
-	print( "Keybind", userSettings.keybinds,  returnKeybind )
+
 
 	return returnKeybind
 end
 
 function getSetting2 (setting)
 	local getSetting = userSettings.settings[setting]
-	print( "Settings", userSettings.settings, getSetting )
 
 	return getSetting
 end

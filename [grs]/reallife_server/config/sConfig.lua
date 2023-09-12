@@ -15,14 +15,41 @@ ServerConfig["main"] = {
 
     -- // Sonstiges
     enableBetasystem = true,
+    enableAlternateDatabaseForBeta = true,
+    allowInfinityAccounts = true,
+    enableMapextensions = true,
+    FPSLimit = setFPSLimit ( 60 ),
     startMoney = {bank = 500000, money = 100000},
     -- // Nicht ändern!
-    compatibleDgsVersion = "3.511",
+    compatibleDgsVersion = "3.521",
 }
 
+if ServerConfig["main"].enableBetasystem == true and ServerConfig["main"].enableAlternateDatabaseForBeta == true then
+    ServerConfig["mysql"] = {
+        host = "localhost",
+        user = "root",
+        password = "",
+        database = "grs",
+        port = "3306"
+    }     
+    print("Alternative Datanbank für den Betaserver aktiviert.")
+end
+
+-- // Updater - Erklärung
+-- // "repository" - Überprüft die komplette GitHub Datei nach änderung d.h man bekommst nach jeder Änderung eine Nachricht, dass es ein Update gibt (Kurz: Bei jeder Änderung = Nachricht)
+-- // "meta" - Bekommt eine Versions-Zahl aus der 'meta.xml' von 'reallife_server', sollte diese anders sein als die installierte, gibt es eine Nachricht, dass es ein Update gibt (Kurz: Bei erwähnenswerten Updates = Nachricht)
+-- // false - schaltet den Updater aus
+ServerConfig["updater"] = {
+    versionsChecker = "meta",
+    frequentUpdateReminder = false, --// Soll die Erinnerung, dass es ein Update gibt jede Stunde (true) oder nur bei jedem Gamemode-Start kommen (false)
+    githubRespoLink = "https://api.github.com/repos/Mezzo1224/GRS-Legacy", 
+    githubRawMeta = "https://raw.githubusercontent.com/Mezzo1224/GRS-Legacy/main/%5Bgrs%5D/reallife_server/meta.xml"
+}
 
 ServerConfig["admin"] = {
     hasPermissionsFromPrevRanks = true, -- // Sollte dieses Einstellung auf false sein, werden Vorherige Rechte nicht übernommen!
+    enableSensetiveCMDs = false,
+    aDutyModel = 16,
     -- Adminränge
     ["ranks"] = {
         [0] = {
@@ -114,9 +141,6 @@ ServerConfig["admin"] = {
     },
 }
 
-
-
-
 ServerConfig["debugging"] = {
     debugServerConfig = false,
     debugSqlStats = {
@@ -131,123 +155,165 @@ ServerConfig["debugging"] = {
     }
 }
 
-ServerConfig["PremiumRanks"] = {
-    [1] = {
-        name = "#8A2908Bronze",
-        changeSocial = (604800*4),
-        changeNumber = (604800*4),
-        freePremiumCar = 0, -- Höher als 0 = Ja
-        civTimeReduction = 0,
-        increasedPayday = 2,
-        xpToMoneyRate = 4
-    },
-    [2] = {
-        name = "#A4A4A4Silber",
-        changeSocial = (604800*2),
-        changeNumber = (604800*2),
-        freePremiumCar = 0, -- Höher als 0 = Ja
-        civTimeReduction = 2,
-        increasedPayday = 5,
-        xpToMoneyRate = 6
-    },
-    [3] = {
-        name = "#AEB404Gold",
-        changeSocial = (604800*4),
-        changeNumber = (604800*4),
-        freePremiumCar = 0, -- Höher als 0 = Ja
-        civTimeReduction = 5,
-        increasedPayday = 10,
-        xpToMoneyRate = 4
-    },
-    [4] = {
-        name = "#D8D8D8Platin",
-        changeSocial = (604800*4),
-        changeNumber = (604800*4),
-        freePremiumCar = 604800, -- Höher als 0 = Ja
-        civTimeReduction = 7,
-        increasedPayday = 16,
-        xpToMoneyRate = 2
-    },
-    [5] = {
-        name = "#848484Titan",
-        changeSocial = (604800*4),
-        changeNumber = (604800*4),
-        freePremiumCar = 604800/2, -- Höher als 0 = Ja
-        civTimeReduction = 10,
-        increasedPayday = 20,
-        xpToMoneyRate = 1
-    }
-}
-
 
 ServerConfig["bonuscodes"] = {
     ["grsfb"] = {onlyRegistration = true, redeemCode = function (player)
         local bankmoney = vioGetElementData ( player, "bankmoney" )
         vioSetElementData ( player, "bankmoney", bankmoney + 100000 )
-        setPremiumData (player, 3,1)
+        setPlayerPremium (player, "3d", 1, false)
     end},
     ["grsad"] =  {onlyRegistration = true, redeemCode = function (player)
         local bankmoney = vioGetElementData ( player, "bankmoney" )
         vioSetElementData ( player, "bankmoney", bankmoney + 100000 )
-        setPremiumData (player, 3,1)
+        setPlayerPremium (player, "3d", 1, false)
     end},
     ["grsbeta"] =  {onlyRegistration = true, redeemCode = function (player)
         local bankmoney = vioGetElementData ( player, "bankmoney" )
         vioSetElementData ( player, "bankmoney", bankmoney + 500000 )
-        setPremiumData (player, 28, 4)
+        setPlayerPremium (player, "3d", 1, false)
     end}
 }
 
-
+ServerConfig["premium"] = {
+    vehicleBlacklist = {
+        [432] = true,
+        [476] = true,
+        [447] = true,
+        [464] = true, 
+        [425] = true
+    },
+    ["ranks"] = {
+        [1] = {
+            name = "#8A2908Bronze",
+            changeSocial = (604800*4),
+            changeNumber = (604800*4),
+            freePremiumCar = 0, -- Höher als 0 = Ja
+            civTimeReduction = 0,
+            increasedPayday = 2,
+            xpToMoneyRate = 4,
+            shopConfig = {
+                price = {money = 1000000, coins = 5},
+                duration = "30d",
+                description = [[ Du erähltst mit dieser Stufe folgende Boni:
+                
+                Sozialer-Status alle  ]] .. tostring(civTimeReduction) .. [[ änderbar.
+                
+                ]]
+            }
+        },
+        [2] = {
+            name = "#A4A4A4Silber",
+            changeSocial = (604800*2),
+            changeNumber = (604800*2),
+            freePremiumCar = 0, -- Höher als 0 = Ja
+            civTimeReduction = 2,
+            increasedPayday = 5,
+            xpToMoneyRate = 6,
+            shopConfig = {
+                price = {money = 0, coins = 5},
+                duration = "30d",
+                description = "[[ Du ]]"
+            }
+        },
+        [3] = {
+            name = "#AEB404Gold",
+            changeSocial = (604800*4),
+            changeNumber = (604800*4),
+            freePremiumCar = 0, -- Höher als 0 = Ja
+            civTimeReduction = 5,
+            increasedPayday = 10,
+            xpToMoneyRate = 4,
+            shopConfig = {
+                price = {money = 0, coins = 5},
+                duration = "30d",
+                description = "[[ Du ]]"
+            }
+        },
+        [4] = {
+            name = "#D8D8D8Platin",
+            changeSocial = (604800*4),
+            changeNumber = (604800*4),
+            freePremiumCar = 604800, -- Höher als 0 = Ja
+            civTimeReduction = 7,
+            increasedPayday = 16,
+            xpToMoneyRate = 2,
+            shopConfig = {
+                price = {money = 0, coins = 5},
+                duration = "30d",
+                description = "[[ Du ]]"
+            }
+        },
+        [5] = {
+            name = "#848484Titan",
+            changeSocial = (604800*4),
+            changeNumber = (604800*4),
+            freePremiumCar = 604800/2, -- Höher als 0 = Ja
+            civTimeReduction = 10,
+            increasedPayday = 20,
+            xpToMoneyRate = 1,
+            shopConfig = nil
+        }
+    }
+}
 
 ServerConfig["shop"] = {
     canSendPaysafecard = true,
+    defaultPackageImage = "images/self/shop/placeholder.png",
     packages = {
         -- Hier werden Item Pakete hinzugefügt
-        ["VIP-Paket (7 Tage)"] = {
-            creditCosts = 0,
-            moneyCosts = 500000,
-            imagePath = "",
-            description = [[Test]],
-            isVIPIncluded = true,
-            category = "VIP-Pakete",
-            sortOrder = 3,
+        [1] = {
+            name = "Fahrzeug-Token",
+            label = "Unikate!",
+            description = [[]],
+            image = nil,
+            price = 3,
+            sortOrder = 1,
             onBuy = function ( target ) 
                 print(target, "hat es gekauft")
             end,
         },
-        ["VIP-Paket (30 Tage)"] = {
-            creditCosts = 10,
-            moneyCosts = 0,
-            imagePath = "",
-            description = [[Test]],
-            isVIPIncluded = true,
-            category = "VIP-Pakete",
-            sortOrder = 2,
+        [2] = {
+            name = "Starter-Paket",
+            label = "Starhilfe gefällig?",
+            description = [[]],
+            image = "images/self/shop/placeholder.png",
+            price = 15,
+            sortOrder = 1,
             onBuy = function ( target ) 
                 print(target, "hat es gekauft")
             end,
         },
-        ["VIP-Paket (90 Tage)"] = {
-            creditCosts = 20,
-            moneyCosts = 0,
-            imagePath = "",
-            description = "Du erhältest VIP für 90 Tage",
-            isVIPIncluded = true,
-            category = "VIP-Pakete",
+        [3] = {
+            name = "Test-Paket",
+            label = "TEST3",
+            description = [[]],
+            image = nil,
+            price = 20,
+            sortOrder = 1,
+            onBuy = function ( target ) 
+                print(target, "hat es gekauft")
+            end,
+        },
+        [4] = {
+            name = "Test-Paket",
+            label = "TEST 4",
+            description = [[]],
+            image = nil,
+            price = 20,
             sortOrder = 1,
             onBuy = function ( target ) 
                 print(target, "hat es gekauft")
             end,
         }
+       
     }
 }
 
+
 -- // Tabellen nach "sortOrder" sortieren
 local function compare(a, b)
-  return a.sortOrder < b.sortOrder
+    return a.sortOrder < b.sortOrder
 end
-
 table.sort(ServerConfig["shop"].packages, compare)
 
 ServerConfig["forum"] = { 

@@ -11,8 +11,6 @@ end
 addEvent ( "intRegister", true )
 addEventHandler ( "intRegister", getRootElement(), intRegister )
 
-intRegister ()
-
 
 
 -- Überprüft ob der Geburtstag gültig ist.
@@ -74,7 +72,6 @@ function calculateSafety(password)
     checkCondition(hasUppercase, "Passwort braucht einen Großbuchstaben.")
     checkCondition(hasSpecialChar, "Passwort hat kein Sonderzeichen.")
     checkCondition(length >= 8 and length <= 12, "Passwort muss 8-12 Zeichen haben.")
-
     return safety, reasons
 end
 

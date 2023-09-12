@@ -7,10 +7,6 @@ local veh_frozen_vehs = {}
 local muted_players = {}
 local activeOOC = false
 local muted_players = {}
-local adminDuty = { } -- TODO
-local admindutyarray = {}
-local admindutyleben = {}
-local admindutyweste = {}
 local adminVeh= {}
 local adminVehData= {}
 
@@ -1827,65 +1823,6 @@ addEventHandler ( "testsocial", root, function ( bool )
 	end
 end )
 
-
--- // Überarbeiten
-function suppmode_func (player)
-    local pl = getPlayerName(player)
-    local x, y, z = getElementPosition ( player )
-    if hasPermission ( player, "canUseSuppmode" ) then
-        if vioGetElementData (player, "suppmode") == true then
-            destroyElement ( admindutyarray[player] )
-            vioSetElementData (player, "suppmode", false)
-            outputChatBox ( "Du bist nun nicht mehr im Admin Duty.", player, 150, 150, 0 )
-            setElementModel ( player, vioGetElementData ( player, "skinid") )
-            removeEventHandler ( "onVehicleEnter", getRootElement(), enterVehicleInADuty )
-            removeEventHandler ( "onVehicleExit", getRootElement(), exitVehicleInADuty  )
-            setElementHealth(player,admindutyleben[player])
-            setPedArmor(player,admindutyweste[player])
-            admindutyweste[player] = nil
-            admindutyleben[player] = nil
-        else
-            admindutyleben[player] = getElementHealth(player)
-            admindutyweste[player] = getPedArmor(player)
-            vioSetElementData (player, "suppmode", true)
-            outputChatBox ( "Du bist nun  im Admin Duty.", player, 150, 150, 0 )
-            setElementModel ( player, 16 )
-            admindutyarray[player] = createMarker ( 0, 0, 0, "arrow", 0.5, 229,231,23,245 )
-            setMarkerSize ( admindutyarray[player], 0.5  )
-            attachElements ( admindutyarray[player], player, 0, 0, 1.3 )
-            addEventHandler ( "onVehicleEnter", getRootElement(), enterVehicleInADuty )
-            addEventHandler ( "onVehicleExit", getRootElement(), exitVehicleInADuty)
-            setElementHealth(player,100)
-            setPedArmor(player,100)
-
-
-        end
-    else
-        triggerClientEvent ( player, "infobox_start", getRootElement(), "\n\nDu bist kein Ticketbeauftragter!", 5000, 255, 0, 0 )
-    end
-end
-addEventHandler ( "suppmode", getRootElement(), suppmode_func )
-addEvent ( "suppmode", true )
-
-function enterVehicleInADuty (player)
-    if vioGetElementData (player, "suppmode") == true then
-        if seat == 0 then
-            detachElements ( admindutyarray[player], player)
-            attachElements ( admindutyarray[player], source, 0, 0,2 )
-        end
-    end
-end
-
-
-function exitVehicleInADuty (player)
-    if vioGetElementData (player, "suppmode") == true then
-        if isElementAttached(player) == true then
-            detachElements ( admindutyarray[player], source)
-            attachElements ( admindutyarray[player], player, 0, 0, 1.3 )
-        end
-    end
-end
-
 local function getTheVehicle ( vehicle )
 	if tostring(vehicle) and getVehicleModelFromName( vehicle ) then
 		return getVehicleModelFromName( vehicle )
@@ -1895,7 +1832,6 @@ local function getTheVehicle ( vehicle )
 		return false
 	end
 end
-
 
 function adminveh ( player, cmd, vehicle )
 	if not vehicle then vehicle = "Infernus" end
@@ -1952,10 +1888,8 @@ function enterVehicle ( thePlayer, seat  )
         opticExitVehicle ( thePlayer)
     end
 end
-
 addCommandHandler ( "adminveh", adminveh )
-addCommandHandler ( "smode",  suppmode_func)
-addCommandHandler ( "suppmode",  suppmode_func)
+
 
 
 
