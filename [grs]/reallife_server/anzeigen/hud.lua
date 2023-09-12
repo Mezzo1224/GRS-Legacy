@@ -7,9 +7,9 @@ local player_screen = player_screen/screen -- die Prozentzahl vom Spieler Bildsc
 local size = 1*sx
 hud = "on"
 cityabk = {
-["San Fierro"] = ", SF",
-["Los Santos"] = ", LS",
-["Las Venturas"] = ", LV"
+	["San Fierro"] = ", SF",
+	["Los Santos"] = ", LS",
+	["Las Venturas"] = ", LV"
 }
 local dxfont0_segoeui = dxCreateFont(":reallife_server/fonts/segoeui.ttf", 11*sy)
 local dxfont1_segoeui = dxCreateFont(":reallife_server/fonts/segoeui.ttf", 14*sy)

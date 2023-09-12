@@ -38,7 +38,8 @@ infoboxesInSession = 0
 infoboxesInQueue = 0
 addYperWaiters = 70
 local x, y = guiGetScreenSize()
-local sx, sy = x/2560, y/1440
+--local sx, sy = x/2560, y/1440
+local sx, sy = x/2560, y/1080
 local FrontSize = sy*1.5 
 
 
@@ -99,11 +100,11 @@ function renderInfobox ()
             local image = infoboxTypes[type].image
             local labeln = infoboxTypes[type].label
             local r,g,b = infoboxTypes[type].color[1], infoboxTypes[type].color[2], infoboxTypes[type].color[3] 
-            dxDrawRectangle(2132/infoboxes[i].animationProgress, 286+(addValue), 418, 52, tocolor(1, 0, 0, 120), false)
-            dxDrawRectangle(2132/infoboxes[i].animationProgress, 286+(addValue), 10, 52, tocolor(r, g, b, 255), false)
-            dxDrawImage(2152/infoboxes[i].animationProgress, 296+(addValue), 32, 32, image, 0, 0, 0, tocolor(255, 255, 255, 255), false)
-            dxDrawText(labeln, 2194/infoboxes[i].animationProgress, 292+(addValue), 2346, 310, tocolor(255, 255, 255, 255), 1.10, "default-bold", "left", "top", false, false, false, false, false)
-            dxDrawText(infoboxes[i].text, 2195/infoboxes[i].animationProgress, 311+(addValue), 2489, 328, tocolor(255, 255, 255, 255), 1.00, "default", "left", "top", false, false, false, false, false)
+            dxDrawRectangle(2132/infoboxes[i].animationProgress*sx, 286+(addValue)*sy, 418*sx, 52*sy, tocolor(1, 0, 0, 120), false)
+            dxDrawRectangle(2132/infoboxes[i].animationProgress*sx, 286+(addValue)*sy, 10*sx, 52*sy, tocolor(r, g, b, 255), false)
+            dxDrawImage(2152/infoboxes[i].animationProgress*sx, 296+(addValue)*sy, 32*sx, 32*sy, image, 0, 0, 0, tocolor(255, 255, 255, 255), false)
+            dxDrawText(labeln, 2194/infoboxes[i].animationProgress*sx, 292+(addValue)*sy, 2346*sx, 310*sy, tocolor(255, 255, 255, 255), 1.10, "default-bold", "left", "top", false, false, false, false, false)
+            dxDrawText(infoboxes[i].text, 2195/infoboxes[i].animationProgress*sx, 311+(addValue)*sy, 2489*sx, 328*sy, tocolor(255, 255, 255, 255), 1.00, "default", "left", "top", false, false, false, false, false)
         end
     end
 end
@@ -135,7 +136,7 @@ end
 
 function infobox_start_func ( text, timetoshow, r, g, b, type )
 	-- // Abärtskompatibilität
-    print (text, timetoshow, r, g, b, type)
+   -- print (text, timetoshow, r, g, b, type)
     if not type then
         type = "info"
     end

@@ -1,20 +1,21 @@
 
 function registerUserInForum (player, email)
-    --if forumsync == 1 then
-	if not dbExist ( "forum_accounts", "email LIKE '"..email.."'") then
-		local pname = getPlayerName(player)
-		local pw = generateString ( math.random( 5,9 ) )
-		register (pname, pw, email, 3, 3)
-		local id = tonumber (getUserID(pname))
-		dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "forum_accounts", "ForumID", id, "Password", pw, "UID", playerUID[pname] )
-		outputChatBox ( "Dein Account mit dem Passwort "..pw.." und der E-Mail "..email.." wurde eingerichtet!", player, 0,139,0 )
-		outputChatBox ( "Das Passwort nach dem Login ändern! Es wird momentan auf unseren Server gespeichert!", player, 0,139,0 )
-		offlinemsg ( "Erinnerung: Dein Foren Passwort "..pw.." und deine E-Mail "..email, "Server", pname )
-		offlinemsg ( "Das Passwort nach dem Login ändern! Es wird momentan auf unseren Server gespeichert!", "Server", pname )
-		return true
-	else
-		 outputChatBox ( "E-Mail bereits in benutzung. ", player, 0,139,0 )
-		 return false
+    if ServerConfig["forum"].enableForumsynchronization == true then
+		if not dbExist ( "forum_accounts", "email LIKE '"..email.."'") then
+			local pname = getPlayerName(player)
+			local pw = generateString ( math.random( 5,9 ) )
+			register (pname, pw, email, 3, 3)
+			local id = tonumber (getUserID(pname))
+			dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "forum_accounts", "ForumID", id, "Password", pw, "UID", playerUID[pname] )
+			outputChatBox ( "Dein Account mit dem Passwort "..pw.." und der E-Mail "..email.." wurde eingerichtet!", player, 0,139,0 )
+			outputChatBox ( "Das Passwort nach dem Login ändern! Es wird momentan auf unseren Server gespeichert!", player, 0,139,0 )
+			offlinemsg ( "Erinnerung: Dein Foren Passwort "..pw.." und deine E-Mail "..email, "Server", pname )
+			offlinemsg ( "Das Passwort nach dem Login ändern! Es wird momentan auf unseren Server gespeichert!", "Server", pname )
+			return true
+		else
+			outputChatBox ( "E-Mail bereits in benutzung. ", player, 0,139,0 )
+			return false
+		end
 	end
 end
 addEvent ( "registerUserInForum", true)

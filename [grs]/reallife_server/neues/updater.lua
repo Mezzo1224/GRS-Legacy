@@ -1,9 +1,9 @@
 
 function updateCheck ()
-	if versionsChecker == "meta" then
-		fetchRemote ( githubRawMeta, getVersionMeta, "", false )
-	elseif versionsChecker == "repository" then
-		fetchRemote ( githubRespoLink, getVersionRespo, "", false )
+	if ServerConfig["updater"].versionsChecker == "meta" then
+		fetchRemote ( ServerConfig["updater"].githubRawMeta, getVersionMeta, "", false )
+	elseif ServerConfig["updater"].versionsChecker == "repository" then
+		fetchRemote ( ServerConfig["updater"].githubRespoLink, getVersionRespo, "", false )
 	else
 		print("Updater deaktiviert.")
 	end

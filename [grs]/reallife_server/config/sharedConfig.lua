@@ -7,9 +7,11 @@ SharedConfig["main"] = {
     serverClantag = "[GRS]",
     -- // Server-Details
     maxPlayers = 100,
-    version = 1.0,
+    version = "1.2b",
+    
    -- // Event
     enableAutomaticEvents = true,
+    hasOneEventRunning = false, -- // Immer auf false lassen
     events = {
       testEvent = {startDate = {16, 6}, endDate = {1, 9}, isRunning = false, eventName = "Test-Event" }, --// 16 steht für den Tag und 6 für den Monat (hier 16.6), zu aktivieren: isRunning = true
       halloween = {startDate = {1, 10}, endDate = {1, 11}, isRunning = false, eventName = "Halloween-Event" },
@@ -26,7 +28,7 @@ SharedConfig["intro"] = {
 SharedConfig["network"] = {
     ip = "127.0.0.1",
     ts3 = "127.0.0.1",
-    discordInviteURL = "LINK",
+    discordInviteURL = "https://discord.gg/RMKHHanaeq",
     websiteURL = "LINK",
     forumURL = "LINK",
     twitterURL = "LINK",

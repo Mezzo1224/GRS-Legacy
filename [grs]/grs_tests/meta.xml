@@ -6,13 +6,18 @@
     <include resource="dgs" />
 
     <script src="intDGS.lua" type="client" />
+    <script src="sMySQLConnect.lua" type="server" />
+    <script src="s2FA.lua" type="server" />
+
     <script src="login/cLoginWindow.lua" type="client" />
     <file src="login/key.png" />
     <file src="login/login.png" />
-    
+
+    <script src="register/cRegisterCamera.lua" type="client" />
     <script src="register/cRegisterUI.lua" type="client" />
     <script src="register/cRegister.lua" type="client" />
 
+    <script src="tutorial/cTutorial.lua" type="client" />
 
     <file src="register/eye-off.png" />
     <file src="register/eye.png" />

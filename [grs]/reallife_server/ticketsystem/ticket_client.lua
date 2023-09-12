@@ -59,7 +59,7 @@ function openTicketWindow_window (adminView)
     local refreshTickets = DGS:dgsCreateButton(392*sx, 404*sy, 116*sx, 46*sy, "Aktualisieren", false, ticketWindow, nil, nil, nil, nil, nil, nil)  
 
     local filterRating = DGS:dgsCreateCheckBox(515*sx, 408*sy, 134*sx, 15*sy, "Unbew. Tickets", false, false, ticketWindow)
-    local filterClosed = DGS:dgsCreateCheckBox(515*sx, 433*sy, 134*sx, 15*sy, "Geschlossene Tickets", false, false, ticketWindow)  
+    local filterClosed = DGS:dgsCreateCheckBox(515*sx, 433*sy, 134*sx, 15*sy, "Gesch. Tickets", false, false, ticketWindow)  
     -- // Adminsicht
     if hasAdminView == true then
         DGS:dgsSetEnabled(startRating, false)
