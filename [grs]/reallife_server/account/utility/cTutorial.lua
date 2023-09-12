@@ -538,9 +538,9 @@ function endtutorial ( )
 	end
 	fadeCamera ( true )
 	stopSound ( registersound )
+	bindKey ("b", "down", showOtherHud)
 	setPlayerHudComponentVisible ( "all", true )
-	loginHUD ()
-	bindKey ("b", "down", switchHUD)
+	showOtherHud ()
 	triggerServerEvent ( "tutorialended", localPlayer )
 end
 

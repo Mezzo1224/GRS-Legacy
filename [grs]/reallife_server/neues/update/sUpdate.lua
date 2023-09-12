@@ -1,8 +1,8 @@
 updateCache = {}
 
 function updateCacheFiles ()
-    if not updateCache[SharedConfig["main"].version] then
-        updateCache[SharedConfig["main"].version] = #updateCache
+    if not updateCache[curVersion] then
+        updateCache[curVersion] = #updateCache
         local jsonuodate = toJSON(updateCache)
         local updateCacheFile = fileOpen(":grs_cache/update/update_cache.txt")
         fileWrite(updateCacheFile, jsonuodate)
@@ -33,8 +33,8 @@ fetchUpdateCache ()
 
 
 function fetchUpdateDetails ()
-    if fileExists(":grs_cache/update/update_"..SharedConfig["main"].version..".txt") then
-        local updateDetailsFile = fileOpen(":grs_cache/update/update_"..SharedConfig["main"].version..".txt")
+    if fileExists(":grs_cache/update/update_"..curVersion..".txt") then
+        local updateDetailsFile = fileOpen(":grs_cache/update/update_"..curVersion..".txt")
         local txt = fileRead(updateDetailsFile,  fileGetSize(updateDetailsFile))
         fileClose(updateDetailsFile)
         local txt = "Legenden:\n+ = Neues Feature\n- = Entferntes Feature\n! = Behobener Fehler\n----------------------------\n"..txt
@@ -73,7 +73,7 @@ function makeNewUpdate (version, txt)
         fileWrite(updateCacheFile, toJSON(updateCache) )
         fileClose(updateCacheFile)
 
-        if version == SharedConfig["main"].version then
+        if version == curVersion then
             local players = getElementsByType ( "player" ) 
             for i,player in ipairs(players) do  
                 if vioGetElementData ( player, "loggedin" ) == 1 then

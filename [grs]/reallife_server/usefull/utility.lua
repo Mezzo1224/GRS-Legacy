@@ -84,14 +84,10 @@ function getVariableTyp ( var )
 	return 0
 end
 
-function removeHex (s)
-    if type (s) == "string" then
-        while (s ~= s:gsub ("#%x%x%x%x%x%x", "")) do
-            s = s:gsub ("#%x%x%x%x%x%x", "")
-        end
-    end
-    return s or false
+function removeHex (text)
+    return type(text)=="string" and string.gsub(text, "#%x%x%x%x%x%x", "") or text
 end
+
 function RGBToHex(red, green, blue, alpha)
 	if((red < 0 or red > 255 or green < 0 or green > 255 or blue < 0 or blue > 255) or (alpha and (alpha < 0 or alpha > 255))) then
 		return nil

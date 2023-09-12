@@ -1,6 +1,6 @@
 <meta>
      <!-- Version nicht ändern, falls gesetzt, wird diese vom Update-Checker abgefragt! -->
-    <info author="Zipper" type="gamemode" name="GRS-Reallife" description="German Reallife" version="5" />
+    <info author="Zipper" type="gamemode" name="GRS-Reallife" description="German Reallife" version="4" />
     <oop>true</oop>
     <min_mta_version client="1.5.7-9.20157" />
     <download_priority_group>1</download_priority_group>
@@ -12,12 +12,9 @@
     <include resource="grs_cache" />
     <include resource="gtav" />
     <include resource="dgs" />
-    <include resource="transferbox" />
 
-    
     <!-- Config-->
     <script src="config/sharedConfig.lua" type="shared"  />
-    <script src="config/sharedConfig_faction.lua" type="shared"  />
     <script src="config/sConfig.lua" type="server" />
     <script src="config/cConfig.lua" type="client" cache="false"  />
 
@@ -95,6 +92,7 @@
     <file src="sounds\sprunk.ogg" />
     <file src="sounds\tetris.mp3" />
     <file src="sounds\hitsound.wav" />
+    <file src="sounds\registermusik.mp3" />
     <file src="sounds\wartezeichen.mp3" />
     
     <file src="sounds\fahrstuhlmusik.mp3" />
@@ -106,12 +104,6 @@
     <file src="images\customFaction\gang_blur.png" />
     <file src="images\customFaction\cooperation_blur.png" />
     
-    <file src="images\register\book.png" />
-    <file src="images\register\enter.png" />
-    <file src="images\register\eye-off.png" />
-    <file src="images\register\eye.png" />
-
-
     <file src="images\easter_egg.png" />
     <file src="images\account.png" />
     <file src="images\at400.jpg" />
@@ -560,8 +552,6 @@
     <file src="images/self/info_off.png" />
     <file src="images/self/settings_off.png" />
     <file src="images/self/shop_off.png" />
-
-     <file src="images/self/shop/placeholder.png" />
     
     <file src="images/health.png" />
     <file src="images/health_bar.png" />
@@ -643,7 +633,6 @@
     <script src="admin\sAdmin.lua" />
     <script src="admin\sAdminMisc.lua" />
     <script src="admin\sAdminPlayer.lua" />
-    <script src="admin\sAdminDuty.lua" />
 
     <script src="admin\adminpanel\cAdminpanel.lua" type="client" />
     <script src="admin\adminpanel\sAdminpanel.lua" type="server" />
@@ -816,15 +805,11 @@
     <script src="clicksys\playerclick\policecomputer_click.lua" type="client" />
     <script src="clicksys\playerclick\radio_click.lua" type="client" />
     <script src="clicksys\playerclick\rathaus_click.lua" type="client" />
+    <script src="clicksys\playerclick\self_click.lua" type="client" />
     <script src="clicksys\playerclick\trunk_click.lua" type="client" />
     <script src="clicksys\playerclick\wdealer_click.lua" type="client" />
     
-    <script src="clicksys\playerclick\selfmenu\cSelf.lua" type="client" />
-    <script src="clicksys\playerclick\selfmenu\shop\cShop.lua" type="client" />
-    <script src="clicksys\playerclick\selfmenu\shop\sShop.lua" type="server" />
-
-    <script src="clicksys\playerclick\selfmenu\cSettings.lua" type="client" />
-
+    
     <!--- Client -->
     <script src="client\antifastshot_client.lua" type="client" />
     <script src="client\commands_client.lua" type="client" />
@@ -1247,18 +1232,13 @@
     <script src="account\sAccount.lua" />
     <script src="account\sSerialValidator.lua" />
     <script src="account\sLoggedinMysql.lua" type="server" />
-    <script src="account\login\cLoginUI.lua" type="client" />
-   
+    <script src="account\login\loginUI.lua" type="client" />
     <script src="account\register\sRegister.lua" />
-    <script src="account\register\cRegisterCamera.lua" type="client" />
-    <script src="account\register\cRegister.lua" type="client" />
     <script src="account\register\cRegisterUI.lua" type="client" />
     <script src="account\premium\sPremium.lua" />
     <script src="account\premium\cPremium.lua" type="client" />
     <script src="account\utility\cTutorial.lua" type="client" cache="false" />
     <script src="account\utility\cCamflight.lua" type="client" />
-    <script src="account\beta\cBetaUI.lua" type="client" cache="false" />
-    <script src="account\beta\sBeta.lua" type="server" />
 
     
     <!--- Buchstabe "S" -->
@@ -1365,6 +1345,7 @@
     <script src="neues/booster.lua" type="server" />
     <script src="neues/sEventManager.lua" type="server" />
     <script src="neues/shopsystem.lua" type="server" />
+    <script src="neues/betasystem.lua" type="server" />
     <script src="neues/dailylogin.lua" type="server" />
      <!-- Settingsystem-->
     <script src="neues/settingSystem/settingSystemMain.lua" type="client" />

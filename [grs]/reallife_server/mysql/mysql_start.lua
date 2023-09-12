@@ -138,7 +138,7 @@ function gamemodeReadyCheck (res)
 			end
 			outputDebugString("------------------------")
 		else
-			outputDebugString("Für ein erneuten Check, bitte die ready.txt löschen.")
+			outputDebugString("Für ein erneuten Check, bitte die ready.txt löschen")
 		end
 	end
 end
@@ -147,7 +147,7 @@ addEventHandler ( "onResourceStart", getResourceRootElement(), gamemodeReadyChec
 function checkDGSVersion ()
 	local currDgsVersion = getElementData(getResourceRootElement(getResourceFromName("dgs")), "Version" )
 	if currDgsVersion then
-		if currDgsVersion ~= ServerConfig["main"].compatibleDgsVersion then
+		if currDgsVersion ~= compatibleDGS then
 			outputDebugString("Achtung: Es läuft die DGS Version "..currDgsVersion.." Version, der Gamemode ist aber auf die Version "..compatibleDGS.." ausgelegt.")
 			outputDebugString("Dies kann zu Fehler führen. Bitte verwende die Beigelegte DGS Version.")
 		end

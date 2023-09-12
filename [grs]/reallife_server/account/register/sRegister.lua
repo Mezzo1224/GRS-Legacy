@@ -81,24 +81,19 @@ function regcheck_func ( player )
 						if isRegistered ( pname ) then
 							local serial = getPlayerSerial ( player )
 							local thename = ""
-						--	if ServerConfig["main"].allowInfinityAccounts == false then
-								haterlaubnis = false
-							--else
-							--	haterlaubnis = true
-						--	end
+							local haterlaubnis = false
 							local result = dbPoll ( dbQuery ( handler, "SELECT ??, ?? FROM ?? WHERE ?? LIKE ?", "Name", "Erlaubnis", "players", "Serial", serial ), -1 )
 							if result and result[1] then
 								thename = result[1]["Name"]
 								if tonumber ( result[1]["Erlaubnis"] ) == 1 then
 									thename = pname 
-									
 									haterlaubnis = true
 								end
 							else
 								thename = pname
 							end
 							if string.lower(thename) ~= string.lower(getPlayerName ( player )) then
-								if not haterlaubnis  then	
+								if not haterlaubnis then
 									kickPlayer ( player, "Du hast schon ein Account mit einem anderen Namen ("..thename..")" )
 									return false
 								end
@@ -107,7 +102,7 @@ function regcheck_func ( player )
 						else
 							local clantag = gettok ( pname, 1, string.byte(']') )
 							if testmode == true then
-								triggerClientEvent ( player, "intRegister", getRootElement() )
+								triggerClientEvent ( player, "ShowRegisterGui", getRootElement() )
 							else
 								local serial = getPlayerSerial ( player )
 								if string.upper ( clantag ) == "[UTM" and not isThisTheBetaServer () then
@@ -121,7 +116,8 @@ function regcheck_func ( player )
 								elseif string.lower (pname) == "niemand" or string.lower (pname) == "versteigerung" or string.lower (pname) == "none" then
 									kickPlayer ( player, "Ungültiger Name!" )
 								else
-									triggerClientEvent ( player, "intRegister", getRootElement() )
+										triggerClientEvent ( player, "ShowRegisterGui", getRootElement() )
+									
 								end
 							end
 						end
@@ -153,9 +149,10 @@ function register_func ( player, passwort, bday, bmon, byear, geschlecht, bcode,
             toggleAllControls ( player, true )
             vioSetElementData ( player, "loggedin", 1 )
 
-            triggerClientEvent ( source, "disableRegisterUI", source )
+            triggerClientEvent ( source, "DisableRegisterGui", source )
 
             local ip = getPlayerIP ( player )
+		--	local email = tostring(email)
             if geschlecht == nil then
                 geschlecht = 1
             end
@@ -193,26 +190,28 @@ function register_func ( player, passwort, bday, bmon, byear, geschlecht, bcode,
                     if dbExist ( "players", "UID LIKE '".. playerUID[werber].."'") then
                         local result = dbExec ( handler, "INSERT INTO advertisedplayers (werberUID, geworbenerUID ) VALUES (?, ?)", playerUID[werber], playerUID[pname] )
                         if not result then
-                            outputDebugString ( "[Referrals] Fehler beim eintragen." )
-                            outputLog ( "[Referrals] Fehler beim eintragen.", "registerwerber" )
+                            outputDebugString ( "[WerbeSystem] Fehler beim eintragen." )
+                            outputLog ( "[WerbeSystem] Fehler beim eintragen.", "registerwerber" )
                         end
                         if getPlayerFromName (werber) then
-                            outputChatBox ( "[Referrals] "..pname.." hat dich als Werber eingetragen.", getPlayerFromName (werber), 125, 0, 0 )
+                            outputChatBox ( "[Werbesystem] "..pname.." hat dich als Werber eingetragen.", getPlayerFromName (werber), 125, 0, 0 )
                         else
-                            offlinemsg ( "[Referrals] "..pname.." hat dich als Werber eingetragen.", "Server",werber )
+                            offlinemsg ( "[Werbesystem] "..pname.." hat dich als Werber eingetragen.", "Server",werber )
                         end
 
-                        outputDebugString ( "[Referrals] "..pname.." hat "..werber.." als Werber eingetragen." )
-                        outputLog ( "[Referrals] "..pname.." hat "..werber.." als Werber eingetragen.", "registerwerber" )
+                        outputDebugString ( "[WerbeSystem] "..pname.." hat "..werber.." als Werber eingetragen." )
+                        outputLog ( "[WerbeSystem] "..pname.." hat "..werber.." als Werber eingetragen.", "registerwerber" )
                     else
-                        outputDebugString ( "[Referrals] Der Eingetragende Werber von "..pname.." ("..werber..") gibt es nicht." )
-                        outputLog ( "[Referrals] Der Eingetragende Werber von "..pname.." ("..werber..") gibt es nicht.", "registerwerber" )
+                        outputDebugString ( "[WerbeSystem] Der Eingetragende Werber von "..pname.." ("..werber..") gibt es nicht." )
+                        outputLog ( "[WerbeSystem] Der Eingetragende Werber von "..pname.." ("..werber..") gibt es nicht.", "registerwerber" )
                     end
                 else
-                    outputLog ( "[Referrals] Der Eingetragende Werber von "..pname.." ("..werber..") gibt es nicht.", "registerwerber" )
+                    outputDebugString ( "[WerbeSystem] Der Eingetragende Werber von "..pname.." ("..werber..") gibt es nicht." )
+                    outputLog ( "[WerbeSystem] Der Eingetragende Werber von "..pname.." ("..werber..") gibt es nicht.", "registerwerber" )
                 end
             else
-                outputLog ( "[Referrals] "..pname.." hat kein Werber eingetragen.", "registerwerber" )
+                outputDebugString ( "[WerbeSystem] "..pname.." hat kein Werber eingetragen." )
+                outputLog ( "[WerbeSystem] "..pname.." hat kein Werber eingetragen.", "registerwerber" )
             end
 
             local result = dbExec ( handler, "INSERT INTO achievments (UID) VALUES (?)", id )
@@ -291,7 +290,7 @@ function register_func ( player, passwort, bday, bmon, byear, geschlecht, bcode,
             vioSetElementData ( player, "fraktion", 0 )
             vioSetElementData ( player, "rang", 0 )
             vioSetElementData ( player, "adminlvl", 0 )
-            vioSetElementData ( player, "playingtime", 0 )
+            vioSetElementData ( player, "playingtime", 180 )
             vioSetElementData ( player, "curcars", 0 )
             vioSetElementData ( player, "maxcars", 5 )
             vioSetElementData ( player, "alkatime", 0 )
@@ -774,7 +773,7 @@ function login_func ( player, passwort )
 							vioSetElementData ( player, "muted", 0 )
 							triggerClientEvent ( player, "DisableLoginWindow", getRootElement() )		
 							if vioGetElementData ( player, "playingtime" )	<= 180 then	
-								triggerClientEvent ( player, "infobox_start", getRootElement(), "Du hast dich erfolgreich eingeloggt! Drücke F1 für Hilfe!", 5000, 0, 255, 0, 2 )
+								triggerClientEvent ( player, "infobox_start", getRootElement(), "Du hast dich erfolgreich eingeloggt!\nDrücke F1, um das Hilfemenü zu öffnen!", 5000, 0, 255, 0, 2 )
 							end
 							outputDebugString ("Spieler "..pname.." wurde eingeloggt, IP: "..getPlayerIP(player))
 							vioSetElementData ( player, "loggedin", 1 )
@@ -861,7 +860,7 @@ function login_func ( player, passwort )
 								triggerClientEvent ( player, "renderBetaWarning", getRootElement() )		
 								if vioGetElementData ( player, "premium") == false then
 									newInfobox (player, "Du hast wegen der Beta 5.000.000$\nund Premium Stufe Platin für 90 Tage erhalten.", 4)
-								--	setPlayerPremium (player, "90d", 4, false)
+									setPremiumData (player, 90,4)
 									vioSetElementData ( player, "money", vioGetElementData ( source, "money" ) + 5000000 )
 								end
 							end

@@ -86,21 +86,13 @@ function checkPremium ( player )
     if PremiumData ~= 0 then
         if PremiumData > timesamp then
             if paket > 0  then
-                local packageName = ServerConfig["premium"]["ranks"][paket].name
                 outputChatBox ( "Premium: Aktiv. Bis zum "..getDate (PremiumData), player, 0, 125, 0,true )
                 giveAchievement( player, 9 )
-                outputChatBox ( "Stufe: "..packageName, player, 0, 125, 0,true )
+                outputChatBox ( "Stufe: "..vipPackageName[paket], player, 0, 125, 0,true )
                 vioSetElementData ( player, "premium", true )
-            elseif paket == 0 then
-                outputChatBox("Premium-Status: Nicht Aktiv.", player, 125, 0, 0)
-                dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "userdata", "PremiumPaket", 0, "PremiumData", 0,  "UID", playerUID[pname] )
-                vioSetElementData ( player, "PremiumData", 0 )
-                vioSetElementData ( player, "Paket", 0 )
-                vioSetElementData ( player, "premium", false )
             else
                 outputChatBox("Premium-Status: Stufe nicht gefunden, bitte Projektleiter kontaktieren.", player, 125, 0, 0)
                 vioSetElementData ( player, "premium", false )
-
             end
 
         else
@@ -129,34 +121,44 @@ end
 function showPremiumFunctions (player, cmd, specLevel)
     if vioGetElementData ( player, "premium" ) == true or specLevel then
         local paket = vioGetElementData ( player, "Paket" )
-        local socialStateFreq = ServerConfig["premium"]["ranks"][paket].changeSocial
-        local numberFreq = ServerConfig["premium"]["ranks"][paket].changeNumber
         if not specLevel then
             specLevel = 0
         end
         if tonumber ( specLevel ) > 0 then
             paket = tonumber ( specLevel )
         end 
-        outputChatBox ( "Features von Stufe: "..ServerConfig["premium"]["ranks"][paket].name, player, 0, 125, 0,true )
-        outputChatBox("/status [STATUS] - Ändert deinen Status - Alle "..math.floor(socialStateFreq/86400).." Tag(e) möglich.", player, 0, 125, 0)
-        outputChatBox("/tele [NUMMER] - Ändert deine Nummer - Alle "..math.floor(numberFreq/86400).." Tag(e) möglich.", player, 0, 125, 0)
+        outputChatBox ( "Features von Stufe: "..vipPackageName[paket], player, 0, 125, 0,true )
+        outputChatBox("/status [STATUS] - Ändert deinen Status - Alle "..math.floor(vipPackageSocialTime[paket]/86400).." Tag(e) möglich.", player, 0, 125, 0)
+        outputChatBox("/tele [NUMMER] - Ändert deine Nummer - Alle "..math.floor(vipPackageTeleTime[paket]/86400).." Tag(e) möglich.", player, 0, 125, 0)
         outputChatBox("/pcar [SLOT] [ID/NAME] - Setzt dir ein Premium Fahrzeug. (Verfügbar:  "..vioGetElementData ( player, "PremiumCars")..")", player, 0, 125, 0)
         outputChatBox("Sonstige Features:", player, 0, 125, 0)
         if vipPackagePremCarGive[paket] == true then
             outputChatBox("Alle "..math.floor(vipPackagePremCarGiveTime[paket]/86400).."  Tag(e) ein gratis Premium Fahrzeug.", player, 0, 125, 0)
         end
-        if ServerConfig["premium"]["ranks"][paket].increasedPayday > 0 then
+        if vipPayDayExtra[paket] > 0 then
             outputChatBox(vipPayDayExtra[paket].."% mehr unversteurte Einnahmen beim Payday.", player, 0, 125, 0)
         end
-        if ServerConfig["premium"]["ranks"][paket].civTimeReduction > 0 then
+        if ziviTimeReduction[paket] > 0 then
             outputChatBox(ziviTimeReduction[paket].."% weniger Zivilzeit.", player, 0, 125, 0)
         end
         outputChatBox("EP zu $ Kurs: "..vipEPtoMoney[paket].." zu 1.", player, 0, 125, 0)
     else
-        newInfobox (player, "Du bist nicht befugt.\nProbiere /phelp [1-"..#ServerConfig["premium"]["ranks"].."]", 3)
+        newInfobox (player, "Du bist nicht befugt.\nProbiere /phelp [1-"..#vipPackageName.."]", 3)
     end
 end
 addCommandHandler("phelp", showPremiumFunctions )
+
+
+function setPremiumData (player, tage, package)
+    local pname = getPlayerName(player)
+    local PremiumData = tonumber(vioGetElementData ( player, "PremiumData" ))
+    local rt = getRealTime ()
+    local timesamp = rt.timestamp
+    vioSetElementData ( player, "Paket", tonumber(package) )
+    vioSetElementData ( player, "PremiumData", timesamp+86400*tage )
+    dbExec ( handler, "UPDATE ?? SET ??=?, ??=? WHERE ??=?", "userdata", "PremiumPaket", package, "PremiumData", timesamp+86400*tage,  "UID", playerUID[pname] )
+    checkPremium ( player )
+end
 
 function convertSuffixTime(input)
     local suffix = string.sub(input, -1) -- Extrahiere den letzten Buchstaben (Suffix)
@@ -450,19 +452,7 @@ addCommandHandler("buystatus" , buystatus )
 
 
 -- Funktionen für den Shop
-function getPremiumData (player)
-    local packageName =  (vioGetElementData ( player, "package" ) == 1) and vioGetElementData ( player, "package" ) or nil
-    data = {
-        hasPremium = isPremium(player), 
-        premTime =  vioGetElementData ( player, "PremiumData" ),
-        premTimeAsText =   getDate ( vioGetElementData ( player, "PremiumData" ) ),
-        package = vioGetElementData ( player, "package" ),
-        packageName = packageName
-    }
-    return data
-end
 
---[[
 function getPremiumData (player)
 	local premTime = vioGetElementData ( player, "PremiumData" )
     local pack = vioGetElementData ( player, "Paket")
@@ -473,4 +463,3 @@ function getPremiumData (player)
 end
 addEvent ( "getPremiumData", true)
 addEventHandler ( "getPremiumData", getRootElement(), getPremiumData)
---]]

@@ -6,21 +6,21 @@ function checkNewUpdate ()
     if fileExists(":grs_cache/update/update.txt") then
         local updateFile = fileOpen(":grs_cache/update/update.txt")
         local updateFileVer = fileRead(updateFile,  fileGetSize(updateFile))
-        if updateFileVer ~= SharedConfig["main"].version then
+        if updateFileVer ~= curVersion then
             showNewUpdate()
             -- // Alte Datei löschen
             fileClose(updateFile)
             fileDelete(":grs_cache/update/update.txt")
             -- // Neue erstellen
             local updateFile = fileCreate(":grs_cache/update/update.txt")
-            fileWrite(updateFile,SharedConfig["main"].version)
+            fileWrite(updateFile,curVersion)
             fileClose(updateFile)
         else
             fileClose(updateFile)
         end
     else
         local updateFile = fileCreate(":grs_cache/update/update.txt")
-        fileWrite(updateFile,SharedConfig["main"].version)
+        fileWrite(updateFile,curVersion)
         fileClose(updateFile)
         
         showNewUpdate()
@@ -29,7 +29,7 @@ end
 
 function showNewUpdate ()    
         triggerServerEvent("fetchUpdateDetails", getLocalPlayer())
-        updateWindow = DGS:dgsCreateWindow(1034*sx, 0*sy, 492*sx, 443*sy,"Neues Update - "..SharedConfig["main"].version,false)
+        updateWindow = DGS:dgsCreateWindow(1034*sx, 0*sy, 492*sx, 443*sy,"Neues Update - "..curVersion,false)
         updateText = DGS:dgsCreateMemo(13*sx, 35*sy, 469*sx, 373*sy,"", false, updateWindow )
         DGS:dgsMoveTo(updateWindow,1034*sx, 499*sy,false,"OutQuad",2000)
         DGS:dgsWindowSetSizable(updateWindow,false)
@@ -71,7 +71,7 @@ addCommandHandler("deleteuf", deleteUpdateFile)
 function makeNewUpdate_window()
 
     newUpdateWindow =  DGS:dgsCreateWindow(1053*sx, 505*sy, 519*sx, 482*sy,"Neues Update erstellen",false)
-    updateVer = DGS:dgsCreateEdit(17*sx, 18*sy, 128*sx, 36*sy, SharedConfig["main"].version, false, newUpdateWindow )
+    updateVer = DGS:dgsCreateEdit(17*sx, 18*sy, 128*sx, 36*sy, curVersion, false, newUpdateWindow )
     updateText = DGS:dgsCreateMemo(12*sx, 70*sy, 497*sx, 325*sy, "", false, newUpdateWindow )
     
 

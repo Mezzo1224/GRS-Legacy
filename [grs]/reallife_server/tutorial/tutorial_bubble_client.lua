@@ -58,20 +58,18 @@ function createTutorialText (x, y, z, head, msg )
 	DGS:dgsSetProperty(text,"alignment",{"center","center"})
 end
 -- // Automatisieren für Bankautomaten 
-function addTextToATMs ()
-	setTimer ( function()
-		if getElementData ( lp, "playingtime" ) <= 6000 then -- todo zu 60
-			local objects = getElementsByType("object")
-			for i, object in pairs(objects) do
-				local model = getElementModel(object)
-				if model == 2942 then
-					local x, y, z = getElementPosition(object)
-					createTutorialText (x, y, z+2, "Bankautomaten", "Drücke M und klicke auf den Geldautomaten, um mit ihm zu interagieren.\nEr erlaubt es dir Geld abzuheben, zu überweisen oder deine Zahlungen zu verfolgen." )
-				end
+setTimer ( function()
+	if getElementData ( lp, "playingtime" ) <= 6000 then -- todo zu 60
+		local objects = getElementsByType("object")
+		for i, object in pairs(objects) do
+			local model = getElementModel(object)
+			if model == 2942 then
+				local x, y, z = getElementPosition(object)
+				createTutorialText (x, y, z+2, "Bankautomaten", "Drücke M und klicke auf den Geldautomaten, um mit ihm zu interagieren.\nEr erlaubt es dir Geld abzuheben, zu überweisen oder deine Zahlungen zu verfolgen." )
 			end
 		end
-	end, 5000, 1 )
-end
+	end
+end, 5000, 1 )
 
 createTutorialText (-1935.7763671875, 236.38671875, 35.3125, "Tuning","Nitro oder größerer Kofferraum Gefällig ?\nBei einem Tuningshop kannst du dein Fahrzeug modifizieren." )
 

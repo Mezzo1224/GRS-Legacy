@@ -23,11 +23,20 @@ function listAdmins ( player )
 end
 addCommandHandler ( "admins", listAdmins )
 
-function isInAdminDuty (player)
-    local pName = getPlayerName(player)
-    if aDuty[pName] then
-        return true
-    else
-        return false
+-- // TODO fertig machen
+function enableAdminDuty (player)
+    if hasPermission ( player, "canUseSuppmode" ) then
+        local pName = getPlayerName(player)
+        aDuty[pName] = {
+            arrowMarker = nil,
+            statsBefore = {
+                health = getElementHealth(player), 
+                getPedArmor = getPedArmor(player),
+                model = getElementModel(player)
+            }
+        }
+        -- aDuty[pName].arrowMarker
     end
 end
+addCommandHandler ( "smode", listAdmins )
+addCommandHandler ( "aduty", listAdmins )

@@ -2,18 +2,15 @@ function intRegister ()
 
     showRegisterUI ()
     showCursor(true)
-
     -- // Kamera setzen
-    fadeCamera(true)
-    intCam ()
+    fadeCamera( true, 5)
+    setCameraMatrix( 1468.8785400391, -919.25317382813, 100.153465271, 1468.388671875, -918.42474365234, 99.881813049316)
 
 end
 addEvent ( "intRegister", true )
 addEventHandler ( "intRegister", getRootElement(), intRegister )
 
 intRegister ()
-
-
 
 -- Überprüft ob der Geburtstag gültig ist.
 function isBirthdayValid(tag, monat, jahr)
@@ -26,12 +23,6 @@ function isBirthdayValid(tag, monat, jahr)
     end
 
     if monat < 1 or monat > 12 then
-        return false
-    end
-
-    local aktuellesJahr = tonumber(os.date("%Y")) -- Aktuelles Jahr ermitteln
-
-    if jahr < 1920 or jahr > aktuellesJahr then
         return false
     end
 
@@ -70,10 +61,10 @@ function calculateSafety(password)
     local numCount = select(2, password:gsub('%d', ''))
     local length = #password
 
-    checkCondition(hasNumber and numCount >= 2, "Passwort braucht 2 Nummern.")
-    checkCondition(hasUppercase, "Passwort braucht einen Großbuchstaben.")
-    checkCondition(hasSpecialChar, "Passwort hat kein Sonderzeichen.")
-    checkCondition(length >= 8 and length <= 12, "Passwort muss 8-12 Zeichen haben.")
+    checkCondition(hasNumber and numCount >= 2, "Passwort enthält nicht mindestens zwei Nummern.")
+    checkCondition(hasUppercase, "Passwort enthält keinen Großbuchstaben.")
+    checkCondition(hasSpecialChar, "Passwort enthält kein Sonderzeichen.")
+    checkCondition(length >= 8 and length <= 12, "Passwort hat nicht die richtige Länge (8-12 Zeichen).")
 
     return safety, reasons
 end
@@ -112,4 +103,3 @@ function isValidEmail(email)
 
     return true
 end
-

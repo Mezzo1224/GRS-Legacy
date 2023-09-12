@@ -1,4 +1,9 @@
-﻿function mainTimer ()
+﻿--setServerPassword ( "" )
+
+
+
+
+function mainTimer ()
 
 	local curtime = getRealTime()
 	local hour = curtime.hour
@@ -136,7 +141,7 @@ end
 
 
 function serverstart ()
-	checkDGSVersion ()
+
 	setGameType ( SharedConfig["main"].serverName )
 	setMapName ( "San Andreas" )
 	enableEventsAutomatically ()
@@ -151,8 +156,9 @@ function serverstart ()
 end
 addEventHandler ( "onResourceStart", resourceRoot, serverstart )
 
+setFPSLimit ( 65 )
 function intMaps ()
-	if SharedConfig["main"].enableMapextensions == true then 
+	if mapsExtension == true then 
 		for i, map in ipairs(mapsFromExtension) do
 			local resource = getResourceFromName ( tostring(map) ) 
 			if getResourceState(resource) == "loaded" then

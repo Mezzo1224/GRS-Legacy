@@ -1,43 +1,4 @@
-﻿-- // Debug
-
-function showMyFaction ( player )
-	local faction = getPlayerFaction ( player )
-	local rank = getPlayerRank ( player )
-	local pName = getPlayerName ( player )
-	if faction > 0 then
-		factionState = "Unbekannt"
-		if sharedFactionConfig["factionMain"].isEvil[faction] == true then
-			factionState = "Du bist ein Böser Junge"
-		elseif sharedFactionConfig["factionMain"].isGood[faction] == true then
-			factionState = "Du bist ein Guter Junge"
-		elseif sharedFactionConfig["factionMain"].isNeural[faction] == true then
-			factionState = "Du bist ein Schweizer Junge"
-		end
-		outputChatBox("Hey "..pName.." - Du bist in der Fraktion "..sharedFactionConfig["factions"][faction].name.." (kurz: "..sharedFactionConfig["factions"][faction].nameShortcut..")", player, 0, 139, 0)
-		outputChatBox(factionState.." und hast den Rang "..sharedFactionConfig["factionRanks"][faction][rank].name.." ("..rank..") ", player, 0, 139, 0)
-		outputChatBox("DEINE FARBE", player, sharedFactionConfig["factions"][faction].color[1], sharedFactionConfig["factions"][faction].color[2], sharedFactionConfig["factions"][faction].color[3])
-
-		-- Spawnorte
-		outputChatBox("Deine Spawnpunkte:", player, 0, 139, 0)
-		for k, v in pairs(sharedFactionConfig["factions"][faction].spawnLocations) do
-			outputChatBox(k.." - "..getZoneName(v[1], v[2], v[3]).." (Rotation: "..v[4].." Int: "..v[5]..", Dim: "..v[6].." )", player, 0, 139, 0)
-		end
-		-- Fahrzeug-Bereiche
-		outputChatBox("Deine Fahrzeugbereiche:", player, 0, 139, 0)
-		for k, v in pairs(sharedFactionConfig["factions"][faction].vehicleAreas) do
-			outputChatBox(k.." - "..getElementZoneName( v ), player, 0, 139, 0)
-		end
-
-		outputChatBox("Beitretts-Bedinungen mit /fc:", player, 0, 139, 0)
-		outputChatBox("Level: "..sharedFactionConfig["factions"][faction].joinRequirments.level.." -  Presige-Level: "..sharedFactionConfig["factions"][faction].joinRequirments.prestigeLevel.." -  VIP-Stufe: "..sharedFactionConfig["factions"][faction].joinRequirments.vipLevel, player, 0, 139, 0)
-		outputChatBox("Würdest du auch den Custom-Check bestehn ? "..tostring(sharedFactionConfig["factions"][faction].joinRequirments.costumCheck(player)), player, 0, 139, 0)
-	else
-		infobox (player, "Du bist in keiner Fraktion.", "error", 15)
-	end
-end
-addCommandHandler ( "smf", showMyFaction )
-
-fraktionNames = {}
+﻿fraktionNames = {}
 fraktionNames = { [0] = "Zivilisten", [1]="SFPD", [2]="Cosa Nostra", [3]="Triaden", [4]="Terroristen", [5]="LTR", [6]="FBI", [7]="Los Aztecas", [8]="Army", [9]="Angels of Death", [10]="Sanitäter", [11]="Mechaniker", [12]="Ballas", [13]="Grove" }
 fraktionJoinable = { ["sfpd"] = true, ["mafia"] = true, ["triaden"] = true, ["terror"] = true, ["reporter"] = true, ["fbi"] = true, ["atzen"] = true, ["army"] = true,["aod"] = true, ["medic"] = true, ["mechaniker"] = true }
 fraktionJoinLevel = { ["sfpd"] = 3, ["mafia"] = 3, ["triaden"] = 3, ["terror"] = 10, ["reporter"] = 5, ["fbi"] = 5, ["atzen"] = 3, ["army"] = 10, ["aod"] = 3, ["medic"] = 1, ["mechaniker"] = 1, ["ballas"] = 3, ["grove"] = 3 }
@@ -85,7 +46,7 @@ function changeFaction (player, cmd, factionName)
 								vioSetElementData ( player, "rang", 0 )
 								vioSetElementData ( player, "FraktionenBetreten", vioGetElementData ( player, "FraktionenBetreten" ) + 1 )
 								outputChatBox("Du bist der Fraktion "..fraktionNames[factionID].." beigetreten.", player, 0, 139, 0)
-								local leaveFactionBanTime = math.floor((86400-(math.floor((SharedConfig["factions"].leaveFactionBanTime/100)*ziviTimeReduction[paket])))/3600)
+								local leaveFactionBanTime = math.floor((86400-(math.floor((leaveFactionBanTime/100)*ziviTimeReduction[paket])))/3600)
 								outputChatBox("Um diese zu verlassen tippe /leavefac, beachte dass dies einen "..leaveFactionBanTime.." Stunden Fraktions Ban nach sich zieht.", player, 0, 139, 0)
 								dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "Fraktion", factionID, "UID", playerUID[getPlayerName(player)] )
 							else
@@ -115,13 +76,13 @@ function leaveFaction ( player )
                 vioSetElementData ( player, "fraktion", 0 )
                 vioSetElementData ( player, "rang", 0 )
                 outputChatBox("Du hast erfolgreich deine Fraktion verlassen.", player, 125, 0, 0)
-				local leaveFactionBanRealTime = math.floor((86400-(math.floor((SharedConfig["factions"].leaveFactionBanTime/100)*ziviTimeReduction[paket])))/3600)
+				local leaveFactionBanRealTime = math.floor((86400-(math.floor((leaveFactionBanTime/100)*ziviTimeReduction[paket])))/3600)
 				
 				
                 outputChatBox("Du kannst nun "..leaveFactionBanRealTime.." Stunden keiner Fraktion mehr betreten. ", player, 125, 0, 0)
 				local reason = {"Verlassen einer Fraktion"}
 				reason = table.concat( reason, " " )
-				if SharedConfig["factions"].leaveFactionBanTime > 0 then
+				if leaveFactionBan == true then
 					giveFactionBan ( player, leaveFactionBanTime, reason)
 				end
             else
@@ -992,6 +953,44 @@ function giverank_func ( player, cmd, target, newrank )
 	
 end
 addCommandHandler ( "giverank", giverank_func )
+
+
+
+
+
+
+function selbstUninvite ( player )
+	local faction = getPlayerFaction ( player )
+	local rank = getPlayerRank ( player )
+	if faction > 0 and rank < 5 then
+		local model = malehomeless[math.random ( 1, 5 )]
+		setElementModel ( player, model )
+		vioSetElementData ( player, "skinid", model )
+		vioSetElementData ( player, "rang", 0 )
+		fraktionMembers[faction][player] = nil
+		fraktionMemberList[faction][getPlayerName(player)] = nil
+		fraktionMemberListInvite[faction][getPlayerName(player)] = nil
+		vioSetElementData ( player, "fraktion", 0 )
+		vioSetElementData ( player, "FraktionenVerlassen", vioGetElementData ( player, "FraktionenVerlassen" ) + 1 )
+		for playeritem, _ in pairs ( fraktionMembers[faction] ) do
+			triggerClientEvent ( playeritem, "syncPlayerList", player, fraktionMemberList[faction], fraktionMemberListInvite[faction] )
+		end
+		outputChatBox ( "Du hast dich soeben aus der Fraktion uninvitet!", player, 0, 125, 0 )
+		dbExec ( handler, "UPDATE ?? SET ??=? WHERE ??=?", "userdata", "LastFactionChange", timestampOptical (), "UID", playerUID[getPlayerName(player)] )
+		for member, rank in pairs (fraktionMemberList[faction]) do
+			if rank >= 4 then
+				if getPlayerFromName ( member ) then
+					outputChatBox ( "Der Spieler "..getPlayerName(player).." hat sich selbst uninvitet!", getPlayerFromName ( member ), 200, 200, 200 )
+				else
+					offlinemsg ( "Der Spieler "..getPlayerName(player).." hat sich selbst uninvitet!", "Fraktion", member )
+				end
+			end
+		end
+	else
+		triggerClientEvent ( player, "infobox_start", getRootElement(), "\nDu bist\nals Leader nicht\nbefugt!", 5000, 125, 0, 0 )
+	end
+end
+--addCommandHandler ("selfuninvite", selbstUninvite)
 
 function toggleBlipsVisibility (player, cmd, type)
 	if vioGetElementData(player, "loggedin") == 1 then

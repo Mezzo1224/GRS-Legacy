@@ -3,7 +3,7 @@ addEvent ( "HungerChangeServer", true )
 addEvent ( "changeClientElementData", true )
 
 elementData = {}
-local syncedData = { ["coins"] = true, ["bonuspoints"] = true, ["carslotupgrade"] = true, ["carslotupgrade2"] = true, ["carslotupgrade3"] = true, ["carslotupgrade4"] = true, ["carslotupgrade5"] = true, ["kingofthehill_achiev"] = true, 
+local syncedData = { ["bonuspoints"] = true, ["carslotupgrade"] = true, ["carslotupgrade2"] = true, ["carslotupgrade3"] = true, ["carslotupgrade4"] = true, ["carslotupgrade5"] = true, ["kingofthehill_achiev"] = true, 
 ["own_foots"] = true, ["rl_achiev"] = true, ["nichtsgehtmehr_achiev"] = true, ["chickendinner_achiev"] = true, ["viewpoints"] = true, ["maxcars"] = true, ["lungenvol"] = true, ["muscle"] = true, ["stamina"] = true, 
 ["kungfu"] = true,["boxen"] = true, ["streetfighting"] = true, ["pistolskill"] = true, ["deagleskill"] = true, ["assaultskill"] = true, ["shotgunskill"] = true, ["mp5skill"] = true, ["doubleSMG"] = true, 
 ["vortex"] = true, ["skimmer"] = true,["golfcart"] = true, ["romero"] = true, ["quad"] = true, ["bonusskin1"] = true, ["fruitNotebook"] = true, ["gameboy"] = true, ["chess"] = true, ["fglass"] = true, 
