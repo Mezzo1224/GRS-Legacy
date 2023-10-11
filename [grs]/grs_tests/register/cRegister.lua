@@ -11,7 +11,7 @@ end
 addEvent ( "intRegister", true )
 addEventHandler ( "intRegister", getRootElement(), intRegister )
 
-intRegister ()
+--intRegister ()
 
 
 

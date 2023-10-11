@@ -8,7 +8,7 @@ function connect()
     end
 end
 
-addEventHandler("onResourceStart",resourceRoot, connect)
+--addEventHandler("onResourceStart",resourceRoot, connect)
 
 
 serverStatistics = {}
@@ -129,4 +129,4 @@ function formatMoney(amount)
 
     return formatted
 end
-connect()
+--connect()

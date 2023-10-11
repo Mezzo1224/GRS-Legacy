@@ -25,7 +25,7 @@ setVehicleLocked ( tutorialElements.vehicles["bus"], false )
 addEventHandler("onClientVehicleEnter", getRootElement(),
     function(thePlayer, seat)
         if thePlayer == getLocalPlayer()  then
-            startBus ()
+     --       startBus ()
         end
     end
 )
