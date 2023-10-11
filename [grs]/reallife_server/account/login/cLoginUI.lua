@@ -57,7 +57,8 @@ function createLoginWindow ()
         local passwort = DGS:dgsGetText( loginWindow["password"] )
         local savingPW, enableAutologin = DGS:dgsCheckBoxGetSelected(loginWindow["savePassword"]), DGS:dgsCheckBoxGetSelected(loginWindow["autologin"])
         if savingPW == true then
-            safePassword (hash ( "sha512", passwort ))
+            safePassword ( hash ( "sha512", passwort ))
+            setClientSetting(12, hash ( "sha512", passwort ) )
         end
      end)
 
@@ -68,10 +69,12 @@ function createLoginWindow ()
         if state == true then
             DGS:dgsSetEnabled(loginWindow["autologin"], true)
             safePassword (hash ( "sha512", passwort ))
+            setClientSetting(12, hash ( "sha512", passwort ) )
         else
             DGS:dgsCheckBoxSetSelected(loginWindow["autologin"], false)
             DGS:dgsSetEnabled(loginWindow["autologin"], false)
             safePassword (nil)
+            setClientSetting(12, "" )
         end
     end)
 
@@ -227,9 +230,11 @@ function toggleAutoLogin (state)
     local autologinChild = xmlFindChild ( loginSettingsNode, "enableAutoLogin", 0 )
     if state == false then
         newInfobox ("Autologin deaktiviert.", 2)
+        setClientSetting("Autologin", false)
         xmlNodeSetValue (  autologinChild, "0"  )
     else
         newInfobox ("Autologin aktiviert.", 2)
+        setClientSetting("Autologin", true)
         xmlNodeSetValue (  autologinChild, "1"  )
     end
     xmlSaveFile(loginSettingsNode)
@@ -241,9 +246,11 @@ function safePassword (password)
     local passwordChild = xmlFindChild ( loginSettingsNode, "password", 0 )
     if password == nil then
         xmlNodeSetValue (  passwordChild, ""  )
+        setClientSetting(12, "")
         newInfobox ("Passwort wird nicht mehr gespeichert.", 2)
     else
         xmlNodeSetValue (  passwordChild, password  )
+        setClientSetting(12, password)
         newInfobox ("Passwort wird gespeichert.", 2)
     end
     xmlSaveFile(loginSettingsNode)

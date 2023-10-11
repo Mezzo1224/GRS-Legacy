@@ -542,3 +542,73 @@ function getSecondTime ( duration )
 	
 	return total
 end
+
+-- // Konvertiert String mit Suffixen in Stunden z.B. 1d = 24h
+function convertSuffixTime(input)
+    local suffix = string.sub(input, -1) 
+    local zahl = tonumber(string.sub(input, 1, -2)) 
+    if suffix == "h" then
+        return zahl 
+    elseif suffix == "d" then
+        return zahl * 24 -
+    elseif suffix == "w" then
+        return (zahl * 24) * 7 
+    elseif suffix == "m" then
+        return (zahl * 24) * 30 
+    else
+        return tonumber(input) -- Kein passendes Suffix gefunden, also input = Stunden
+    end
+end
+
+-- // Generiert abängig von dem numerischen input (Stunden) einen Prefix. Sprich es wird eine Text mit der Zeit generiert
+function createPrefixFromTime(input)
+    local zahl = tonumber(input)
+    local monate = math.floor(zahl / (30 * 24))
+    local wochen = math.floor((zahl % (30 * 24)) / (7 * 24))
+    local tage = math.floor((zahl % (7 * 24)) / 24)
+    local reststunden = zahl % 24
+    local result = ""
+
+    if monate > 0 then
+        result = result .. monate .. " Monat"
+        if monate > 1 then
+            result = result .. "e"
+        end
+    end
+
+    if wochen > 0 then
+        if result ~= "" then
+            result = result .. " und "
+        end
+
+        result = result .. wochen .. " Woche"
+        if wochen > 1 then
+            result = result .. "n"
+        end
+    end
+
+    if tage > 0 then
+        if result ~= "" then
+            result = result .. " und "
+        end
+
+        result = result .. tage .. " Tag"
+        if tage > 1 then
+            result = result .. "e"
+        end
+    end
+
+    if reststunden > 0 then
+        if result ~= "" then
+            result = result .. " und "
+        end
+
+        if reststunden == 1 then
+            result = result .. "1 Stunde"
+        else
+            result = result .. reststunden .. " Stunden"
+        end
+    end
+
+    return result
+end

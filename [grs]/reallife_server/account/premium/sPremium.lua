@@ -158,74 +158,6 @@ function showPremiumFunctions (player, cmd, specLevel)
 end
 addCommandHandler("phelp", showPremiumFunctions )
 
-function convertSuffixTime(input)
-    local suffix = string.sub(input, -1) -- Extrahiere den letzten Buchstaben (Suffix)
-    local zahl = tonumber(string.sub(input, 1, -2)) -- Extrahiere den numerischen Wert
-    if suffix == "h" then
-        return zahl -- Stunden bleiben unverändert
-    elseif suffix == "d" then
-        return zahl * 24 -- Tage in Stunden umrechnen
-    elseif suffix == "w" then
-        return (zahl * 24) * 7 -- Wochen in Stunden umrechnen
-    elseif suffix == "m" then
-        return (zahl * 24) * 30 -- Monate in Stunden umrechnen (30 Tage pro Monat angenommen)
-    else
-        return tonumber(input) -- Kein passender Suffix gefunden, interpretiere den Wert direkt als Zahl
-    end
-end
-
-function createPrefixFromTime(input)
-    local zahl = tonumber(input)
-    local monate = math.floor(zahl / (30 * 24))
-    local wochen = math.floor((zahl % (30 * 24)) / (7 * 24))
-    local tage = math.floor((zahl % (7 * 24)) / 24)
-    local reststunden = zahl % 24
-    local result = ""
-
-    if monate > 0 then
-        result = result .. monate .. " Monat"
-        if monate > 1 then
-            result = result .. "e"
-        end
-    end
-
-    if wochen > 0 then
-        if result ~= "" then
-            result = result .. " und "
-        end
-
-        result = result .. wochen .. " Woche"
-        if wochen > 1 then
-            result = result .. "n"
-        end
-    end
-
-    if tage > 0 then
-        if result ~= "" then
-            result = result .. " und "
-        end
-
-        result = result .. tage .. " Tag"
-        if tage > 1 then
-            result = result .. "e"
-        end
-    end
-
-    if reststunden > 0 then
-        if result ~= "" then
-            result = result .. " und "
-        end
-
-        if reststunden == 1 then
-            result = result .. "1 Stunde"
-        else
-            result = result .. reststunden .. " Stunden"
-        end
-    end
-
-    return result
-end
-
 
 function setPlayerPremiumCMD (player, cmd, target, time, package)
     if isAdminLevel ( player, 8 ) or getElementType ( player ) == "console"then
@@ -258,6 +190,7 @@ function setPlayerPremiumCMD (player, cmd, target, time, package)
 end
 addCommandHandler("setpremium", setPlayerPremiumCMD )
 
+-- [[ Dieser Funktion kann ohne CMD und vorherige Abfragen genutzt werden.]]
 function setPlayerPremium (player, time, package, fromAdmin)
     if getPlayerName(player) then
         local time = convertSuffixTime(time)
@@ -319,8 +252,6 @@ function changeSocial ( player, cmd , ... )
     end
 end
 addCommandHandler("status", changeSocial )
-
-
 
 function changeNumber ( player, cmd, number )
     local paket = tonumber(vioGetElementData ( player, "Paket" ))

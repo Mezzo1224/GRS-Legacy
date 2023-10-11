@@ -647,7 +647,7 @@
 
     <script src="admin\adminpanel\cAdminpanel.lua" type="client" />
     <script src="admin\adminpanel\sAdminpanel.lua" type="server" />
-    <script src="admin\allround_log.lua" type="server" />
+    <script src="admin\sLogging.lua" type="server" />
 
     
     <script src="anticheat\anticheat_client.lua" type="client" />
@@ -1367,6 +1367,10 @@
     <script src="neues/shopsystem.lua" type="server" />
     <script src="neues/dailylogin.lua" type="server" />
      <!-- Settingsystem-->
+    <script src="playerOptions\cLoadOptions.lua" type="client" />
+    <script src="playerOptions\cKeybinds.lua" type="client" />
+    <script src="playerOptions\cSettings.lua" type="client" />
+
     <script src="neues/settingSystem/settingSystemMain.lua" type="client" />
     <script src="neues/settingSystem/settingLoader.lua" type="client" />
     <script src="neues/settingSystem/settingSystemServerside.lua" type="server" />

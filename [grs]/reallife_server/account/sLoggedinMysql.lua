@@ -18,10 +18,3 @@ function deleteAllFromLoggedIn ()
 	end
 end
 deleteAllFromLoggedIn ()
-
-function resetLogin (player)
-	vioSetElementData ( player, "loggedin", 0 )
-	setElementData ( player, "loggedin", 0 )
-	print(getPlayerName(player).." wurde resettet.")
-end
-addCommandHandler("rl", resetLogin)

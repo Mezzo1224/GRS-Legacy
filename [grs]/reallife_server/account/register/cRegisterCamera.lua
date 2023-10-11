@@ -117,7 +117,6 @@ local function startCameraFlight()
            setCameraMatrix(startX, startY, startZ, startX2, startY2, startZ2)
            startX2, startY2, startZ2 = currentEntry.startCoords[4], currentEntry.startCoords[5], currentEntry.startCoords[6]
        else
-           -- Verwenden Sie die "endCoords" des vorherigen Eintrags als "startCoords"
            local previousEntry = cameraFlight[randomCameraflight][currentIndex - 1]
            startX, startY, startZ = previousEntry.endCoords[1], previousEntry.endCoords[2], previousEntry.endCoords[3]
            startX2, startY2, startZ2 = previousEntry.endCoords[4], previousEntry.endCoords[5], previousEntry.endCoords[6]
@@ -127,8 +126,7 @@ local function startCameraFlight()
        local endX, endY, endZ, endX2, endY2, endZ2 = currentEntry.endCoords[1], currentEntry.endCoords[2], currentEntry.endCoords[3], currentEntry.endCoords[4], currentEntry.endCoords[5], currentEntry.endCoords[6]
         
         smoothMoveCamera ( startX, startY, startZ, startX2, startY2, startZ2, endX, endY, endZ, endX2, endY2, endZ2, currentEntry.movementTime )
-        
-        -- Erstellen Sie einen Timer basierend auf movementTime und rufen Sie startCameraFlight für den nächsten Eintrag auf
+
         currentTimer = setTimer(startCameraFlight, currentEntry.movementTime, 1)
         
         currentIndex = currentIndex + 1 -- Zum nächsten Eintrag in der Tabelle gehen
