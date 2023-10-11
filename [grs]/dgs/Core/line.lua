@@ -41,6 +41,7 @@ function dgsCreateLine(...)
 	}
 	dgsSetParent(line,parent,true,true)
 	calculateGuiPositionSize(line,x,y,relative or false,w,h,relative or false,true)
+	dgsApplyGeneralProperties(line,sRes)
 	onDGSElementCreate(line,sRes)
 	return line
 end
@@ -145,7 +146,6 @@ end
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
 dgsRenderer["dgs-dxline"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt)
-	local eleData = dgsElementData[source]
 	local width = eleData.lineWidth
 	local color = eleData.color
 	local line = eleData.line

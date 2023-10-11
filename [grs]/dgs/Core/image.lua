@@ -65,6 +65,7 @@ function dgsCreateImage(...)
 	dgsSetParent(image,parent,true,true)
 	dgsElementData[image].image = type(img) == "string" and dgsImageCreateTextureExternal(image,res,img) or img
 	calculateGuiPositionSize(image,x,y,relative or false,w,h,relative or false,true)
+	dgsApplyGeneralProperties(image,sRes)
 	onDGSElementCreate(image,sRes)
 	return image
 end
@@ -93,7 +94,7 @@ function dgsImageSetImage(image,img)
 		local imageType = dgsGetType(texture)
 		if imageType == "texture" or imageType == "svg" then
 			materialInfo[1],materialInfo[2] = dxGetMaterialSize(texture)
-		else 
+		else
 			materialInfo[1],materialInfo[2] = 0,0
 		end
 	else
@@ -211,7 +212,7 @@ dgsRenderer["dgs-dximage"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherite
 		end
 		if uvPx then
 			if shadowoffx and shadowoffy and shadowc then
-				local shadowc = applyColorAlpha(shadowc,parentAlpha)
+				shadowc = applyColorAlpha(shadowc,parentAlpha)
 				dxDrawImageSection(x+shadowoffx,y+shadowoffy,w,h,uvPx,uvPy,uvSx,uvSy,image,rot,rotOffx,rotOffy,shadowc,isPostGUI,rndtgt)
 				if shadowIsOutline then
 					dxDrawImageSection(x-shadowoffx,y+shadowoffy,w,h,uvPx,uvPy,uvSx,uvSy,image,rot,rotOffx,rotOffy,shadowc,isPostGUI,rndtgt)
@@ -222,7 +223,7 @@ dgsRenderer["dgs-dximage"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherite
 			dxDrawImageSection(x,y,w,h,uvPx,uvPy,uvSx,uvSy,image,rot,rotOffy,rotOffy,color,isPostGUI,rndtgt)
 		else
 			if shadowoffx and shadowoffy and shadowc then
-				local shadowc = applyColorAlpha(shadowc,parentAlpha)
+				shadowc = applyColorAlpha(shadowc,parentAlpha)
 				dxDrawImage(x+shadowoffx,y+shadowoffy,w,h,image,rot,rotOffx,rotOffy,shadowc,isPostGUI,rndtgt)
 				if shadowIsOutline then
 					dxDrawImage(x-shadowoffx,y+shadowoffy,w,h,image,rot,rotOffx,rotOffy,shadowc,isPostGUI,rndtgt)

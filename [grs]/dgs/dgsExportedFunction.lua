@@ -86,7 +86,7 @@ function dgsImportFunction(name,nameAs)
 										isLocated = true	--Need to get the next index
 									end
 								end
-							until data and data.source:sub(1,1) == "@" 
+							until data and data.source:sub(1,1) == "@"
 							if data then
 								functionCallLogger = fncCallLoggerSelf
 								functionCallLogger.line=data.currentline
@@ -139,8 +139,8 @@ function dgsImportFunction(name,nameAs)
 			triggerEvent("DGSI_onImport",root,resourceRoot)
 		end
 		]]
-		for i,name in ipairs(getResourceExportedFunctions()) do
-			allCode = allCode.."\n "..name.." = DGS."..name..";"
+		for i,fnName in ipairs(getResourceExportedFunctions()) do
+			allCode = allCode.."\n "..fnName.." = DGS."..fnName..";"
 		end
 		return allCode
 	else
@@ -152,7 +152,7 @@ end
 
 G2DHookerEvents = {}
 function dgsG2DLoadHooker(isLocal)
-	if table.count(G2DHookerEvents) == 0 then 
+	if table.count(G2DHookerEvents) == 0 then
 		addEventHandler("onDgsEditAccepted",root,handleHookerEvents)
 		addEventHandler("onDgsTextChange",root,handleHookerEvents)
 		addEventHandler("onDgsComboBoxSelect",root,handleHookerEvents)
@@ -196,7 +196,7 @@ function dgsG2DLoadHooker(isLocal)
 		guiSetPosition = dgsSetPosition
 		guiSetSize = function (gl,w,h,relative)
 			local v = dgsSetSize(gl,w,h,relative)
-			if _getElementType(gl) == "dgs-dxcombobox" then 
+			if _getElementType(gl) == "dgs-dxcombobox" then
 				local width,height = dgsGetSize(gl,false)
 				dgsSetSize(gl,width,22,false)
 				dgsComboBoxSetBoxHeight(gl,height-22,false)
@@ -226,12 +226,11 @@ function dgsG2DLoadHooker(isLocal)
 		guiComboBoxAddItem = dgsComboBoxAddItem
 		guiComboBoxClear = dgsComboBoxClear
 		guiComboBoxGetItemCount = dgsComboBoxGetItemCount
-		guiComboBoxGetItemText = function(combobox,item,...)
-			if item and item ~= -1 then
-				item = isGUIComboBox[combobox] and item+1 or item
-			end
-			if item and dgsComboBoxGetItemCount(combobox) < item then return false end
-			return dgsComboBoxGetItemText(combobox,item,...)
+		guiComboBoxGetItemText = function(combobox,item)
+			if not item or item == -1 then return false end
+			item = isGUIComboBox[combobox] and item+1 or item
+			if dgsComboBoxGetItemCount(combobox) < item then return false end
+			return dgsComboBoxGetItemText(combobox,item)
 		end
 		guiComboBoxGetSelected = function(combobox,...)
 			if isGUIComboBox[combobox] then
@@ -295,15 +294,9 @@ function dgsG2DLoadHooker(isLocal)
 				return dgsGridListInsertRowAfter(gl,row,...)
 			end
 		end
-		guiGridListAddRow = function(gl,row,...)
-			local rowData = dgsGetProperty(gl,"rowData")
-			if isGUIGridList[gl] then
-				row = tonumber(row) or #rowData
-				return dgsGridListAddRow(gl,row+1,...)-1
-			else
-				row = tonumber(row) or #rowData+1
-				return dgsGridListAddRow(gl,row,...)
-			end
+		guiGridListAddRow = function(gl,...)
+			local row = dgsGridListAddRow(gl,nil,...)
+			return row and row-1 or row
 		end
 		guiGridListGetItemColor = function(gl,row,column)
 			if column and dgsGridListGetColumnCount(gl) < column then return false end
@@ -382,24 +375,24 @@ function dgsG2DLoadHooker(isLocal)
 			return dgsGridListSetItemColor(gl,row,column,...)
 		end
 		guiGridListSetSelectedItem = function(gl,row,column,...)
-    		if column then 
-        		if column <= 0 then 
-            		column = -1
-        		elseif dgsGridListGetColumnCount(gl) < column then 
-            		return false 
-        		end
-    		end
-    		if row then 
-        		if row <= -1 then 
-            		row = -1
-        		elseif isGUIGridList[gl] then 
-            		row = row+1
-            		if dgsGridListGetRowCount(gl) < row then 
-                		return false 
-            		end
-       			 end
-    		end
-    		return dgsGridListSetSelectedItem(gl,row,column,...)
+			if column then
+				if column <= 0 then
+					column = -1
+				elseif dgsGridListGetColumnCount(gl) < column then
+					return false
+				end
+			end
+			if row then
+				if row <= -1 then
+					row = -1
+				elseif isGUIGridList[gl] then
+					row = row+1
+					if dgsGridListGetRowCount(gl) < row then
+						return false
+					end
+				end
+			end
+			return dgsGridListSetSelectedItem(gl,row,column,...)
 		end
 		guiGridListAutoSizeColumn = function (gl,column)
 			if column and dgsGridListGetColumnCount(gl) < column then return false end
@@ -433,7 +426,24 @@ function dgsG2DLoadHooker(isLocal)
 		guiGridListSetColumnTitle = dgsGridListSetColumnTitle
 		guiGridListSetColumnWidth = dgsGridListSetColumnWidth
 		guiGridListSetScrollBars = dgsGridListSetScrollBarState
-		guiGridListSetSelectionMode = dgsGridListSetSelectionMode
+		guiGridListSetSelectionMode = function (gl,mode)
+			local selectionModes = {
+				[0] = {mode=1,multi=false},
+				[1] = {mode=1,multi=true},
+				[2] = {mode=3,multi=false},
+				[3] = {mode=3,multi=true},
+				[4] = {mode=2,multi=false},
+				[5] = {mode=2,multi=true},
+				[6] = {mode=2,multi=false},
+				[7] = {mode=2,multi=true}, 
+				[8] = {mode=3,multi=false},
+				[9] = {mode=3,multi=true},
+			}
+			local g2dMode = selectionModes[mode]
+			dgsGridListSetSelectedItems(gl,{})
+			dgsGridListSetMultiSelectionEnabled(gl,g2dMode.multi)
+			return dgsGridListSetSelectionMode(gl,g2dMode.mode)
+		end
 		guiGridListSetSortingEnabled = dgsGridListSetSortEnabled
 		guiCreateMemo = dgsCreateMemo
 		guiMemoGetCaretIndex = dgsMemoGetCaretPosition
@@ -489,15 +499,15 @@ function dgsG2DLoadHooker(isLocal)
 		guiGetBrowser = dgsGetBrowser
 
 		local fontReplace = {
-            ["default-normal"]="default",
+			["default-normal"]="default",
 			["default-small"]="arial",
 			["default-bold-small"]="default-bold",
 			["clear-normal"]="clear",
 			["sa-gothic"]="beckett",
 			["sa-header"]="diploma",
-        }
-        guiSetFont = function(gl,font)
-            return dgsSetFont(gl,fontReplace[font] or font)
+		}
+		guiSetFont = function(gl,font)
+			return dgsSetFont(gl,fontReplace[font] or font)
 		end
 
 		guiSetProperty = function(gl,prop,v)
@@ -522,6 +532,9 @@ function dgsG2DLoadHooker(isLocal)
 				return dgsSetProperty(gl,"readOnly",v:lower() == "true")
 			elseif prop == "Alpha" or prop == "Font" or prop == "Text" then
 				return dgsSetProperty(gl,prop:lower(),v)
+			elseif prop == "AlwaysOnTop" then 
+				v = v:lower() == "true"
+				return dgsSetLayer(gl,v and "top" or "center")
 			else
 				return dgsSetProperty(gl,prop,v)
 			end
@@ -550,9 +563,9 @@ function dgsG2DLoadHooker(isLocal)
 		addEventHandler = function(event,...)
 			return _addEventHandler(eventReplace[event] or event,...)
 		end
-		
+
 		_removeEventHandler = removeEventHandler
-		
+
 		removeEventHandler = function(event,...)
 			return _removeEventHandler(eventReplace[event] or event,...)
 		end
@@ -585,7 +598,7 @@ end
 function handleHookerEvents(...)
 	triggerEvent(eventName.."-C",source,source,...)
 end
-	
+
 -------Inside DGS
 setElementData(root,"__DGSRes",getThisResource(),false)
 addEventHandler("onClientResourceStop",resourceRoot,function() setElementData(root,"__DGSRes",false,false) end)
@@ -599,13 +612,13 @@ function dgsImportOOPClass()
 	if not matched then return outputChatBox("[DGS] Failed to load classlib.lua (File mismatch)",255,0,0) end
 	local str = content
 	if fileExists("customOOP.lua") then
-		local matched,content = verifyFile("customOOP.lua",true)
+		matched,content = verifyFile("customOOP.lua",true)
 		if not matched then outputChatBox("[DGS] Failed to load customOOP.lua (File mismatch)",255,0,0) end
 		local s = content:gsub("\r\n","\n")
 		local list = split(s,"\n")
 		for i=1,#list do
 			if fileExists(list[i]) then
-				local matched,content = verifyFile(list[i],true)
+				matched,content = verifyFile(list[i],true)
 				if not matched then outputChatBox("[DGS] Failed to load "..list[i].." (File mismatch)",255,0,0) end
 				local f,e = loadstring(content)
 				if f then

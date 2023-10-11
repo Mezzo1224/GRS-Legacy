@@ -47,7 +47,7 @@ function dgsCreateCmd(x,y,w,h,relative,parent)
 	dgsSetData(edit,"mycmd",cmdMemo)
 	addEventHandler("onDgsTextChange",edit,function()
 		local text = dgsElementData[source].text
-		local parent = dgsElementData[source].mycmd
+		parent = dgsElementData[source].mycmd
 		if isElement(parent) then
 			if dgsGetPluginType(parent) == "dgs-dxcmd" then
 				local hisid = dgsElementData[parent].cmdCurrentHistory
@@ -197,8 +197,8 @@ function executeCmdCommand(cmd,str,...)
 end
 --------------DGS CMD
 dgs_MyIP = "Unknown"
-triggerServerEvent("DGSI_RequestIP",resourceRoot)
-addEventHandler("DGSI_ReceiveIP",resourceRoot,function(ip)
+triggerServerEvent("DGSI_RequestIP",localPlayer)
+addEventHandler("DGSI_ReceiveIP",localPlayer,function(ip)
 	dgs_MyIP = ip
 end)
 
@@ -281,15 +281,15 @@ function dgsBuildInCMD(command)
 		dgsSetProperty(cmdSystem["window"],"outline",{"out",1,tocolor(100,100,100,255)})
 		dgsMoveTo(cmdSystem["window"],sW*0.25,sH*0.5,false,"OutQuad",300)
 		dgsSizeTo(cmdSystem["window"],sW*0.5,25,false,"OutQuad",300)
-		setTimer(function(command)
+		setTimer(function(icommand)
 			dgsMoveTo(cmdSystem["window"],sW*0.25,sH*0.25,false,"InQuad",300)
 			dgsSizeTo(cmdSystem["window"],sW*0.5,sH*0.6,false,"InQuad",300)
-			setTimer(function(command)
+			setTimer(function(iicommand)
 				cmdSystem["cmd"] = dgsCreateCmd(0,0,sW*0.5,sH*0.6-45,false,cmdSystem["window"],1,1)
 				dgsCmdApplyDefaultCommands(cmdSystem["cmd"])
 				local version = getElementData(resourceRoot,"Version") or "N/A"
 				outputCmdMessage(cmdSystem["cmd"],"( Thisdp's Dx Graphical User Interface System ) Version: "..version)
-			end,310,1,command)
+			end,310,1,icommand)
 			dgsShowCursor(true,"cmd")
 		end,310,1,command)
 	else
@@ -514,10 +514,10 @@ function dgsCreateAnimationWindow(...)
 	dgsSetData(window,"animated",1)
 	dgsMoveTo(window,x,y+sy/2-12.5,false,"OutQuad",200)
 	dgsSizeTo(window,sx,25,false,"OutQuad",200)
-	setTimer(function(window)
-		dgsMoveTo(window,x,y,false,"InQuad",200)
-		dgsSizeTo(window,sx,sy,false,"InQuad",200)
-		setTimer(onAnimationWindowCreate,202,1,window)
+	setTimer(function(iwindow)
+		dgsMoveTo(iwindow,x,y,false,"InQuad",200)
+		dgsSizeTo(iwindow,sx,sy,false,"InQuad",200)
+		setTimer(onAnimationWindowCreate,202,1,iwindow)
 	end,210,1,window)
 	return window
 end
@@ -634,16 +634,16 @@ function onAnimationWindowCreate(window)
 		dgsSetProperty(performanceBrowser["dxList"],"rowTextSize",{1.5,1.5})
 		dgsGridListAddColumn(performanceBrowser["dxList"],"",1)
 		local k = 0
-		for v,t in pairs(pBCat) do
+		for catalogue,items in pairs(pBCat) do
 			k=k+1
-			dgsGridListAddRow(performanceBrowser["dxList"],_,v)
+			dgsGridListAddRow(performanceBrowser["dxList"],_,catalogue)
 			performanceBrowser[k] = dgsCreateGridList(140,10,750,460,false,performanceBrowser["window"])
 			dgsGridListSetSortEnabled(performanceBrowser[k],false)
 			dgsSetProperty(performanceBrowser[k],"rowHeight",25)
 			dgsSetProperty(performanceBrowser[k],"columnHeight",25)
 			dgsSetProperty(performanceBrowser[k],"columnTextSize",{1.3,1.3})
 			dgsSetProperty(performanceBrowser[k],"rowTextSize",{1.3,1.3})
-			for index,name in ipairs(t) do
+			for index,name in ipairs(items) do
 				dgsGridListAddColumn(performanceBrowser[k],name,0.3)
 			end
 			addEventHandler("onDgsElementRender",performanceBrowser[k],function()
@@ -660,17 +660,17 @@ function onAnimationWindowCreate(window)
 						dgsGridListAddRow(source)
 					end
 				end
-				for i=1,#rows do
-					for k,v in pairs(rows[i]) do
-						rowData[i][k] = rowData[i][k] or {}
-						rowData[i][k][1] = v
-						rowData[i][k][2] = white
+				for rowIndex=1,#rows do
+					for columnIndex,itemName in pairs(rows[rowIndex]) do
+						rowData[rowIndex][columnIndex] = rowData[rowIndex][columnIndex] or {}
+						rowData[rowIndex][columnIndex][1] = itemName
+						rowData[rowIndex][columnIndex][2] = white
 					end
 				end
 				dgsSetProperty(source,"rowData",rowData)
 			end,false)
 			dgsSetProperty(performanceBrowser[k],"renderEventCall",true)
-			dgsSetProperty(performanceBrowser[k],"myType",v)
+			dgsSetProperty(performanceBrowser[k],"myType",catalogue)
 			dgsSetProperty(performanceBrowser[k],"myIndex",k)
 			dgsSetProperty(performanceBrowser[k],"startTick",getTickCount()-5000)
 			dgsSetVisible(performanceBrowser[k],false)

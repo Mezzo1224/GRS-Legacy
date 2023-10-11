@@ -50,7 +50,7 @@ local mathClamp = math.clamp
 
 function dgsCreateScrollBar(...)
 	local sRes = sourceResource or resource
-	
+
 	local x,y,w,h,isHorizontal,relative,parent,arrowImage,troughImage,cursorImage,nColorA,hColorA,cColorA,troughColor,nColorC,hColorC,cColorC
 	if select("#",...) == 1 and type(select(1,...)) == "table" then
 		local argTable = ...
@@ -78,18 +78,18 @@ function dgsCreateScrollBar(...)
 	if not(type(y) == "number") then error(dgsGenAsrt(y,"dgsCreateScrollBar",2,"number")) end
 	if not(type(w) == "number") then error(dgsGenAsrt(w,"dgsCreateScrollBar",3,"number")) end
 	if not(type(h) == "number") then error(dgsGenAsrt(h,"dgsCreateScrollBar",4,"number")) end
-	local isHorizontal = isHorizontal or false
+	isHorizontal = isHorizontal or false
 	local scrollbar = createElement("dgs-dxscrollbar")
 	dgsSetType(scrollbar,"dgs-dxscrollbar")
-				
+
 	local res = sRes ~= resource and sRes or "global"
 	local style = styleManager.styles[res]
 	local using = style.using
 	style = style.loaded[using]
-	
+
 	style = style.scrollbar
-	local arrowImage = arrowImage or dgsCreateTextureFromStyle(using,res,style.arrowImage)
-	local cursorImage = cursorImage or dgsCreateTextureFromStyle(using,res,style.cursorImage)
+	arrowImage = arrowImage or dgsCreateTextureFromStyle(using,res,style.arrowImage)
+	cursorImage = cursorImage or dgsCreateTextureFromStyle(using,res,style.cursorImage)
 	if not troughImage then
 		troughImage = isHorizontal and style.troughImageHorizontal or style.troughImage
 		if troughImage and type(troughImage) == "table" then
@@ -124,7 +124,7 @@ function dgsCreateScrollBar(...)
 		troughColor = troughColor or style.troughColor,
 		troughImageSectionMode = false,
 		troughImage = troughImage,
-		troughClickAction = "none",
+		troughClickAction = "step",
 		troughWidth = style.troughWidth or style.cursorWidth or {1,true},
 		wheelReversed = false,
 		renderBuffer = {
@@ -137,6 +137,7 @@ function dgsCreateScrollBar(...)
 	}
 	dgsSetParent(scrollbar,parent,true,true)
 	calculateGuiPositionSize(scrollbar,x,y,relative or false,w,h,relative or false,true)
+	dgsApplyGeneralProperties(scrollbar,sRes)
 	onDGSElementCreate(scrollbar,sRes)
 	return scrollbar
 end
@@ -175,7 +176,7 @@ end
 
 function dgsScrollBarSetLocked(scrollbar,state)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarSetLocked",1,"dgs-dxscrollbar")) end
-	local state = state and true or false
+	state = state and true or false
 	return dgsSetData(scrollbar,"locked",state)
 end
 
@@ -230,7 +231,7 @@ end
 
 function dgsScrollBarGetCursorLength(scrollbar,relative)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarGetCursorLength",1,"dgs-dxscrollbar")) end
-	local relative = relative or false
+	relative = relative or false
 	local eleData = dgsElementData[scrollbar]
 	local slotRange
 	local scrollArrow = eleData.scrollArrow
@@ -255,7 +256,7 @@ end
 function dgsScrollBarGetCursorWidth(scrollbar,relative)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarGetCursorWidth",1,"dgs-dxscrollbar")) end
 	if not(type(width) == "number") then error(dgsGenAsrt(width,"dgsScrollBarGetCursorWidth",2,"number")) end
-	local relative = relative or false
+	relative = relative or false
 	local eleData = dgsElementData[scrollbar]
 	local w,h = eleData.absSize[1],eleData.absSize[2]
 	local cursorWidth = eleData.cursorWidth
@@ -268,7 +269,6 @@ function dgsScrollBarGetCursorWidth(scrollbar,relative)
 	end
 end
 
-
 function dgsScrollBarSetTroughWidth(scrollbar,width,relative)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarSetTroughWidth",1,"dgs-dxscrollbar")) end
 	if not(type(width) == "number") then error(dgsGenAsrt(width,"dgsScrollBarSetTroughWidth",2,"number")) end
@@ -277,7 +277,7 @@ end
 
 function dgsScrollBarGetTroughWidth(scrollbar,relative)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarGetTroughWidth",1,"dgs-dxscrollbar")) end
-	local relative = relative or false
+	relative = relative or false
 	local eleData = dgsElementData[scrollbar]
 	local w,h = eleData.absSize[1],eleData.absSize[2]
 	local troughWidth = eleData.troughWidth
@@ -298,7 +298,7 @@ end
 
 function dgsScrollBarGetArrowSize(scrollbar,relative)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarGetArrowSize",1,"dgs-dxscrollbar")) end
-	local relative = relative or false
+	relative = relative or false
 	local eleData = dgsElementData[scrollbar]
 	local w,h = eleData.absSize[1],eleData.absSize[2]
 	local arrowWidth = eleData.arrowWidth
@@ -311,16 +311,46 @@ function dgsScrollBarGetArrowSize(scrollbar,relative)
 	end
 end
 
-local allowedClickAction = { none=1, step=2, jump=3 }
+local allowedClickAction = { none=true, step=true, jump=true }
 function dgsScrollBarSetTroughClickAction(scrollbar,action)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarSetTroughClickAction",1,"dgs-dxscrollbar")) end
-	if not(allowedClickAction[action]) then error(dgsGenAsrt(action,"dgsScrollBarSetTroughClickAction",2,"number","1/2/3")) end
+	if not(allowedClickAction[action]) then error(dgsGenAsrt(action,"dgsScrollBarSetTroughClickAction",2,"string","'none'/'step'/'jump'")) end
 	return dgsSetData(scrollbar,"troughClickAction",action)
 end
 
 function dgsScrollBarGetTroughClickAction(scb)
 	if dgsGetType(scrollbar) ~= "dgs-dxscrollbar" then error(dgsGenAsrt(scrollbar,"dgsScrollBarGetTroughClickAction",1,"dgs-dxscrollbar")) end
 	return dgsElementData[scrollbar].troughClickAction or "none"
+end
+
+----------------------------------------------------------------
+---------------------OnMouseScrollAction------------------------
+----------------------------------------------------------------
+dgsOnMouseScrollAction["dgs-dxscrollbar"] = function(dgsEle,isWheelDown)
+	dgsSetData(dgsEle,"moveType","slow")
+	scrollScrollBar(dgsEle,isWheelDown)
+end
+
+----------------------------------------------------------------
+----------------------OnMouseClickAction------------------------
+----------------------------------------------------------------
+dgsOnMouseClickAction["dgs-dxscrollbar"] = function(dgsEle,button,state)
+	if state ~= "down" then return end
+	local eleData = dgsElementData[dgsEle]
+	local scrollArrow = eleData.scrollArrow
+	local x,y = dgsGetPosition(dgsEle,false,true)
+	local w,h = dgsGetSize(dgsEle,false)
+	local isHorizontal = eleData.isHorizontal
+	local length,lrlt = eleData.length[1],eleData.length[2]
+	local slotRange
+	local arrowWid = eleData.arrowWidth
+	if isHorizontal then
+		slotRange = w-(scrollArrow and (arrowWid[2] and h*arrowWid[1] or arrowWid[1])*2 or 0)
+	else
+		slotRange = h-(scrollArrow and (arrowWid[2] and w*arrowWid[1] or arrowWid[1])*2 or 0)
+	end
+	local cursorRange = (lrlt and length*slotRange) or (length <= slotRange and length or slotRange*0.01)
+	checkScrollBar(dgsEle,eleData.scrollPosition*0.01*(slotRange-cursorRange),isHorizontal)
 end
 
 ----------------------------------------------------------------
@@ -349,7 +379,8 @@ dgsOnPropertyChange["dgs-dxscrollbar"] = {
 				else
 					dgsElementData[dgsEle][key] = nValue
 				end
-				dgsTriggerEvent("onDgsElementScroll",dgsEle,dgsEle,dgsElementData[dgsEle][key],oldValue,nValue,oValue)
+				nValue,oValue = nValue/100*(scaler[2]-scaler[1])+scaler[1],oValue/100*(scaler[2]-scaler[1])+scaler[1]
+				dgsTriggerEvent("onDgsElementScroll",dgsEle,dgsEle,nValue,oValue,dgsElementData[dgsEle][key],oldValue)
 			else
 				dgsElementData[dgsEle][key] = oldValue
 			end
@@ -426,7 +457,7 @@ dgsRenderer["dgs-dxscrollbar"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInhe
 	local cursorWidth,troughWidth,arrowWidth = eleData.cursorWidth,eleData.troughWidth,eleData.arrowWidth
 	local imgRot = eleData.imageRotation
 	local troughPadding,cursorPadding,arrowPadding
-	
+
 	if isHorizontal then
 		troughWidth = troughWidth[2] and troughWidth[1]*h or troughWidth[1]
 		cursorWidth = cursorWidth[2] and cursorWidth[1]*h or cursorWidth[1]
@@ -491,6 +522,7 @@ dgsRenderer["dgs-dxscrollbar"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInhe
 				preEnterPos = (myRlt-arrowWidth-cursorRange/2)/csRange
 			end
 		end
+		MouseData.scbEnterDataDynamic = preEnterData
 		if not MouseData.scbClickData then
 			MouseData.scbEnterData = preEnterData
 			MouseData.scbEnterRltPos = preEnterPos
@@ -502,7 +534,7 @@ dgsRenderer["dgs-dxscrollbar"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInhe
 			local canLeftClick,canRightClick,canMiddleClick = true
 			if mouseButtons then
 				canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
-			end		
+			end
 			if (canLeftClick and MouseData.click.left == source) or (canRightClick and MouseData.click.right == source) or (canMiddleClick and MouseData.click.middle == source) then
 				colorImageIndex[MouseData.scbClickData] = 3
 				if MouseData.scbClickData == 3 then

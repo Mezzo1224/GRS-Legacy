@@ -4,7 +4,7 @@ showingToolTip = false
 function dgsCreateToolTip(textColor,bgColor,bgImage)	--Tooltip template
 	local tooltipTemplate = createElement("dgs-dxtooltip")
 	dgsSetData(tooltipTemplate,"asPlugin","dgs-dxtooltip")
-	
+
 	dgsSetData(tooltipTemplate,"textColor",textColor or tocolor(255,255,255,255))
 	--dgsSetData(tooltipTemplate,"colorCoded",false)
 	dgsSetData(tooltipTemplate,"textSize",{1,1})
@@ -16,10 +16,10 @@ function dgsCreateToolTip(textColor,bgColor,bgImage)	--Tooltip template
 	dgsSetData(tooltipTemplate,"padding",{10,10,false})
 	dgsSetData(tooltipTemplate,"bgColor",bgColor or tocolor(0,0,0,128))
 	dgsSetData(tooltipTemplate,"bgImage",bgImage or nil)
-	
+
 	dgsSetData(tooltipTemplate,"stayPosition",{0,0})
 	dgsSetData(tooltipTemplate,"text","")
-	
+
 	dgsTriggerEvent("onDgsPluginCreate",tooltipTemplate,sourceResource)
 	return tooltipTemplate
 end
@@ -54,13 +54,13 @@ function DGSTooltipRender()
 	local padding = tooltipData.padding
 	local bgColor = tooltipData.bgColor
 	local bgImage = tooltipData.bgImage
-	
+
 	local stayX,stayY = tooltipData.stayPosition[1],tooltipData.stayPosition[2]
-	
+
 	local maxWidth = tooltipData.maxWidth
 	local textWidth,textHeight = dxGetTextSize(text,maxWidth-padding[1]*2,textSize[1],textSize[2],font,true)
 	local bgWidth,bgHeight = textWidth+padding[1]*2,textHeight+padding[2]*2
-	
+
 	local drawX,drawY
 	if stayX+bgWidth/2 > sW then
 		drawX = sW-bgWidth
@@ -98,17 +98,17 @@ function DGSToolTipShow(enterElement,x,y)
 			dgsSetData(showingToolTip,"text",appliedTooltip[2])
 			dgsSetData(showingToolTip,"font",appliedTooltip[3] or dgsElementData[showingToolTip].font)
 			dgsSetData(showingToolTip,"maxWidth",appliedTooltip[4] or dgsElementData[showingToolTip].maxWidth)
-			dgsRegisterFastEvent("onDgsRender","DGSTooltipRender")
+			dgsRegisterFastEventHandler("onDgsRender","DGSTooltipRender")
 		end
 	end
 end
-dgsRegisterFastEvent("onDgsMouseStay","DGSToolTipShow")
+dgsRegisterFastEventHandler("onDgsMouseStay","DGSToolTipShow")
 
 function DGSMouseLeaveForToolTip(leaveElement)
 	local eleData = dgsElementData[leaveElement]
 	if not showingToolTip then return end
 	if eleData.appliedTooltip and eleData.appliedTooltip[1] == showingToolTip then
-		dgsRemoveFastEvent("onDgsRender","DGSTooltipRender")
+		dgsRemoveFastEventHandler("onDgsRender","DGSTooltipRender")
 	end
 end
-dgsRegisterFastEvent("onDgsMouseLeave","DGSMouseLeaveForToolTip")
+dgsRegisterFastEventHandler("onDgsMouseLeave","DGSMouseLeaveForToolTip")

@@ -66,13 +66,13 @@ function dgsCreateLabel(...)
 	if not(type(h) == "number") then error(dgsGenAsrt(h,"dgsCreateLabel",4,"number")) end
 	local label = createElement("dgs-dxlabel")
 	dgsSetType(label,"dgs-dxlabel")
-	
+
 	local res = sRes ~= resource and sRes or "global"
 	local style = styleManager.styles[res]
 	local using = style.using
 	style = style.loaded[using]
 	local systemFont = style.systemFontElement
-	
+
 	style = style.label
 	local textSizeX,textSizeY = tonumber(scaleX) or style.textSize[1], tonumber(scaleY) or style.textSize[2]
 	dgsElementData[label] = {
@@ -80,7 +80,7 @@ function dgsCreateLabel(...)
 		font = style.font or systemFont,
 		rotation = 0,
 		rotationCenter = {0, 0},
-		shadow = nil,
+		shadow = (shadowOffestX and shadowOffsetY and shadowColor) and {shadowOffsetX,shadowOffsetY,shadowColor} or nil,
 		subPixelPositioning = nil,
 		textColor = textColor or style.textColor,
 		textSize = {textSizeX,textSizeY},
@@ -98,6 +98,7 @@ function dgsCreateLabel(...)
 		dgsSetData(label,"text",tostring(text or ""))
 	end
 	calculateGuiPositionSize(label,x,y,relative or false,w,h,relative or false,true)
+	dgsApplyGeneralProperties(label,sRes)
 	onDGSElementCreate(label,sRes)
 	return label
 end
@@ -115,7 +116,8 @@ end
 function dgsLabelGetColor(label,notSplit)
 	if dgsGetType(label) ~= "dgs-dxlabel" then error(dgsGenAsrt(label,"dgsLabelGetColor",1,"dgs-dxlabel")) end
 	local textColor = dgsElementData[label].textColor
-	return notSplit and textColor or fromcolor(textColor)
+	if notSplit then return textColor end
+	return fromcolor(textColor)
 end
 
 function dgsLabelSetHorizontalAlign(label,align,wordbreak)

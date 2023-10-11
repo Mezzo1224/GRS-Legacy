@@ -90,13 +90,13 @@ function dgsCreateCheckBox(...)
 	if not(type(state) == "boolean") then error(dgsGenAsrt(state,"dgsCreateCheckBox",6,"boolean")) end
 	local cb = createElement("dgs-dxcheckbox")
 	dgsSetType(cb,"dgs-dxcheckbox")
-	
+
 	local res = sRes ~= resource and sRes or "global"
 	local style = styleManager.styles[res]
 	local using = style.using
 	style = style.loaded[using]
 	local systemFont = style.systemFontElement
-	
+
 	style = style.checkbox
 	local imageUnchecked = style.imageUnchecked
 	nImageF = nImageF or dgsCreateTextureFromStyle(using,res,imageUnchecked[1])
@@ -151,6 +151,7 @@ function dgsCreateCheckBox(...)
 	dgsSetParent(cb,parent,true,true)
 	dgsAttachToTranslation(cb,resourceTranslation[sRes])
 	calculateGuiPositionSize(cb,x,y,relative or false,w,h,relative or false,true)
+	dgsApplyGeneralProperties(cb,sRes)
 	if type(text) == "table" then
 		dgsElementData[cb]._translation_text = text
 		dgsSetData(cb,"text",text)
@@ -246,6 +247,16 @@ function dgsCheckBoxUpdateTextWidth(cb)
 	end
 	eleData.textWidth = dxGetTextSize(text,w-buttonSizeX,textSize[1],textSize[2],font,wordBreak,colorCoded)
 end
+
+----------------------------------------------------------------
+----------------------OnMouseClickAction------------------------
+----------------------------------------------------------------
+dgsOnMouseClickAction["dgs-dxcheckbox"] = function(dgsEle,button,state)
+	if state ~= "down" then return end
+	local eleData = dgsElementData[dgsEle]
+	dgsCheckBoxSetSelected(dgsEle,not eleData.state)
+end
+
 ----------------------------------------------------------------
 -----------------------PropertyListener-------------------------
 ----------------------------------------------------------------
@@ -285,13 +296,13 @@ dgsOnPropertyChange["dgs-dxcheckbox"] = {
 		dgsCheckBoxUpdateTextWidth(dgsEle)
 	end,
 }
+
 ----------------------------------------------------------------
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
 dgsRenderer["dgs-dxcheckbox"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt)
 	local imageUnchecked,imageChecked,imageIndeterminate = eleData.imageUnchecked,eleData.imageChecked,eleData.imageIndeterminate
 	local colorUnchecked,colorChecked,colorIndeterminate = eleData.colorUnchecked,eleData.colorChecked,eleData.colorIndeterminate
-	local image,color
 	local _buttonSize = eleData.buttonSize
 	local buttonSizeX,buttonSizeY
 	if tonumber(_buttonSize[2]) then
@@ -301,6 +312,7 @@ dgsRenderer["dgs-dxcheckbox"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 		buttonSizeX = _buttonSize[2] and _buttonSize[1]*h or _buttonSize[1]
 		buttonSizeY = buttonSizeX
 	end
+	local image,color
 	if eleData.state == true then
 		image,color = imageChecked,colorChecked
 	elseif eleData.state == false then
@@ -315,7 +327,7 @@ dgsRenderer["dgs-dxcheckbox"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 		local canLeftClick,canRightClick,canMiddleClick = true
 		if mouseButtons then
 			canLeftClick,canRightClick,canMiddleClick = mouseButtons[1],mouseButtons[2],mouseButtons[3]
-		end		
+		end
 		if (canLeftClick and MouseData.click.left == source) or (canRightClick and MouseData.click.right == source) or (canMiddleClick and MouseData.click.middle == source) then
 			colorimgid = 3
 		end
@@ -334,12 +346,12 @@ dgsRenderer["dgs-dxcheckbox"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInher
 	else
 		finalcolor = applyColorAlpha(color[colorimgid],parentAlpha)
 	end
-	
+
 	local res = eleData.resource or "global"
 	local style = styleManager.styles[res]
 	style = style.loaded[style.using]
 	local systemFont = style.systemFontElement
-	
+
 	local font = eleData.font or systemFont
 	local txtSizX,txtSizY = eleData.textSize[1],eleData.textSize[2] or eleData.textSize[1]
 	local clip = eleData.clip

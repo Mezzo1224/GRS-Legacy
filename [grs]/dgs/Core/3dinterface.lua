@@ -20,6 +20,7 @@ local type = type
 local tableInsert = table.insert
 local dxSetShaderValue = dxSetShaderValue
 local dxDrawImage = dxDrawImage
+local dxDrawMaterialLine3D = dxDrawMaterialLine3D
 
 function dgsCreate3DInterface(...)
 	local sRes = sourceResource or resource
@@ -50,7 +51,7 @@ function dgsCreate3DInterface(...)
 	if not(type(resX) == "number") then error(dgsGenAsrt(resX,"dgsCreate3DInterface",6,"number")) end
 	if not(type(resY) == "number") then error(dgsGenAsrt(resY,"dgsCreate3DInterface",7,"number")) end
 	local interface = createElement("dgs-dx3dinterface")
-	local renderer = dxCreateShader(interface3DShader)
+	local renderer = dxCreateShader(RendererShader3DInterface)
 	tableInsert(dgsWorld3DTable,interface)
 	dgsSetType(interface,"dgs-dx3dinterface")
 	dgsElementData[interface] = {
@@ -63,7 +64,7 @@ function dgsCreate3DInterface(...)
 		resolution = {resX,resY},
 		maxDistance = distance or 200,
 		fadeDistance = distance or 180,
-		blendMode = "add",
+		blendMode = "blend",
 		attachTo = false,
 		dimension = -1,
 		interior = -1,
@@ -71,8 +72,10 @@ function dgsCreate3DInterface(...)
 		hit = {},
 		renderer = renderer,
 		doublesided = true,
+		enableColorFilter = false,
 	}
 	dgsAttachToAutoDestroy(renderer,interface,-2)
+	dgsApplyGeneralProperties(interface,sRes)
 	onDGSElementCreate(interface,sRes)
 	dgs3DInterfaceRecreateRenderTarget(interface,true)
 	return interface
@@ -90,8 +93,8 @@ function dgs3DInterfaceRecreateRenderTarget(interface,lateAlloc)
 		else
 			dxSetTextureEdge(mainRT,"mirror")
 			dgsAttachToAutoDestroy(mainRT,interface,-1)
-			dxSetShaderValue(dgsElementData[interface].renderer,"sourceTexture",mainRT)
 		end
+		dxSetShaderValue(dgsElementData[interface].renderer,"sourceTexture",mainRT)
 		dgsSetData(interface,"mainRT",mainRT)
 		dgsSetData(interface,"retrieveRT",nil)
 	end
@@ -115,18 +118,18 @@ function dgsCalculate3DInterfaceMouse(x,y,z,vx,vy,vz,w,h,lnVP1,lnVP2,lnVP3,lnVP4
 		local px,py,pz = dgsGetIntersection(lnVP1,lnVP2,lnVP3,lnVP4,lnVP5,lnVP6,vx,vy,vz,x,y,z) --Intersection Point
 		if not px then return end
 		local model = (vx*vx+vy*vy+vz*vz)^0.5
-		local vx,vy,vz = vx/model,vy/model,vz/model
+		vx,vy,vz = vx/model,vy/model,vz/model
 		local ltX,ltY,ltZ = y1*vz-vy*z1,z1*vx-vz*x1,x1*vy-vx*y1 --Left Point
 		local leftModel = (ltX*ltX+ltY*ltY+ltZ*ltZ)^0.5*2
-		local ltX,ltY,ltZ = ltX/leftModel*w,ltY/leftModel*w,ltZ/leftModel*w
+		ltX,ltY,ltZ = ltX/leftModel*w,ltY/leftModel*w,ltZ/leftModel*w
 		local vec1X,vec1Y,vec1Z = ltX+x-px,ltY+y-py,ltZ+z-pz
 		local vec2X,vec2Y,vec2Z = px-x+x1,py-y+y1,pz-z+z1
-		local _x,_y = (vec1X*ltX+vec1Y*ltY+vec1Z*ltZ)/(ltX*ltX+ltY*ltY+ltZ*ltZ)^0.5/w,(vec2X*x1+vec2Y*y1+vec2Z*z1)/(x1*x1+y1*y1+z1*z1)^0.5/_h
+		_x,_y = (vec1X*ltX+vec1Y*ltY+vec1Z*ltZ)/(ltX*ltX+ltY*ltY+ltZ*ltZ)^0.5/w,(vec2X*x1+vec2Y*y1+vec2Z*z1)/(x1*x1+y1*y1+z1*z1)^0.5/_h
 		local angle = (x-lnVP4)*lnVP1+(y-lnVP5)*lnVP2+(z-lnVP6)*lnVP3
 		local inSide = _x>=0 and _x<=1 and _y>=0 and _y <=1
 		return (angle > 0) and inSide,_x,_y,px,py,pz
 	end
-end	
+end
 
 function dgsGetIntersection(lnVP1,lnVP2,lnVP3,lnVP4,lnVP5,lnVP6,pnVP1,pnVP2,pnVP3,pnVP4,pnVP5,pnVP6)
 	local vpt = pnVP1*lnVP1+pnVP2*lnVP2+pnVP3*lnVP3
@@ -292,8 +295,8 @@ end
 function dgs3DInterfaceAttachToElement(interface,element,offX,offY,offZ,offFaceX,offFaceY,offFaceZ)
 	if not dgsIsType(interface,"dgs-dx3dinterface") then error(dgsGenAsrt(interface,"dgs3DInterfaceAttachToElement",1,"dgs-dx3dinterface")) end
 	if not isElement(element) then error(dgsGenAsrt(element,"dgs3DInterfaceAttachToElement",2,"element")) end
-	local offX,offY,offZ = offX or 0,offY or 0,offZ or 0
-	local offFaceX,offFaceY,offFaceZ = offFaceX or 0,offFaceY or 1,offFaceZ or 0
+	offX,offY,offZ = offX or 0,offY or 0,offZ or 0
+	offFaceX,offFaceY,offFaceZ = offFaceX or 0,offFaceY or 1,offFaceZ or 0
 	return dgsSetData(interface,"attachTo",{element,offX,offY,offZ,offFaceX,offFaceY,offFaceZ})
 end
 
@@ -311,8 +314,8 @@ function dgs3DInterfaceSetAttachedOffsets(interface,offX,offY,offZ,offFaceX,offF
 	if not dgsIsType(interface,"dgs-dx3dinterface") then error(dgsGenAsrt(interface,"dgs3DInterfaceSetAttachedOffsets",1,"dgs-dx3dinterface")) end
 	local attachTable = dgsElementData[interface].attachTo
 	if attachTable then
-		local offX,offY,offZ = offX or attachTable[2],offY or attachTable[3],offZ or attachTable[4]
-		local offFaceX,offFaceY,offFaceZ = offFaceX or attachTable[5],offFaceY or attachTable[6],offFaceZ or attachTable[7]
+		offX,offY,offZ = offX or attachTable[2],offY or attachTable[3],offZ or attachTable[4]
+		offFaceX,offFaceY,offFaceZ = offFaceX or attachTable[5],offFaceY or attachTable[6],offFaceZ or attachTable[7]
 		return dgsSetData(interface,"attachTo",{attachTable[1],offX,offY,offZ,offFaceX,offFaceY,offFaceZ})
 	end
 	return false
@@ -331,8 +334,21 @@ end
 ----------------------------------------------------------------
 ----------------3D Interface Renderer Shader--------------------
 ----------------------------------------------------------------
-local rightBottom3D,rightTop3D,leftBottom3D,leftTop3D = {0,0,0,0,0,1},{0,0,0,0,0,0},{0,0,0,0,1,1},{0,0,0,0,1,0}
 function dgsDrawMaterialLine3D(x,y,z,vx,vy,vz,material,w,h,color,roll)
+	local offFaceX = atan2(vz,(vx*vx+vy*vy)^0.5)
+	local offFaceZ = atan2(vx,vy)
+	local cRoll = cos(roll)*h*0.5
+	local sRoll = sin(roll)*h*0.5
+	local cZ = cos(offFaceZ)
+	local sZ = sin(offFaceZ)
+	local cX = cos(offFaceX)
+	local sX = sin(offFaceX)
+	local x1,y1,z1 = sX*cRoll*sZ + cZ*sRoll, sX*cRoll*cZ - sZ*sRoll, -cX*cRoll
+	dxDrawMaterialLine3D(x-x1,y-y1,z-z1,x+x1,y+y1,z+z1,material,w,color,x+vx,y+vy,z+vz)
+end
+
+local rightBottom3D,rightTop3D,leftBottom3D,leftTop3D = {0,0,0,0,0,1},{0,0,0,0,0,0},{0,0,0,0,1,1},{0,0,0,0,1,0}
+function dgsDrawMaterialLine3DPrimitive(x,y,z,vx,vy,vz,material,w,h,color,roll)
 	local offFaceX = atan2(vz,(vx*vx+vy*vy)^0.5)
 	local offFaceZ = atan2(vx,vy)
 	local cRoll = cos(roll)
@@ -345,7 +361,7 @@ function dgsDrawMaterialLine3D(x,y,z,vx,vy,vz,material,w,h,color,roll)
 	local topX,topY,topZ = _x*h,_y*h,_z*h
 	local leftX,leftY,leftZ = topY*vz-vy*topZ,topZ*vx-vz*topX,topX*vy-vx*topY --Left Point
 	local leftModel = (leftX*leftX+leftY*leftY+leftZ*leftZ)^0.5
-	local leftX,leftY,leftZ = leftX/leftModel*w,leftY/leftModel*w,leftZ/leftModel*w
+	leftX,leftY,leftZ = leftX/leftModel*w,leftY/leftModel*w,leftZ/leftModel*w
 	rightBottom3D[1]  = leftX+topX+x
 	rightBottom3D[2]  = leftY+topY+y
 	rightBottom3D[3]  = leftZ+topZ+z
@@ -365,19 +381,11 @@ function dgsDrawMaterialLine3D(x,y,z,vx,vy,vz,material,w,h,color,roll)
 	dxDrawMaterialPrimitive3D("trianglestrip",material,false,leftTop3D,leftBottom3D,rightTop3D,rightBottom3D)
 end
 
-interface3DShader = [[
-float3x3 shapeConfig = {
-	float3(0, 0, 0),	//Position
-	float3(0, 0, 0),	//Face To
-	float3(0, 0, 0),	//Width Height Roll
-};
-bool doublesided = true;
+RendererShader3DInterface = [[
+float3 colorFilter = float3(1,1,1);
 texture sourceTexture;
-float4x4 gProjectionMainScene : PROJECTION_MAIN_SCENE;
-float4x4 gViewMainScene : VIEW_MAIN_SCENE;
-#define HalfPI 1.5707963267948966192313216916398
 
-sampler2D SamplerColor = sampler_state{
+sampler2D SamplerTex = sampler_state{
     Texture = sourceTexture;
     MipFilter = Linear;
     MinFilter = Linear;
@@ -386,85 +394,18 @@ sampler2D SamplerColor = sampler_state{
     AddressV = Mirror;
 };
 
-struct VSInput{
-    float3 Position : POSITION0;
-    float2 TexCoord : TEXCOORD0;
-    float4 Diffuse : COLOR0;
-};
-
-struct PSInput{
-    float4 Position : POSITION0;
-    float2 TexCoord : TEXCOORD0;
-    float4 Diffuse : COLOR0;
-};
-
-float3 findRotation3DByFaceRad(float3 faceTo) {
-	return float3(atan2(faceTo.z,length(faceTo.xy))+HalfPI,0,-atan2(faceTo.x,faceTo.y));	
+float4 colorFilterRemover(float4 color:COLOR0, float2 UV:TEXCOORD0) : COLOR0{
+	color *= tex2D(SamplerTex, UV);
+	color.rgb /= colorFilter;
+	return color;
 }
 
-float3x3 rodriguesFucksEuler(float3 rotVector, float angle){
-	rotVector = normalize(rotVector);
-    float c, s;
-    sincos(angle,s,c);
-    float t = 1-c;
-    float x = rotVector.x;
-    float y = rotVector.y;
-    float z = rotVector.z;
-    return float3x3(
-        t*x*x+c,   t*x*y-s*z, t*x*z+s*y,
-        t*x*y+s*z, t*y*y+c,   t*y*z-s*x,
-        t*x*z-s*y, t*y*z+s*x, t*z*z+c
-    );
-}
-
-float4x4 createWorldMatrix(float3 pos, float3 faceTo, float roll){
-	float3 faceToRot = findRotation3DByFaceRad(faceTo);
-    float3 cRot, sRot;
-    sincos(faceToRot, sRot, cRot);
-	float3x3 rotXZ = float3x3(
-        cRot.z * cRot.y - sRot.z * sRot.x * sRot.y, cRot.y * sRot.z + cRot.z * sRot.x * sRot.y, -cRot.x * sRot.y,
-        -cRot.x * sRot.z, cRot.z * cRot.x, sRot.x,
-        cRot.z * sRot.y + cRot.y * sRot.z * sRot.x, sRot.z * sRot.y - cRot.z * cRot.y * sRot.x, cRot.x * cRot.y
-	);
-	float3x3 rot = mul(rotXZ,rodriguesFucksEuler(faceTo,roll));
-    float4x4 eleMatrix = {
-        float4(rot[0], 0),
-        float4(rot[1], 0),
-        float4(rot[2], 0),
-        float4(pos, 1),
-    };
-    return eleMatrix;
-}
-
-PSInput VertexShaderFunction(VSInput VS){
-    PSInput PS = (PSInput)0;
-    VS.Position.xyz = float3((VS.TexCoord.xy-0.5)*shapeConfig[2].xy, 0);
-    float4x4 sWorld = createWorldMatrix(shapeConfig[0], shapeConfig[1], shapeConfig[2].z);
-	PS.Position = mul(mul(mul(float4(VS.Position,1),sWorld),gViewMainScene), gProjectionMainScene);
-    PS.TexCoord = 1-VS.TexCoord;
-    PS.Diffuse = VS.Diffuse;
-    return PS;
-}
-
-float4 PixelShaderFunction(PSInput PS) : COLOR0{
-    return tex2D(SamplerColor, PS.TexCoord.xy)*PS.Diffuse;
-}
-
-technique interface3D{
-  pass P0  {
-    ZEnable = true;
-    ZFunc = LessEqual;
-	SeparateAlphaBlendEnable = true;
-	SrcBlendAlpha = One;
-	DestBlendAlpha = InvSrcAlpha;
-    ZWriteEnable = true;
-	CullMode = doublesided?1:3;
-    VertexShader = compile vs_2_0 VertexShaderFunction();
-    PixelShader  = compile ps_2_0 PixelShaderFunction();
-  }
+technique cFilterRemover{
+	pass P0{
+		PixelShader = compile ps_2_0 colorFilterRemover();
+	}
 }
 ]]
-
 ----------------------------------------------------------------
 -----------------------PropertyListener-------------------------
 ----------------------------------------------------------------
@@ -480,21 +421,21 @@ end
 ----------------------------------------------------------------
 --------------------------Renderer------------------------------
 ----------------------------------------------------------------
-dgsRenderer["dgs-dx3dinterface"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI,rndtgt)
+dgsRenderer["dgs-dx3dinterface"] = function(source,x,y,w,h,mx,my,cx,cy,enabledInherited,enabledSelf,eleData,parentAlpha,isPostGUI)
 	if eleData.retrieveRT then
 		dgs3DInterfaceRecreateRenderTarget(source)
 	end
-	rndtgt = eleData.mainRT
+	local rndtgt = eleData.mainRT
 	local hitData = eleData.hit
 	hitData[1] = false
 	if eleData.cameraDistance and eleData.cameraDistance <= eleData.maxDistance and mx then
-		local eleData = dgsElementData[source]
-		local isHit = false
+		eleData = dgsElementData[source]
 		local pos = eleData.position
 		local size = eleData.size
 		local faceTo = eleData.faceTo
 		local resolution = eleData.resolution
-		local x,y,z,w,h,fx,fy,fz,roll = pos[1],pos[2],pos[3],size[1],size[2],faceTo[1],faceTo[2],faceTo[3],eleData.roll
+		x,y,z,w,h = pos[1],pos[2],pos[3],size[1],size[2]
+		local fx,fy,fz,roll = faceTo[1],faceTo[2],faceTo[3],eleData.roll
 		local isHit,hitX,hitY,hx,hy,hz
 		if x and y and z and w and h then
 			local camX,camY,camZ = cameraPos[1],cameraPos[2],cameraPos[3]
@@ -578,12 +519,13 @@ dgs3DRenderer["dgs-dx3dinterface"] = function(source)
 					fx,fy,fz = fx-x,fy-y,fz-z
 				end
 				if eleData.mainRT then
-					dgsDrawMaterialLine3D(x,y,z,fx,fy,fz,eleData.mainRT,w,h,applyColorAlpha(eleData.color,eleData.alpha*addalp),roll)
+					if eleData.enableColorFilter then
+						dgsDrawMaterialLine3D(x,y,z,fx,fy,fz,eleData.mainRT,w,h,applyColorAlpha(eleData.color,eleData.alpha*addalp),roll)
+					else
+						dxSetShaderValue(eleData.renderer,"colorFilter",colorFilter)
+						dgsDrawMaterialLine3D(x,y,z,fx,fy,fz,eleData.renderer,w,h,applyColorAlpha(eleData.color,eleData.alpha*addalp),roll)
+					end
 				end
-				--[[if eleData.mainRT then
-					dxSetShaderValue(eleData.renderer,"shapeConfig",x,y,z,fx,fy,fz,w,h,roll/180*math.pi)
-					dxDrawImage(0,0,sW,sH,eleData.renderer,0,0,0,applyColorAlpha(eleData.color,eleData.alpha*addalp))
-				end]]
 				return true
 			end
 		end
